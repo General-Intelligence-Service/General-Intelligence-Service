@@ -370,24 +370,36 @@ export default function DashboardPage() {
                   <table className="w-full text-right text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-2">#</th>
-                        <th className="p-2">التاريخ</th>
-                        <th className="p-2">الجهة الطالبة</th>
-                        <th className="p-2">القطع</th>
-                        <th className="p-2">ملاحظات</th>
+                        <th className="p-2 w-10">#</th>
+                        <th className="p-2 w-28">التاريخ</th>
+                        <th className="p-2 min-w-[140px]">الجهة الطالبة</th>
+                        <th className="p-2 min-w-[220px]">الهدايا</th>
+                        <th className="p-2 w-16">القطع</th>
+                        <th className="p-2 max-w-[180px]">ملاحظات</th>
                       </tr>
                     </thead>
                     <tbody>
                       {ordersForMonth.length === 0 ? (
-                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">لا توجد طلبات في هذا الشهر</td></tr>
+                        <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا توجد طلبات في هذا الشهر</td></tr>
                       ) : (
                         ordersForMonth.map((o, i) => (
-                          <tr key={o.id} className="border-t">
+                          <tr key={o.id} className="border-t align-top">
                             <td className="p-2">{i + 1}</td>
                             <td className="p-2">{o.date}</td>
                             <td className="p-2">{o.requesterName || "—"}</td>
+                            <td className="p-2">
+                              {o.items?.length ? (
+                                <ul className="list-inside list-disc space-y-0.5 text-muted-foreground">
+                                  {o.items.map((it, idx) => (
+                                    <li key={idx}>{it.name} ({it.quantity})</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
                             <td className="p-2">{o.totalPieces ?? 0}</td>
-                            <td className="p-2 max-w-[200px] truncate">{o.notes || "—"}</td>
+                            <td className="p-2 max-w-[180px] truncate">{o.notes || "—"}</td>
                           </tr>
                         ))
                       )}

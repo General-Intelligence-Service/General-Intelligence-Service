@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const colWidths = { num: "10%", date: "18%", requester: "32%", pieces: "15%", notes: "25%" };
+const colWidths = { num: "8%", date: "12%", requester: "20%", gifts: "28%", pieces: "10%", notes: "22%" };
 
 interface MonthlyReportPDFProps {
   orders: OrderRecord[];
@@ -146,6 +146,7 @@ export function MonthlyReportPDF({ orders, monthLabel }: MonthlyReportPDFProps) 
           <Text style={[styles.tableHeaderCell, { width: colWidths.num }]}>#</Text>
           <Text style={[styles.tableHeaderCell, { width: colWidths.date }]}>التاريخ</Text>
           <Text style={[styles.tableHeaderCell, { width: colWidths.requester }]}>الجهة الطالبة</Text>
+          <Text style={[styles.tableHeaderCell, { width: colWidths.gifts }]}>الهدايا</Text>
           <Text style={[styles.tableHeaderCell, { width: colWidths.pieces }]}>القطع</Text>
           <Text style={[styles.tableHeaderCell, { width: colWidths.notes }]}>ملاحظات</Text>
         </View>
@@ -154,6 +155,9 @@ export function MonthlyReportPDF({ orders, monthLabel }: MonthlyReportPDFProps) 
             <Text style={[styles.tableCell, { width: colWidths.num }]}>{i + 1}</Text>
             <Text style={[styles.tableCell, { width: colWidths.date }]}>{o.date}</Text>
             <Text style={[styles.tableCell, { width: colWidths.requester }]}>{o.requesterName || "—"}</Text>
+            <Text style={[styles.tableCell, { width: colWidths.gifts, textAlign: "right" }]}>
+              {o.items?.length ? o.items.map((it) => `${it.name} (${it.quantity})`).join("، ") : "—"}
+            </Text>
             <Text style={[styles.tableCell, { width: colWidths.pieces }]}>{o.totalPieces ?? 0}</Text>
             <Text style={[styles.tableCell, { width: colWidths.notes }]}>{o.notes || "—"}</Text>
           </View>
