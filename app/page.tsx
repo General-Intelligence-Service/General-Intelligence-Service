@@ -25,6 +25,15 @@ export default function Home() {
   const giftTiers = getAllGiftTiers();
   const categories = useMemo(() => getCategoriesFromProducts(allProducts), [allProducts]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
+        localStorage.setItem("visit_count", String(n + 1));
+      } catch {}
+    }
+  }, []);
+
   // تحميل المنتجات من localStorage بعد mount على العميل فقط
   useEffect(() => {
     setMounted(true);

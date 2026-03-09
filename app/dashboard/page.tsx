@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [mounted, setMounted] = useState(false);
   const [authOk, setAuthOk] = useState<boolean | null>(null);
+  const [visitCount, setVisitCount] = useState<number>(0);
 
   useEffect(() => {
     fetch("/api/auth/session", { credentials: "include" })
@@ -50,7 +51,12 @@ export default function DashboardPage() {
       return initialProducts;
     };
     setProducts(loadProducts());
+    if (typeof window !== "undefined") {
+      const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
+      setVisitCount(n);
+    }
   }, []);
+
 
   useEffect(() => {
     if (mounted && typeof window !== "undefined") {
@@ -166,6 +172,71 @@ export default function DashboardPage() {
     router.replace("/login");
   };
 
+  const escapeCsv = (s: string) => {
+    const t = String(s ?? "").replace(/"/g, '""');
+    return t.includes(",") || t.includes("\n") || t.includes('"') ? `"${t}"` : t;
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["الاسم", "الكود", "التصنيف", "الفئة", "الكمية المتوفرة", "السعر", "الوصف"];
+    const rows = products.map((p) => [
+      p.name,
+      p.sku,
+      getGiftTierLabel(p.giftTier),
+      p.category ?? "",
+      p.availableQuantity ?? 0,
+      p.price ?? "",
+      (p.shortDescription ?? "").replace(/\s+/g, " "),
+    ]);
+    const csv = [headers.map(escapeCsv).join(","), ...rows.map((r) => r.map(escapeCsv).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `منتجات-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleBackup = () => {
+    const json = JSON.stringify(products, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `منتجات-نسخة-احتياطية-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        if (!Array.isArray(data) || data.length === 0) {
+          alert("الملف يجب أن يحتوي على مصفوفة منتجات.");
+          return;
+        }
+        const valid = data.every((p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p);
+        if (!valid) {
+          alert("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من المنتجات.");
+          return;
+        }
+        if (!confirm(`سيتم استبدال ${products.length} منتج بـ ${data.length} منتج. متابعة؟`)) return;
+        setProducts(data as Product[]);
+        if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(data));
+        alert("تمت الاستعادة بنجاح.");
+      } catch {
+        alert("تعذر قراءة الملف. تأكد أنه ملف JSON صالح.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
   if (authOk === null) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -199,6 +270,43 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                إحصائيات وأدوات
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-6 text-sm">
+                <div>
+                  <span className="text-muted-foreground">عدد المنتجات:</span>
+                  <span className="mr-2 font-bold text-lg">{products.length}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">عدد زيارات الصفحة الرئيسية:</span>
+                  <span className="mr-2 font-bold text-lg">{visitCount}</span>
+                  <span className="text-muted-foreground text-xs">(هذا المتصفح)</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                  <Download className="ml-2 h-4 w-4" />
+                  تصدير CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleBackup}>
+                  <Download className="ml-2 h-4 w-4" />
+                  تحميل نسخة احتياطية
+                </Button>
+                <label className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 cursor-pointer">
+                  <Upload className="ml-2 h-4 w-4" />
+                  استعادة من ملف
+                  <input type="file" accept=".json,application/json" className="hidden" onChange={handleRestore} />
+                </label>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="mb-6">
             <CardContent className="pt-6">

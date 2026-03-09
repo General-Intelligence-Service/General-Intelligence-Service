@@ -6,5 +6,7 @@ export const siteConfig = {
   telegramUrl: "https://t.me/Mojahd_N",
   instagram: "https://instagram.com/yourhandle",
   email: "info@example.com",
+  /** رسالة الشريط العلوي (اتركها فارغة لإخفاء الشريط) */
+  announcement: "مواعيد استلام الطلبات: الأحد - الخميس من 9 صباحاً حتى 3 عصراً. نرحب بكم.",
 };
 
