@@ -12,12 +12,13 @@ export async function POST(request: NextRequest) {
     const email = (body.email as string)?.trim?.();
     const password = body.password;
 
-    if (!email || typeof password !== "string") {
+    if (!email) {
       return NextResponse.json(
-        { success: false, error: "البريد وكلمة المرور مطلوبان" },
+        { success: false, error: "البريد الإلكتروني مطلوب" },
         { status: 400 }
       );
     }
+    const pass = typeof password === "string" ? password : "";
 
     if (!isAllowedEmail(email)) {
       return NextResponse.json(
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!checkAdminPassword(password)) {
+    if (!checkAdminPassword(pass)) {
       return NextResponse.json(
         { success: false, error: "كلمة المرور غير صحيحة" },
         { status: 401 }
