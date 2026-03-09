@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getFirestore, getAuth } from "@/lib/firebase-admin";
-import type { OrderPayload } from "@/types/order";
+import type { OrderPayload, OrderRecord } from "@/types/order";
 
 const ORDERS_COLLECTION = "orders";
 
@@ -84,22 +84,22 @@ export async function GET(request: NextRequest) {
       .limit(500)
       .get();
 
-    let orders = snapshot.docs.map((doc) => ({
+    let orders: OrderRecord[] = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    })) as OrderRecord[];
 
     if (dateFrom) {
       const from = new Date(dateFrom).toISOString();
-      orders = orders.filter((o: { createdAt?: string }) => (o.createdAt ?? "") >= from);
+      orders = orders.filter((o) => (o.createdAt ?? "") >= from);
     }
     if (dateTo) {
       const to = new Date(dateTo + "T23:59:59.999Z").toISOString();
-      orders = orders.filter((o: { createdAt?: string }) => (o.createdAt ?? "") <= to);
+      orders = orders.filter((o) => (o.createdAt ?? "") <= to);
     }
     if (requester) {
       const r = requester.toLowerCase();
-      orders = orders.filter((o: { requesterName?: string }) =>
+      orders = orders.filter((o) =>
         (o.requesterName ?? "").toLowerCase().includes(r)
       );
     }
