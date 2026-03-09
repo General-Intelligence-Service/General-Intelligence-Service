@@ -172,7 +172,7 @@ export default function DashboardPage() {
     router.replace("/login");
   };
 
-  const escapeCsv = (s: string) => {
+  const escapeCsv = (s: string | number) => {
     const t = String(s ?? "").replace(/"/g, '""');
     return t.includes(",") || t.includes("\n") || t.includes('"') ? `"${t}"` : t;
   };
