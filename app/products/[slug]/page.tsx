@@ -31,6 +31,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [orderQty, setOrderQty] = useState(1);
   const [shareDone, setShareDone] = useState(false);
+  const [orderAdded, setOrderAdded] = useState(false);
 
   const handleShare = async () => {
     if (!product) return;
@@ -366,14 +367,25 @@ export default function ProductPage({ params }: ProductPageProps) {
                         <Plus className="h-5 w-5" />
                       </Button>
                     </div>
-                    <Button
-                      onClick={() => addToOrder(product, orderQty)}
-                      variant="outline"
-                      className="border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white h-11 px-6"
-                    >
-                      <ShoppingCart className="ml-2 h-5 w-5" />
-                      أضف للطلبية
-                    </Button>
+                    {orderAdded ? (
+                      <div className="flex h-11 items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 px-6 text-sm font-medium text-green-700">
+                        <Check className="h-5 w-5" />
+                        تمت الإضافة
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          addToOrder(product, orderQty);
+                          setOrderAdded(true);
+                          setTimeout(() => setOrderAdded(false), 2200);
+                        }}
+                        variant="outline"
+                        className="border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white h-11 px-6"
+                      >
+                        <ShoppingCart className="ml-2 h-5 w-5" />
+                        أضف للطلبية
+                      </Button>
+                    )}
                   </div>
                 </div>
 

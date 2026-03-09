@@ -16,6 +16,7 @@ function HomeContent() {
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
+  const [sortOrder, setSortOrder] = useState<"name-asc" | "name-desc">("name-asc");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -124,7 +125,7 @@ function HomeContent() {
       .slice(0, 8);
   }, [filteredByFilters, searchLower]);
 
-  const filteredProducts = useMemo(() => {
+  const filteredProductsRaw = useMemo(() => {
     if (!searchLower) return filteredByFilters;
     return filteredByFilters.filter(
       (p) =>
@@ -132,6 +133,16 @@ function HomeContent() {
         (p.sku && p.sku.toLowerCase().includes(searchLower))
     );
   }, [filteredByFilters, searchLower]);
+
+  const filteredProducts = useMemo(() => {
+    const list = [...filteredProductsRaw];
+    if (sortOrder === "name-asc") {
+      list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+    } else {
+      list.sort((a, b) => b.name.localeCompare(a.name, "ar"));
+    }
+    return list;
+  }, [filteredProductsRaw, sortOrder]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -209,8 +220,8 @@ function HomeContent() {
               )}
             </div>
 
-            {/* Filters */}
-            <div className="mb-8">
+            {/* Filters + ترتيب */}
+            <div className="mb-8 space-y-4">
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
                 <div className="flex flex-wrap gap-3">
@@ -233,6 +244,25 @@ function HomeContent() {
                       {getGiftTierLabel(tier)}
                     </Badge>
                   ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-3 text-base font-semibold text-foreground">ترتيب:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={sortOrder === "name-asc" ? "default" : "outline"}
+                    className="cursor-pointer text-base px-4 py-1.5"
+                    onClick={() => setSortOrder("name-asc")}
+                  >
+                    الاسم (أ → ي)
+                  </Badge>
+                  <Badge
+                    variant={sortOrder === "name-desc" ? "default" : "outline"}
+                    className="cursor-pointer text-base px-4 py-1.5"
+                    onClick={() => setSortOrder("name-desc")}
+                  >
+                    الاسم (ي → أ)
+                  </Badge>
                 </div>
               </div>
             </div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,14 @@ interface ProductCardProps {
 
 export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const [showAdded, setShowAdded] = useState(false);
 
   const handleAdd = () => {
     if (onAddToOrder && quantity >= 1) {
       onAddToOrder(product, quantity);
       setQuantity(1);
+      setShowAdded(true);
+      setTimeout(() => setShowAdded(false), 2200);
     }
   };
 
@@ -121,14 +124,21 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
                   </Button>
                 </div>
               </div>
-              <Button
-                onClick={handleAdd}
-                variant="outline"
-                className="w-full border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white"
-              >
-                <ShoppingCart className="ml-2 h-4 w-4" />
-                أضف للطلبية
-              </Button>
+              {showAdded ? (
+                <div className="flex items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 py-2.5 text-sm font-medium text-green-700">
+                  <Check className="h-4 w-4" />
+                  تمت الإضافة
+                </div>
+              ) : (
+                <Button
+                  onClick={handleAdd}
+                  variant="outline"
+                  className="w-full border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white"
+                >
+                  <ShoppingCart className="ml-2 h-4 w-4" />
+                  أضف للطلبية
+                </Button>
+              )}
             </div>
           )}
           <a
