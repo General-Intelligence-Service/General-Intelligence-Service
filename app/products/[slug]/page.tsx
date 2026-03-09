@@ -174,9 +174,9 @@ export default function ProductPage({ params }: ProductPageProps) {
         </div>
 
         {/* Product Details */}
-        <section className="py-8 md:py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-8 lg:grid-cols-2">
+        <section className="py-6 sm:py-8 md:py-16">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
               {/* Images */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -231,6 +231,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                               fill
                               sizes="(max-width: 640px) 25vw, 20vw"
                               className="object-cover"
+                              loading="lazy"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';

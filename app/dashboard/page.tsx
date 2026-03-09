@@ -153,6 +153,27 @@ export default function DashboardPage() {
 
   const refreshOrders = () => setOrders(getStoredOrders());
 
+  /** إحصائيات أكثر المنتجات طلباً (حسب عدد القطع) */
+  const topProductsByPieces = (() => {
+    const map = new Map<string, { name: string; pieces: number; orders: number }>();
+    orders.forEach((o) => {
+      o.items?.forEach((it) => {
+        const key = it.slug || it.name;
+        const cur = map.get(key);
+        if (cur) {
+          cur.pieces += it.quantity ?? 0;
+          cur.orders += 1;
+        } else {
+          map.set(key, { name: it.name, pieces: it.quantity ?? 0, orders: 1 });
+        }
+      });
+    });
+    return Array.from(map.entries())
+      .map(([_, v]) => v)
+      .sort((a, b) => b.pieces - a.pieces)
+      .slice(0, 10);
+  })();
+
 
   useEffect(() => {
     if (mounted && typeof window !== "undefined") {
@@ -367,7 +388,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ملخص سريع: طلبات هذا الشهر وإجمالي القطع */}
+          {/* ملخص سريع + أكثر المنتجات طلباً */}
           {(() => {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -377,18 +398,37 @@ export default function DashboardPage() {
             });
             const thisMonthPieces = thisMonthOrders.reduce((s, o) => s + (o.totalPieces ?? 0), 0);
             return (
-              <Card className="mb-6 border-primary/20 bg-primary/5">
-                <CardContent className="flex flex-row flex-wrap items-center justify-around gap-4 py-4">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">طلبات هذا الشهر</p>
-                    <p className="text-2xl font-bold text-primary">{thisMonthOrders.length}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">إجمالي القطع هذا الشهر</p>
-                    <p className="text-2xl font-bold text-primary">{thisMonthPieces}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <>
+                <Card className="mb-6 border-primary/20 bg-primary/5">
+                  <CardContent className="flex flex-row flex-wrap items-center justify-around gap-4 py-4">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">طلبات هذا الشهر</p>
+                      <p className="text-2xl font-bold text-primary">{thisMonthOrders.length}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">إجمالي القطع هذا الشهر</p>
+                      <p className="text-2xl font-bold text-primary">{thisMonthPieces}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                {topProductsByPieces.length > 0 && (
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-lg">أكثر المنتجات طلباً (القطع)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2 text-sm">
+                        {topProductsByPieces.map((p, i) => (
+                          <li key={i} className="flex justify-between gap-2 border-b border-dashed pb-2 last:border-0">
+                            <span className="font-medium truncate">{p.name}</span>
+                            <span className="text-primary font-bold shrink-0">{p.pieces} قطعة</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             );
           })()}
 
@@ -510,10 +550,20 @@ export default function DashboardPage() {
                       {ordersForPeriod.length === 0 ? (
                         <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا توجد طلبات في الفترة المحددة</td></tr>
                       ) : (
-                        ordersForPeriod.map((o, i) => (
-                          <tr key={o.id} className="border-t align-top">
+                        ordersForPeriod.map((o, i) => {
+                          const isToday = o.date === new Date().toISOString().slice(0, 10);
+                          const isThisMonth = (o.date?.slice(0, 7) ?? o.createdAt?.slice(0, 7)) === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+                          return (
+                          <tr
+                            key={o.id}
+                            className={`border-t align-top ${isToday ? "bg-green-50 dark:bg-green-950/20" : isThisMonth ? "bg-primary/5" : ""}`}
+                          >
                             <td className="p-2">{i + 1}</td>
-                            <td className="p-2">{o.date}</td>
+                            <td className="p-2">
+                              <span className="inline-block">{o.date}</span>
+                              {isToday && <Badge variant="default" className="mr-1 text-xs bg-green-600">اليوم</Badge>}
+                              {!isToday && isThisMonth && <Badge variant="secondary" className="mr-1 text-xs">هذا الشهر</Badge>}
+                            </td>
                             <td className="p-2">{o.requesterName || "—"}</td>
                             <td className="p-2">
                               {o.items?.length ? (
@@ -529,7 +579,8 @@ export default function DashboardPage() {
                             <td className="p-2">{o.totalPieces ?? 0}</td>
                             <td className="p-2 max-w-[180px] truncate">{o.notes || "—"}</td>
                           </tr>
-                        ))
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

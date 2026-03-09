@@ -171,8 +171,8 @@ function HomeContent() {
         </section>
 
         {/* Products Section */}
-        <section id="products" className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
+        <section id="products" className="py-10 sm:py-14 md:py-24">
+          <div className="container mx-auto px-4 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -269,7 +269,7 @@ function HomeContent() {
 
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredProducts.map((product, index) => (
                   <ProductCard
                     key={product.slug}

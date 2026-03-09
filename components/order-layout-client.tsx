@@ -3,6 +3,7 @@
 import { OrderProvider } from "@/contexts/order-context";
 import { OrderCart } from "@/components/order-cart";
 import { AnnouncementBar } from "@/components/announcement-bar";
+import { WelcomeTip } from "@/components/welcome-tip";
 
 export function OrderLayoutClient({
   children,
@@ -13,6 +14,7 @@ export function OrderLayoutClient({
     <OrderProvider>
       <AnnouncementBar />
       <OrderCart />
+      <WelcomeTip />
       {children}
     </OrderProvider>
   );

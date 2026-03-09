@@ -68,7 +68,7 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
             </div>
           </CardHeader>
         </Link>
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           <div className="mb-2 flex items-start justify-between gap-2">
             <Link href={`/products/${product.slug}`}>
               <h3 className="text-xl font-semibold leading-tight hover:text-brand-green-dark">
@@ -95,7 +95,7 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
           </p>
           <p className="text-base text-muted-foreground">كود: {product.sku}</p>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 p-4 pt-0">
+        <CardFooter className="flex flex-col gap-2 p-3 sm:p-4 pt-0">
           {onAddToOrder && (
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center justify-between gap-2">
@@ -105,7 +105,7 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   >
                     <Minus className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0"
+                    className="h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation"
                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                   >
                     <Plus className="h-4 w-4" />
@@ -145,7 +145,7 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
             href={generateWhatsAppLink(product.name, product.sku)}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker h-11 rounded-md px-5"
+            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker h-12 sm:h-11 rounded-md px-5 py-3 sm:py-2 touch-manipulation"
           >
             استفسر عن المنتج
           </a>
