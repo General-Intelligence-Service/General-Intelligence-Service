@@ -20,6 +20,8 @@ export default function Home() {
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const giftTiers = getAllGiftTiers();
@@ -102,7 +104,7 @@ export default function Home() {
     };
   }, []);
 
-  const filteredProducts = useMemo(() => {
+  const filteredByFilters = useMemo(() => {
     return allProducts.filter((product) => {
       const matchesGiftTier =
         selectedGiftTier === null || product.giftTier === selectedGiftTier;
@@ -111,6 +113,27 @@ export default function Home() {
       return matchesGiftTier && matchesCategory;
     });
   }, [allProducts, selectedGiftTier, selectedCategory]);
+
+  const searchLower = searchQuery.trim().toLowerCase();
+  const searchSuggestions = useMemo(() => {
+    if (!searchLower || searchLower.length < 1) return [];
+    return filteredByFilters
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchLower) ||
+          (p.sku && p.sku.toLowerCase().includes(searchLower))
+      )
+      .slice(0, 8);
+  }, [filteredByFilters, searchLower]);
+
+  const filteredProducts = useMemo(() => {
+    if (!searchLower) return filteredByFilters;
+    return filteredByFilters.filter(
+      (p) =>
+        p.name.toLowerCase().includes(searchLower) ||
+        (p.sku && p.sku.toLowerCase().includes(searchLower))
+    );
+  }, [filteredByFilters, searchLower]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -155,6 +178,38 @@ export default function Home() {
                 تصفح مجموعتنا المتنوعة من الهدايا الفاخرة والتراثية المعروضة
               </p>
             </motion.div>
+
+            {/* بحث مع اقتراحات */}
+            <div className="relative mb-6 max-w-md mx-auto">
+              <input
+                type="text"
+                placeholder="ابحث عن منتج بالاسم أو الكود..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                className="w-full rounded-lg border border-input bg-background px-4 py-3 pr-10 text-right focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              {(searchFocused || searchQuery) && searchSuggestions.length > 0 && (
+                <ul className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-lg border bg-background shadow-lg">
+                  {searchSuggestions.map((p) => (
+                    <li key={p.slug}>
+                      <button
+                        type="button"
+                        className="w-full px-4 py-2 text-right text-sm hover:bg-muted"
+                        onClick={() => {
+                          setSearchQuery(p.name);
+                          setSearchFocused(false);
+                        }}
+                      >
+                        <span className="font-medium">{p.name}</span>
+                        {p.sku && <span className="mr-2 text-muted-foreground">— {p.sku}</span>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             {/* Filters */}
             <div className="mb-8 space-y-4">

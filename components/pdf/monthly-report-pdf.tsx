@@ -119,9 +119,11 @@ const colWidths = { num: "8%", date: "12%", requester: "20%", gifts: "28%", piec
 interface MonthlyReportPDFProps {
   orders: OrderRecord[];
   monthLabel: string;
+  /** نوع التقرير للعرض في الهيدر (شهري / ربع سنوي / سنوي) */
+  reportSubtitle?: string;
 }
 
-export function MonthlyReportPDF({ orders, monthLabel }: MonthlyReportPDFProps) {
+export function MonthlyReportPDF({ orders, monthLabel, reportSubtitle = "تقرير الطلبات الشهري" }: MonthlyReportPDFProps) {
   const totalPieces = orders.reduce((s, o) => s + (o.totalPieces ?? 0), 0);
 
   return (
@@ -129,7 +131,7 @@ export function MonthlyReportPDF({ orders, monthLabel }: MonthlyReportPDFProps) 
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>فرع الإعلام - قسم الهدايا الرسمية</Text>
-          <Text style={styles.headerSub}>تقرير الطلبات الشهري</Text>
+          <Text style={styles.headerSub}>{reportSubtitle}</Text>
         </View>
         <Text style={styles.title}>{monthLabel}</Text>
         <View style={styles.summaryRow}>

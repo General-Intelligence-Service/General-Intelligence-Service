@@ -28,6 +28,13 @@ export default function DashboardPage() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [reportType, setReportType] = useState<"month" | "quarter" | "year">("month");
+  const [reportQuarter, setReportQuarter] = useState<string>(() => {
+    const d = new Date();
+    const q = Math.floor(d.getMonth() / 3) + 1;
+    return `${d.getFullYear()}-${q}`;
+  });
+  const [reportYear, setReportYear] = useState<string>(() => String(new Date().getFullYear()));
   const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
@@ -77,19 +84,63 @@ export default function DashboardPage() {
     return date.toLocaleDateString("ar-SA", { year: "numeric", month: "long" });
   })();
 
-  const handleDownloadMonthlyReport = async () => {
-    if (ordersForMonth.length === 0) {
-      alert("لا توجد طلبات في هذا الشهر.");
+  const quarterLabels = ["الأول", "الثاني", "الثالث", "الرابع"];
+
+  const { ordersForPeriod, periodLabel, reportSubtitle, downloadFilename } = (() => {
+    if (reportType === "month") {
+      return {
+        ordersForPeriod: ordersForMonth,
+        periodLabel: monthLabel,
+        reportSubtitle: "تقرير الطلبات الشهري",
+        downloadFilename: `تقرير-طلبات-${reportMonth}.pdf`,
+      };
+    }
+    if (reportType === "quarter") {
+      const [y, q] = reportQuarter.split("-").map(Number);
+      const startMonth = (q - 1) * 3 + 1;
+      const monthPrefixes = [
+        `${y}-${String(startMonth).padStart(2, "0")}`,
+        `${y}-${String(startMonth + 1).padStart(2, "0")}`,
+        `${y}-${String(startMonth + 2).padStart(2, "0")}`,
+      ];
+      const ordersForPeriod = orders.filter((o) => {
+        const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);
+        return ym && monthPrefixes.includes(ym);
+      });
+      const label = `الربع ${quarterLabels[(q || 1) - 1]} ${y}`;
+      return {
+        ordersForPeriod,
+        periodLabel: label,
+        reportSubtitle: "تقرير الطلبات الربع سنوي",
+        downloadFilename: `تقرير-طلبات-ربع-${y}-${q}.pdf`,
+      };
+    }
+    const y = reportYear;
+    const ordersForPeriod = orders.filter((o) => {
+      const ym = o.date ? o.date.slice(0, 4) : o.createdAt?.slice(0, 4);
+      return ym === y;
+    });
+    return {
+      ordersForPeriod,
+      periodLabel: y,
+      reportSubtitle: "تقرير الطلبات السنوي",
+      downloadFilename: `تقرير-طلبات-${y}.pdf`,
+    };
+  })();
+
+  const handleDownloadReport = async () => {
+    if (ordersForPeriod.length === 0) {
+      alert("لا توجد طلبات في الفترة المحددة.");
       return;
     }
     setReportLoading(true);
     try {
       const { generateMonthlyReportBlob } = await import("@/lib/monthly-report-pdf");
-      const blob = await generateMonthlyReportBlob(ordersForMonth, monthLabel);
+      const blob = await generateMonthlyReportBlob(ordersForPeriod, periodLabel, reportSubtitle);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `تقرير-طلبات-${reportMonth}.pdf`;
+      a.download = downloadFilename;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -316,6 +367,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ملخص سريع: طلبات هذا الشهر وإجمالي القطع */}
+          {(() => {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+            const thisMonthOrders = orders.filter((o) => {
+              const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);
+              return ym === currentMonth;
+            });
+            const thisMonthPieces = thisMonthOrders.reduce((s, o) => s + (o.totalPieces ?? 0), 0);
+            return (
+              <Card className="mb-6 border-primary/20 bg-primary/5">
+                <CardContent className="flex flex-row flex-wrap items-center justify-around gap-4 py-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">طلبات هذا الشهر</p>
+                    <p className="text-2xl font-bold text-primary">{thisMonthOrders.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">إجمالي القطع هذا الشهر</p>
+                    <p className="text-2xl font-bold text-primary">{thisMonthPieces}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           <div className="mb-6 flex gap-2 border-b">
             <button
               type="button"
@@ -344,27 +420,79 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
-                  <label className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">الشهر:</span>
-                    <input
-                      type="month"
-                      value={reportMonth}
-                      onChange={(e) => setReportMonth(e.target.value)}
-                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value as "month" | "quarter" | "year")}
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="month">شهري</option>
+                    <option value="quarter">ربع سنوي</option>
+                    <option value="year">سنوي</option>
+                  </select>
+                  {reportType === "month" && (
+                    <label className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">الشهر:</span>
+                      <input
+                        type="month"
+                        value={reportMonth}
+                        onChange={(e) => setReportMonth(e.target.value)}
+                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </label>
+                  )}
+                  {reportType === "quarter" && (
+                    <>
+                      <label className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">السنة:</span>
+                        <input
+                          type="number"
+                          min={2020}
+                          max={2030}
+                          value={reportQuarter.split("-")[0]}
+                          onChange={(e) => setReportQuarter(`${e.target.value}-${reportQuarter.split("-")[1] || 1}`)}
+                          className="w-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">الربع:</span>
+                        <select
+                          value={reportQuarter.split("-")[1]}
+                          onChange={(e) => setReportQuarter(`${reportQuarter.split("-")[0]}-${e.target.value}`)}
+                          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="1">الأول (يناير–مارس)</option>
+                          <option value="2">الثاني (أبريل–يونيو)</option>
+                          <option value="3">الثالث (يوليو–سبتمبر)</option>
+                          <option value="4">الرابع (أكتوبر–ديسمبر)</option>
+                        </select>
+                      </label>
+                    </>
+                  )}
+                  {reportType === "year" && (
+                    <label className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">السنة:</span>
+                      <input
+                        type="number"
+                        min={2020}
+                        max={2030}
+                        value={reportYear}
+                        onChange={(e) => setReportYear(e.target.value)}
+                        className="w-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      />
+                    </label>
+                  )}
                   <Button
                     variant="default"
                     size="sm"
-                    onClick={handleDownloadMonthlyReport}
-                    disabled={ordersForMonth.length === 0 || reportLoading}
+                    onClick={handleDownloadReport}
+                    disabled={ordersForPeriod.length === 0 || reportLoading}
                   >
                     <FileText className="ml-2 h-4 w-4" />
-                    {reportLoading ? "جاري التصدير..." : "تحميل تقرير شهري PDF"}
+                    {reportLoading ? "جاري التصدير..." : "تحميل تقرير PDF"}
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  عدد الطلبات في {monthLabel}: {ordersForMonth.length} — إجمالي القطع: {ordersForMonth.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
+                  عدد الطلبات في {periodLabel}: {ordersForPeriod.length} — إجمالي القطع: {ordersForPeriod.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
                 </p>
                 <div className="overflow-x-auto rounded-md border">
                   <table className="w-full text-right text-sm">
@@ -379,10 +507,10 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ordersForMonth.length === 0 ? (
-                        <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا توجد طلبات في هذا الشهر</td></tr>
+                      {ordersForPeriod.length === 0 ? (
+                        <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا توجد طلبات في الفترة المحددة</td></tr>
                       ) : (
-                        ordersForMonth.map((o, i) => (
+                        ordersForPeriod.map((o, i) => (
                           <tr key={o.id} className="border-t align-top">
                             <td className="p-2">{i + 1}</td>
                             <td className="p-2">{o.date}</td>

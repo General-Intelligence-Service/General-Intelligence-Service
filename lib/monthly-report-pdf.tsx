@@ -4,8 +4,9 @@ import type { OrderRecord } from "@/types/order";
 
 export async function generateMonthlyReportBlob(
   orders: OrderRecord[],
-  monthLabel: string
+  periodLabel: string,
+  reportSubtitle?: string
 ): Promise<Blob> {
-  const doc = <MonthlyReportPDF orders={orders} monthLabel={monthLabel} />;
+  const doc = <MonthlyReportPDF orders={orders} monthLabel={periodLabel} reportSubtitle={reportSubtitle} />;
   return pdf(doc).toBlob();
 }

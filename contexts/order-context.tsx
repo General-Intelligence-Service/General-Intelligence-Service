@@ -22,6 +22,8 @@ interface OrderContextValue {
   removeFromOrder: (slug: string) => void;
   /** تفريغ الطلبية بالكامل (بعد تصدير PDF أو إرسال الطلب) */
   clearOrder: () => void;
+  /** استعادة الطلبية من مسودة (عناصر + جهة طالبة + ملاحظات) */
+  restoreFromDraft: (items: OrderItem[], requesterName: string, orderNotes: string) => void;
   totalItems: number;
   lastAddedName: string | null;
   orderNotes: string;
@@ -83,6 +85,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setLastAddedName(null);
   }, []);
 
+  const restoreFromDraft = useCallback((items: OrderItem[], reqName: string, notes: string) => {
+    setOrderItems(items);
+    setRequesterName(reqName);
+    setOrderNotes(notes);
+  }, []);
+
   const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const value: OrderContextValue = {
@@ -91,6 +99,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     updateQuantity,
     removeFromOrder,
     clearOrder,
+    restoreFromDraft,
     totalItems,
     lastAddedName,
     orderNotes,

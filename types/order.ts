@@ -48,3 +48,42 @@ export function saveOrderToHistory(order: OrderRecord): void {
     // ignore
   }
 }
+
+/** مسودة طلبية (قبل التصدير) */
+export interface OrderDraft {
+  items: { slug: string; quantity: number }[];
+  requesterName: string;
+  orderNotes: string;
+  savedAt: string;
+}
+
+const DRAFT_STORAGE_KEY = "order_draft";
+
+export function getOrderDraft(): OrderDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as OrderDraft;
+  } catch {
+    return null;
+  }
+}
+
+export function saveOrderDraft(draft: OrderDraft): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearOrderDraft(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, ShoppingCart, Plus, Minus } from "lucide-react";
+import { ArrowRight, Check, ShoppingCart, Plus, Minus, Share2 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,35 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [orderQty, setOrderQty] = useState(1);
+  const [shareDone, setShareDone] = useState(false);
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const text = `${product.name} - كتالوج الهدايا`;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({
+          title: product.name,
+          text,
+          url,
+        });
+        setShareDone(true);
+        setTimeout(() => setShareDone(false), 2000);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareDone(true);
+        setTimeout(() => setShareDone(false), 2000);
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareDone(true);
+        setTimeout(() => setShareDone(false), 2000);
+      } catch {
+        alert("تعذر نسخ الرابط");
+      }
+    }
+  };
 
   // تحميل المنتجات من localStorage بعد mount على العميل فقط
   useEffect(() => {
@@ -237,9 +266,20 @@ export default function ProductPage({ params }: ProductPageProps) {
                       </Badge>
                     </div>
                   )}
-                  <h1 className="mb-4 text-3xl font-bold md:text-4xl">
-                    {product.name}
-                  </h1>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <h1 className="text-3xl font-bold md:text-4xl">
+                      {product.name}
+                    </h1>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleShare}
+                      className="shrink-0"
+                    >
+                      <Share2 className="ml-2 h-4 w-4" />
+                      {shareDone ? "تم النسخ!" : "مشاركة"}
+                    </Button>
+                  </div>
                   <p className="text-base text-muted-foreground">
                     كود المنتج: <span className="font-semibold">{product.sku}</span>
                   </p>

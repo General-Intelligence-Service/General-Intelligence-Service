@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail, Save, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
-import { saveOrderToHistory } from "@/types/order";
+import { saveOrderToHistory, getOrderDraft, saveOrderDraft, clearOrderDraft } from "@/types/order";
+import { products as initialProducts, type Product } from "@/data/products";
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,6 +29,7 @@ export function OrderCart() {
     updateQuantity,
     removeFromOrder,
     clearOrder,
+    restoreFromDraft,
     totalItems,
     lastAddedName,
     requesterName,
@@ -38,6 +40,55 @@ export function OrderCart() {
   const [sendByEmail, setSendByEmail] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftExists, setDraftExists] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && orderItems.length === 0) {
+      setDraftExists(!!getOrderDraft());
+    }
+  }, [isOpen, orderItems.length]);
+
+  const handleSaveDraft = () => {
+    if (orderItems.length === 0) return;
+    saveOrderDraft({
+      items: orderItems.map((i) => ({ slug: i.product.slug, quantity: i.quantity })),
+      requesterName,
+      orderNotes,
+      savedAt: new Date().toISOString(),
+    });
+    setDraftExists(false);
+    alert("تم حفظ المسودة. يمكنك استعادتها لاحقاً عند فتح الطلبية.");
+  };
+
+  const handleRestoreDraft = () => {
+    const draft = getOrderDraft();
+    if (!draft) return;
+    let productsList: Product[] = initialProducts;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("products");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as Product[];
+          const merged = [...initialProducts];
+          parsed.forEach((p) => {
+            const i = merged.findIndex((e) => e.slug === p.slug);
+            if (i >= 0) merged[i] = p;
+            else merged.push(p);
+          });
+          productsList = merged;
+        } catch {}
+      }
+    }
+    const items = draft.items
+      .map(({ slug, quantity }) => {
+        const product = productsList.find((p) => p.slug === slug);
+        return product ? { product, quantity } : null;
+      })
+      .filter((x): x is { product: Product; quantity: number } => x !== null);
+    restoreFromDraft(items, draft.requesterName || "", draft.orderNotes || "");
+    clearOrderDraft();
+    setDraftExists(false);
+  };
 
   const handleExportPDF = async () => {
     if (isSubmitting) return;
@@ -93,6 +144,7 @@ export function OrderCart() {
       URL.revokeObjectURL(url);
 
       clearOrder();
+      clearOrderDraft();
       setIsOpen(false);
     } catch (e) {
       console.error(e);
@@ -150,6 +202,15 @@ export function OrderCart() {
             <div className="flex-1 overflow-y-auto p-6">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center gap-4 text-center">
+                  {draftExists && (
+                    <div className="w-full rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                      <p className="text-sm font-medium text-foreground">لديك مسودة طلبية محفوظة</p>
+                      <Button variant="default" size="sm" onClick={handleRestoreDraft}>
+                        <RotateCcw className="ml-2 h-4 w-4" />
+                        استعادة المسودة
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-muted-foreground">الطلبية فارغة</p>
                   <Link href="/#products" onClick={() => setIsOpen(false)}>
                     <Button variant="outline">تصفح المنتجات</Button>
@@ -236,6 +297,10 @@ export function OrderCart() {
                   <span className="font-semibold">إجمالي القطع:</span>
                   <span className="text-lg font-bold">{totalItems}</span>
                 </div>
+                <Button variant="outline" size="sm" className="w-full" onClick={handleSaveDraft}>
+                  <Save className="ml-2 h-4 w-4" />
+                  حفظ كمسودة
+                </Button>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
