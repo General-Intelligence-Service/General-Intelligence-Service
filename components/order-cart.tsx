@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
-import type { OrderItemPayload } from "@/types/order";
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -45,35 +44,8 @@ export function OrderCart() {
     try {
       const notes = orderNotes?.trim() || undefined;
       const reqName = requesterName.trim() || undefined;
+      const dateStr = new Date().toISOString().split("T")[0];
 
-      const payload = {
-        date: new Date().toISOString().split("T")[0],
-        requesterName: reqName ?? "",
-        notes,
-        items: orderItems.map((item): OrderItemPayload => ({
-          slug: item.product.slug,
-          sku: item.product.sku,
-          name: item.product.name,
-          quantity: item.quantity,
-          giftTier: item.product.giftTier,
-          category: item.product.category,
-        })),
-        totalPieces: totalItems,
-        createdAt: new Date().toISOString(),
-      };
-
-      let orderId: string | undefined;
-      try {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json();
-        if (res.ok) orderId = data.orderId;
-      } catch {
-        orderId = undefined;
-      }
       const { generatePDFBlob } = await import("@/lib/pdf-generator");
       const blob = await generatePDFBlob(orderItems, siteConfig, notes, reqName ?? undefined);
 
@@ -86,19 +58,18 @@ export function OrderCart() {
             body: JSON.stringify({
               to: emailTo.trim() || undefined,
               pdfBase64,
-              orderId,
             }),
           });
         } catch (e) {
           console.error("Send email failed:", e);
-          alert("تم حفظ الطلبية وتنزيل PDF، لكن إرسال البريد فشل.");
+          alert("تم تنزيل PDF، لكن إرسال البريد فشل.");
         }
       }
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `طلبية-هدايا-${payload.date}.pdf`;
+      link.download = `طلبية-هدايا-${dateStr}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
 
@@ -106,7 +77,7 @@ export function OrderCart() {
       setIsOpen(false);
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ أثناء إنشاء ملف PDF أو حفظ الطلبية");
+      alert("حدث خطأ أثناء إنشاء ملف PDF");
     } finally {
       setIsSubmitting(false);
     }
