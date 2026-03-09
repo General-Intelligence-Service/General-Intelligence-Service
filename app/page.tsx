@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
@@ -16,6 +17,7 @@ function getCategoriesFromProducts(prods: Product[]): string[] {
 import { useOrder } from "@/contexts/order-context";
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
@@ -23,6 +25,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
 
   const giftTiers = getAllGiftTiers();
   const categories = useMemo(() => getCategoriesFromProducts(allProducts), [allProducts]);

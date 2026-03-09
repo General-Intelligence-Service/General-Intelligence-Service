@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -12,16 +11,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { generateWhatsAppLinkGeneral } from "@/lib/whatsapp";
 import { siteConfig } from "@/lib/config";
+import { NavbarSearch } from "@/components/navbar-search";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-3">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4">
+        <Link href="/" className="flex shrink-0 items-center gap-3">
           <div className="relative h-12 w-12 shrink-0">
             <Image
               src="/1.png"
@@ -32,6 +31,11 @@ export function Navbar() {
             />
           </div>
         </Link>
+
+        {/* بحث - يظهر على الديسكتوب */}
+        <div className="hidden flex-1 justify-center md:flex">
+          <NavbarSearch />
+        </div>
 
         {/* Desktop Navigation */}
         <div className="hidden items-center gap-6 md:flex">
@@ -58,7 +62,10 @@ export function Navbar() {
             <SheetHeader>
               <SheetTitle>{siteConfig.name}</SheetTitle>
             </SheetHeader>
-            <div className="mt-8 flex flex-col gap-4">
+            <div className="mt-6 flex flex-col gap-4">
+              <div className="px-1 md:hidden">
+                <NavbarSearch />
+              </div>
               <Link
                 href="/#products"
                 onClick={() => setIsOpen(false)}
