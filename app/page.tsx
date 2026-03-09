@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -16,7 +16,7 @@ function getCategoriesFromProducts(prods: Product[]): string[] {
 }
 import { useOrder } from "@/contexts/order-context";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
@@ -298,6 +298,24 @@ export default function Home() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex flex-1 items-center justify-center">
+            <p className="text-muted-foreground">جاري التحميل...</p>
+          </main>
+          <Footer />
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
 
