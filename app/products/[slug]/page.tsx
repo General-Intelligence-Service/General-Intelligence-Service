@@ -33,6 +33,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [shareDone, setShareDone] = useState(false);
 
   const handleShare = async () => {
+    if (!product) return;
     const url = typeof window !== "undefined" ? window.location.href : "";
     const text = `${product.name} - كتالوج الهدايا`;
     try {
