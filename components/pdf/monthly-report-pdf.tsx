@@ -155,7 +155,7 @@ export function MonthlyReportPDF({ orders, monthLabel }: MonthlyReportPDFProps) 
             <Text style={[styles.tableCell, { width: colWidths.date }]}>{o.date}</Text>
             <Text style={[styles.tableCell, { width: colWidths.requester }]}>{o.requesterName || "—"}</Text>
             <Text style={[styles.tableCell, { width: colWidths.pieces }]}>{o.totalPieces ?? 0}</Text>
-            <Text style={[styles.tableCell, { width: colWidths.notes }]} numberOfLines={1}>{o.notes || "—"}</Text>
+            <Text style={[styles.tableCell, { width: colWidths.notes }]}>{o.notes || "—"}</Text>
           </View>
         ))}
         <View style={styles.footer}>
