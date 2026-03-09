@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, ShoppingCart, Plus, Minus } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/product-card";
 import { getProductBySlug, products as initialProducts, getGiftTierLabel, type Product } from "@/data/products";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { useOrder } from "@/contexts/order-context";
 
 interface ProductPageProps {
   params: {
@@ -23,10 +24,12 @@ interface ProductPageProps {
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
+  const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [orderQty, setOrderQty] = useState(1);
 
   // تحميل المنتجات من localStorage بعد mount على العميل فقط
   useEffect(() => {
@@ -296,6 +299,45 @@ export default function ProductPage({ params }: ProductPageProps) {
 
                 <Separator />
 
+                <div className="space-y-3">
+                  <p className="text-base font-medium text-muted-foreground">أضف للطلبية</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-1 border rounded-md">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10"
+                        onClick={() => setOrderQty((q) => Math.max(1, q - 1))}
+                      >
+                        <Minus className="h-5 w-5" />
+                      </Button>
+                      <span className="w-12 text-center text-lg font-semibold tabular-nums">
+                        {orderQty}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10"
+                        onClick={() => setOrderQty((q) => Math.min(99, q + 1))}
+                      >
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={() => addToOrder(product, orderQty)}
+                      variant="outline"
+                      className="border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white h-11 px-6"
+                    >
+                      <ShoppingCart className="ml-2 h-5 w-5" />
+                      أضف للطلبية
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
                 <a
                   href={generateWhatsAppLink(product.name, product.sku)}
                   target="_blank"
@@ -330,6 +372,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     key={relatedProduct.slug}
                     product={relatedProduct}
                     index={index}
+                    onAddToOrder={addToOrder}
                   />
                 ))}
               </div>

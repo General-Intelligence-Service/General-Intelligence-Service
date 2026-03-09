@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
 import { defaultMetadata } from "./metadata";
+import { OrderLayoutClient } from "@/components/order-layout-client";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -18,7 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html dir="rtl" lang="ar" className={cairo.variable}>
-      <body className={`${cairo.className} antialiased`}>{children}</body>
+      <body className={`${cairo.className} antialiased`}>
+        <OrderLayoutClient>{children}</OrderLayoutClient>
+      </body>
     </html>
   );
 }

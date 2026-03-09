@@ -3,24 +3,18 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
-import { OrderCart } from "@/components/order-cart";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
-import { generateWhatsAppLinkGeneral } from "@/lib/whatsapp";
+import { useOrder } from "@/contexts/order-context";
 
 export default function Home() {
+  const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [addToOrderFn, setAddToOrderFn] = useState<((product: Product) => void) | null>(null);
 
   const giftTiers = getAllGiftTiers();
 
@@ -94,27 +88,15 @@ export default function Home() {
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.shortDescription
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesGiftTier =
         selectedGiftTier === null || product.giftTier === selectedGiftTier;
-
-      return matchesSearch && matchesGiftTier;
+      return matchesGiftTier;
     });
-  }, [allProducts, searchQuery, selectedGiftTier]);
+  }, [allProducts, selectedGiftTier]);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <OrderCart 
-        products={allProducts}
-        onAddToOrderReady={(fn) => setAddToOrderFn(() => fn)}
-      />
 
       <main className="flex-1">
         {/* Hero Section */}
@@ -156,19 +138,8 @@ export default function Home() {
               </p>
             </motion.div>
 
-            {/* Search and Filters */}
+            {/* Filters */}
             <div className="mb-8 space-y-4">
-              <div className="relative">
-                <Search className="absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="ابحث عن منتج..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                />
-              </div>
-
               {/* تصنيف الهدايا */}
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
@@ -200,11 +171,11 @@ export default function Home() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredProducts.map((product, index) => (
-                  <ProductCard 
-                    key={product.slug} 
-                    product={product} 
+                  <ProductCard
+                    key={product.slug}
+                    product={product}
                     index={index}
-                    onAddToOrder={addToOrderFn || undefined}
+                    onAddToOrder={addToOrder}
                   />
                 ))}
               </div>

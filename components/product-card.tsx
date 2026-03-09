@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Plus, Minus } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,18 @@ import { generateWhatsAppLink } from "@/lib/whatsapp";
 interface ProductCardProps {
   product: Product;
   index?: number;
-  onAddToOrder?: (product: Product) => void;
+  onAddToOrder?: (product: Product, quantity?: number) => void;
 }
 
 export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardProps) {
+  const [quantity, setQuantity] = useState(1);
+
+  const handleAdd = () => {
+    if (onAddToOrder && quantity >= 1) {
+      onAddToOrder(product, quantity);
+      setQuantity(1);
+    }
+  };
 
   return (
     <motion.div
@@ -85,14 +94,42 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
         </CardContent>
         <CardFooter className="flex flex-col gap-2 p-4 pt-0">
           {onAddToOrder && (
-            <Button
-              onClick={() => onAddToOrder(product)}
-              variant="outline"
-              className="w-full border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white"
-            >
-              <ShoppingCart className="ml-2 h-4 w-4" />
-              أضف للطلبية
-            </Button>
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-muted-foreground">الكمية:</span>
+                <div className="flex items-center gap-1 border rounded-md">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-8 text-center text-sm font-semibold tabular-nums">
+                    {quantity}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <Button
+                onClick={handleAdd}
+                variant="outline"
+                className="w-full border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white"
+              >
+                <ShoppingCart className="ml-2 h-4 w-4" />
+                أضف للطلبية
+              </Button>
+            </div>
           )}
           <a
             href={generateWhatsAppLink(product.name, product.sku)}

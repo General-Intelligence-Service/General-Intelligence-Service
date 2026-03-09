@@ -6,7 +6,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // دعم أسماء الملفات العربية
     remotePatterns: [],
-    unoptimized: false,
+    unoptimized: true,
     // السماح بجميع أنواع الصور
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

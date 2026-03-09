@@ -1,100 +1,55 @@
 "use client";
 
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { Plus, Minus, Trash2, ShoppingCart, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Product } from "@/data/products";
-import { generatePDF } from "@/lib/pdf-generator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
 
-interface OrderItem {
-  product: Product;
-  quantity: number;
-}
-
-interface OrderCartProps {
-  products: Product[];
-  onAddToOrderReady?: (fn: (product: Product) => void) => void;
-}
-
-export interface OrderCartRef {
-  addToOrder: (product: Product) => void;
-}
-
-export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
-  ({ products, onAddToOrderReady }, ref) => {
-    const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
-
-    const addToOrder = (product: Product) => {
-    setOrderItems((prev) => {
-      const existing = prev.find((item) => item.product.slug === product.slug);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.slug === product.slug
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
-    });
-    setIsOpen(true);
-  };
-
-  const updateQuantity = (slug: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromOrder(slug);
-      return;
-    }
-    setOrderItems((prev) =>
-      prev.map((item) =>
-        item.product.slug === slug ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const removeFromOrder = (slug: string) => {
-    setOrderItems((prev) => prev.filter((item) => item.product.slug !== slug));
-  };
-
-  const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+export function OrderCart() {
+  const {
+    orderItems,
+    updateQuantity,
+    removeFromOrder,
+    clearOrder,
+    totalItems,
+    lastAddedName,
+    requesterName,
+    setRequesterName,
+  } = useOrder();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleExportPDF = async () => {
-    await generatePDF(orderItems, siteConfig);
-    setIsOpen(false);
-  };
-
-  useImperativeHandle(ref, () => ({
-    addToOrder,
-  }));
-
-  useEffect(() => {
-    if (onAddToOrderReady) {
-      onAddToOrderReady(addToOrder);
+    try {
+      const { generatePDF } = await import("@/lib/pdf-generator");
+      await generatePDF(orderItems, siteConfig, undefined, requesterName.trim() || undefined);
+      clearOrder();
+      setIsOpen(false);
+    } catch (e) {
+      console.error(e);
+      alert("حدث خطأ أثناء إنشاء ملف PDF");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  };
 
   return (
     <>
       {/* Floating Cart Button */}
       {totalItems > 0 && (
         <div className="fixed bottom-6 left-6 z-50">
-          <Button
+          <button
+            type="button"
             onClick={() => setIsOpen(true)}
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg"
+            className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-green to-brand-green-light shadow-xl shadow-brand-green/30 ring-2 ring-white/20 transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-brand-green/40 hover:ring-4 hover:ring-brand-gold/40 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold"
+            aria-label={`فتح طلبية الهدايا (${totalItems} قطعة)`}
           >
-            <ShoppingCart className="h-6 w-6" />
-            {totalItems > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center">
-                {totalItems}
-              </Badge>
-            )}
-          </Button>
+            <ShoppingCart className="h-7 w-7 text-white drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
+            <span className="absolute -top-1 -right-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-gold px-1.5 text-sm font-bold text-brand-green shadow-md ring-2 ring-white">
+              {totalItems}
+            </span>
+          </button>
         </div>
       )}
 
@@ -104,14 +59,21 @@ export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
           <div
             className="fixed inset-0 bg-black/50"
             onClick={() => setIsOpen(false)}
+            aria-hidden
           />
           <div className="relative ml-auto flex h-full w-full max-w-md flex-col bg-background shadow-xl">
             <div className="flex h-16 items-center justify-between border-b px-6">
               <h2 className="text-xl font-bold">طلبية الهدايا</h2>
+              {lastAddedName && (
+                <span className="text-sm text-green-600 font-medium animate-pulse">
+                  تمت إضافة: {lastAddedName}
+                </span>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
+                className="text-xl"
               >
                 ×
               </Button>
@@ -119,8 +81,11 @@ export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
 
             <div className="flex-1 overflow-y-auto p-6">
               {orderItems.length === 0 ? (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col h-full items-center justify-center gap-4 text-center">
                   <p className="text-muted-foreground">الطلبية فارغة</p>
+                  <Link href="/#products" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline">تصفح المنتجات</Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -138,6 +103,7 @@ export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
                             variant="ghost"
                             size="icon"
                             onClick={() => removeFromOrder(item.product.slug)}
+                            className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -183,8 +149,22 @@ export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
             </div>
 
             {orderItems.length > 0 && (
-              <div className="border-t p-6">
-                <div className="mb-4 flex items-center justify-between">
+              <div className="border-t p-6 space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="requester" className="text-sm font-medium text-foreground block text-right">
+                    الجهة الطالبة للهدية
+                  </label>
+                  <Input
+                    id="requester"
+                    type="text"
+                    placeholder="مثال: إدارة الموارد البشرية"
+                    value={requesterName}
+                    onChange={(e) => setRequesterName(e.target.value)}
+                    className="text-right placeholder:text-right"
+                    dir="rtl"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="font-semibold">إجمالي القطع:</span>
                   <span className="text-lg font-bold">{totalItems}</span>
                 </div>
@@ -201,12 +181,6 @@ export const OrderCart = forwardRef<OrderCartRef, OrderCartProps>(
           </div>
         </div>
       )}
-
-      {/* Add to Order Button for each product */}
-      <div className="hidden" id="order-cart-provider" />
     </>
   );
-});
-
-OrderCart.displayName = "OrderCart";
-
+}
