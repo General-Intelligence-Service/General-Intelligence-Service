@@ -9,11 +9,6 @@ import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
-function getCategoriesFromProducts(prods: Product[]): string[] {
-  const set = new Set<string>();
-  prods.forEach((p) => { if (p.category) set.add(p.category); });
-  return Array.from(set).sort();
-}
 import { useOrder } from "@/contexts/order-context";
 
 function HomeContent() {
@@ -21,7 +16,6 @@ function HomeContent() {
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -32,7 +26,6 @@ function HomeContent() {
   }, [searchParams]);
 
   const giftTiers = getAllGiftTiers();
-  const categories = useMemo(() => getCategoriesFromProducts(allProducts), [allProducts]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -115,11 +108,9 @@ function HomeContent() {
     return allProducts.filter((product) => {
       const matchesGiftTier =
         selectedGiftTier === null || product.giftTier === selectedGiftTier;
-      const matchesCategory =
-        selectedCategory === null || product.category === selectedCategory;
-      return matchesGiftTier && matchesCategory;
+      return matchesGiftTier;
     });
-  }, [allProducts, selectedGiftTier, selectedCategory]);
+  }, [allProducts, selectedGiftTier]);
 
   const searchLower = searchQuery.trim().toLowerCase();
   const searchSuggestions = useMemo(() => {
@@ -219,33 +210,7 @@ function HomeContent() {
             </div>
 
             {/* Filters */}
-            <div className="mb-8 space-y-4">
-              {/* أقسام / التصنيفات */}
-              {categories.length > 0 && (
-                <div>
-                  <p className="mb-3 text-base font-semibold text-foreground">الأقسام:</p>
-                  <div className="flex flex-wrap gap-3">
-                    <Badge
-                      variant={selectedCategory === null ? "default" : "outline"}
-                      className="cursor-pointer text-base px-4 py-1.5"
-                      onClick={() => setSelectedCategory(null)}
-                    >
-                      الكل
-                    </Badge>
-                    {categories.map((cat) => (
-                      <Badge
-                        key={cat}
-                        variant={selectedCategory === cat ? "default" : "outline"}
-                        className="cursor-pointer text-base px-4 py-1.5"
-                        onClick={() => setSelectedCategory(cat)}
-                      >
-                        {cat}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* تصنيف الهدايا */}
+            <div className="mb-8">
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
                 <div className="flex flex-wrap gap-3">
