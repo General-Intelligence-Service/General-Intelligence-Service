@@ -7,6 +7,6 @@ export const siteConfig = {
   instagram: "https://instagram.com/yourhandle",
   email: "info@example.com",
   /** رسالة الشريط العلوي (اتركها فارغة لإخفاء الشريط) */
-  announcement: "مواعيد استلام الطلبات: الأحد - الخميس من 9 صباحاً حتى 3 عصراً. نرحب بكم.",
+  announcement: "مواعيد استلام الطلبات: الأحد - الخميس من 8 صباحاً حتى 2 عصراً. نرحب بكم.",
 };
 
