@@ -41,12 +41,6 @@ export function Navbar() {
           >
             المنتجات
           </Link>
-          <Link
-            href="/dashboard"
-            className="text-base font-medium transition-colors hover:text-brand-green-dark"
-          >
-            لوحة التحكم
-          </Link>
         </div>
 
         {/* Mobile Navigation */}
@@ -71,13 +65,6 @@ export function Navbar() {
                 className="text-lg font-medium transition-colors hover:text-brand-green-dark"
               >
                 المنتجات
-              </Link>
-              <Link
-                href="/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-medium transition-colors hover:text-brand-green-dark"
-              >
-                لوحة التحكم
               </Link>
             </div>
           </SheetContent>
