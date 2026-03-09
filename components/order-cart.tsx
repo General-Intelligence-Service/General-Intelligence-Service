@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
+import { saveOrderToHistory } from "@/types/order";
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -65,6 +66,24 @@ export function OrderCart() {
           alert("تم تنزيل PDF، لكن إرسال البريد فشل.");
         }
       }
+
+      const orderId = `order-${Date.now()}`;
+      saveOrderToHistory({
+        id: orderId,
+        date: dateStr,
+        requesterName: reqName ?? "",
+        notes,
+        items: orderItems.map((item) => ({
+          slug: item.product.slug,
+          sku: item.product.sku,
+          name: item.product.name,
+          quantity: item.quantity,
+          giftTier: item.product.giftTier,
+          category: item.product.category,
+        })),
+        totalPieces: totalItems,
+        createdAt: new Date().toISOString(),
+      });
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

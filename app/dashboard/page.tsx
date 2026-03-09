@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3 } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, type GiftTier, getGiftTierLabel, generateNextSKU, products as initialProducts } from "@/data/products";
+import { getStoredOrders, type OrderRecord } from "@/types/order";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -21,6 +22,13 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [authOk, setAuthOk] = useState<boolean | null>(null);
   const [visitCount, setVisitCount] = useState<number>(0);
+  const [dashboardTab, setDashboardTab] = useState<"products" | "orders">("products");
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [reportMonth, setReportMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/session", { credentials: "include" })
@@ -54,8 +62,45 @@ export default function DashboardPage() {
     if (typeof window !== "undefined") {
       const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
       setVisitCount(n);
+      setOrders(getStoredOrders());
     }
   }, []);
+
+  const ordersForMonth = orders.filter((o) => {
+    const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);
+    return ym === reportMonth;
+  });
+
+  const monthLabel = (() => {
+    const [y, m] = reportMonth.split("-");
+    const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+    return date.toLocaleDateString("ar-SA", { year: "numeric", month: "long" });
+  })();
+
+  const handleDownloadMonthlyReport = async () => {
+    if (ordersForMonth.length === 0) {
+      alert("لا توجد طلبات في هذا الشهر.");
+      return;
+    }
+    setReportLoading(true);
+    try {
+      const { generateMonthlyReportBlob } = await import("@/lib/monthly-report-pdf");
+      const blob = await generateMonthlyReportBlob(ordersForMonth, monthLabel);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `تقرير-طلبات-${reportMonth}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert("حدث خطأ أثناء إنشاء التقرير.");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const refreshOrders = () => setOrders(getStoredOrders());
 
 
   useEffect(() => {
@@ -271,6 +316,90 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="mb-6 flex gap-2 border-b">
+            <button
+              type="button"
+              onClick={() => setDashboardTab("products")}
+              className={`px-4 py-2 font-medium transition-colors ${dashboardTab === "products" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              المنتجات
+            </button>
+            <button
+              type="button"
+              onClick={() => { setDashboardTab("orders"); refreshOrders(); }}
+              className={`px-4 py-2 font-medium transition-colors ${dashboardTab === "orders" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              <ClipboardList className="ml-2 inline h-4 w-4" />
+              الطلبات
+            </button>
+          </div>
+
+          {dashboardTab === "orders" && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" />
+                  الطلبات المسجلة
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">الشهر:</span>
+                    <input
+                      type="month"
+                      value={reportMonth}
+                      onChange={(e) => setReportMonth(e.target.value)}
+                      className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadMonthlyReport}
+                    disabled={ordersForMonth.length === 0 || reportLoading}
+                  >
+                    <FileText className="ml-2 h-4 w-4" />
+                    {reportLoading ? "جاري التصدير..." : "تحميل تقرير شهري PDF"}
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  عدد الطلبات في {monthLabel}: {ordersForMonth.length} — إجمالي القطع: {ordersForMonth.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
+                </p>
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full text-right text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2">#</th>
+                        <th className="p-2">التاريخ</th>
+                        <th className="p-2">الجهة الطالبة</th>
+                        <th className="p-2">القطع</th>
+                        <th className="p-2">ملاحظات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ordersForMonth.length === 0 ? (
+                        <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">لا توجد طلبات في هذا الشهر</td></tr>
+                      ) : (
+                        ordersForMonth.map((o, i) => (
+                          <tr key={o.id} className="border-t">
+                            <td className="p-2">{i + 1}</td>
+                            <td className="p-2">{o.date}</td>
+                            <td className="p-2">{o.requesterName || "—"}</td>
+                            <td className="p-2">{o.totalPieces ?? 0}</td>
+                            <td className="p-2 max-w-[200px] truncate">{o.notes || "—"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {dashboardTab === "products" && (
+          <>
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -385,6 +514,8 @@ export default function DashboardPage() {
                 {searchQuery ? "لم يتم العثور على منتجات تطابق البحث" : "لا توجد منتجات"}
               </p>
             </div>
+          )}
+          </>
           )}
         </div>
       </main>
