@@ -76,7 +76,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                placeholder="اختياري إذا لم تُضبط كلمة مرور"
                 className="text-left"
                 dir="ltr"
               />
