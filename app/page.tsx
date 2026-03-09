@@ -8,15 +8,22 @@ import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
+function getCategoriesFromProducts(prods: Product[]): string[] {
+  const set = new Set<string>();
+  prods.forEach((p) => { if (p.category) set.add(p.category); });
+  return Array.from(set).sort();
+}
 import { useOrder } from "@/contexts/order-context";
 
 export default function Home() {
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const giftTiers = getAllGiftTiers();
+  const categories = useMemo(() => getCategoriesFromProducts(allProducts), [allProducts]);
 
   // تحميل المنتجات من localStorage بعد mount على العميل فقط
   useEffect(() => {
@@ -90,9 +97,11 @@ export default function Home() {
     return allProducts.filter((product) => {
       const matchesGiftTier =
         selectedGiftTier === null || product.giftTier === selectedGiftTier;
-      return matchesGiftTier;
+      const matchesCategory =
+        selectedCategory === null || product.category === selectedCategory;
+      return matchesGiftTier && matchesCategory;
     });
-  }, [allProducts, selectedGiftTier]);
+  }, [allProducts, selectedGiftTier, selectedCategory]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -140,6 +149,31 @@ export default function Home() {
 
             {/* Filters */}
             <div className="mb-8 space-y-4">
+              {/* أقسام / التصنيفات */}
+              {categories.length > 0 && (
+                <div>
+                  <p className="mb-3 text-base font-semibold text-foreground">الأقسام:</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Badge
+                      variant={selectedCategory === null ? "default" : "outline"}
+                      className="cursor-pointer text-base px-4 py-1.5"
+                      onClick={() => setSelectedCategory(null)}
+                    >
+                      الكل
+                    </Badge>
+                    {categories.map((cat) => (
+                      <Badge
+                        key={cat}
+                        variant={selectedCategory === cat ? "default" : "outline"}
+                        className="cursor-pointer text-base px-4 py-1.5"
+                        onClick={() => setSelectedCategory(cat)}
+                      >
+                        {cat}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* تصنيف الهدايا */}
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
 import { defaultMetadata } from "./metadata";
+import { AuthProvider } from "@/contexts/auth-context";
 import { OrderLayoutClient } from "@/components/order-layout-client";
 
 const cairo = Cairo({
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html dir="rtl" lang="ar" className={cairo.variable}>
       <body className={`${cairo.className} antialiased`}>
-        <OrderLayoutClient>{children}</OrderLayoutClient>
+        <AuthProvider>
+          <OrderLayoutClient>{children}</OrderLayoutClient>
+        </AuthProvider>
       </body>
     </html>
   );

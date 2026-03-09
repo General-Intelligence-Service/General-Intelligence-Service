@@ -8,6 +8,37 @@ export interface OrderItem {
   quantity: number;
 }
 
+/** إنشاء مستند PDF وإرجاعه كـ Blob (لتحويله إلى base64 أو تحميله) */
+export async function generatePDFBlob(
+  orderItems: OrderItem[],
+  config: typeof siteConfig,
+  notes?: string,
+  requesterName?: string
+): Promise<Blob> {
+  const dateStr = new Date().toLocaleDateString("ar-SA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const logoUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/LOGO_PDF.png`
+      : undefined;
+
+  const doc = (
+    <OrderPDFDocument
+      orderItems={orderItems}
+      config={config}
+      notes={notes}
+      dateStr={dateStr}
+      logoUrl={logoUrl}
+      requesterName={requesterName?.trim() || undefined}
+    />
+  );
+
+  return pdf(doc).toBlob();
+}
+
 export async function generatePDF(
   orderItems: OrderItem[],
   config: typeof siteConfig,
@@ -15,28 +46,7 @@ export async function generatePDF(
   requesterName?: string
 ): Promise<void> {
   try {
-    const dateStr = new Date().toLocaleDateString("ar-SA", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-    const logoUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/LOGO_PDF.png`
-        : undefined;
-
-    const doc = (
-      <OrderPDFDocument
-        orderItems={orderItems}
-        config={config}
-        notes={notes}
-        dateStr={dateStr}
-        logoUrl={logoUrl}
-        requesterName={requesterName?.trim() || undefined}
-      />
-    );
-
-    const blob = await pdf(doc).toBlob();
+    const blob = await generatePDFBlob(orderItems, config, notes, requesterName);
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

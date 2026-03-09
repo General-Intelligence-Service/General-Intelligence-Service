@@ -2,12 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Minus, Trash2, ShoppingCart, FileText } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
+import type { OrderItemPayload } from "@/types/order";
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1] ?? "");
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 export function OrderCart() {
   const {
@@ -19,18 +32,83 @@ export function OrderCart() {
     lastAddedName,
     requesterName,
     setRequesterName,
+    orderNotes,
   } = useOrder();
   const [isOpen, setIsOpen] = useState(false);
+  const [sendByEmail, setSendByEmail] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleExportPDF = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      const { generatePDF } = await import("@/lib/pdf-generator");
-      await generatePDF(orderItems, siteConfig, undefined, requesterName.trim() || undefined);
+      const notes = orderNotes?.trim() || undefined;
+      const reqName = requesterName.trim() || undefined;
+
+      const payload = {
+        date: new Date().toISOString().split("T")[0],
+        requesterName: reqName ?? "",
+        notes,
+        items: orderItems.map((item): OrderItemPayload => ({
+          slug: item.product.slug,
+          sku: item.product.sku,
+          name: item.product.name,
+          quantity: item.quantity,
+          giftTier: item.product.giftTier,
+          category: item.product.category,
+        })),
+        totalPieces: totalItems,
+        createdAt: new Date().toISOString(),
+      };
+
+      let orderId: string | undefined;
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok) orderId = data.orderId;
+      } catch {
+        orderId = undefined;
+      }
+      const { generatePDFBlob } = await import("@/lib/pdf-generator");
+      const blob = await generatePDFBlob(orderItems, siteConfig, notes, reqName ?? undefined);
+
+      if (sendByEmail && (emailTo.trim() || true)) {
+        try {
+          const pdfBase64 = await blobToBase64(blob);
+          await fetch("/api/orders/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: emailTo.trim() || undefined,
+              pdfBase64,
+              orderId,
+            }),
+          });
+        } catch (e) {
+          console.error("Send email failed:", e);
+          alert("تم حفظ الطلبية وتنزيل PDF، لكن إرسال البريد فشل.");
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `طلبية-هدايا-${payload.date}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
       clearOrder();
       setIsOpen(false);
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ أثناء إنشاء ملف PDF");
+      alert("حدث خطأ أثناء إنشاء ملف PDF أو حفظ الطلبية");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -168,13 +246,36 @@ export function OrderCart() {
                   <span className="font-semibold">إجمالي القطع:</span>
                   <span className="text-lg font-bold">{totalItems}</span>
                 </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={sendByEmail}
+                      onChange={(e) => setSendByEmail(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    إرسال نسخة PDF بالبريد
+                  </label>
+                  {sendByEmail && (
+                    <Input
+                      type="email"
+                      placeholder="البريد المستلم (اختياري - يُستخدم البريد الافتراضي)"
+                      value={emailTo}
+                      onChange={(e) => setEmailTo(e.target.value)}
+                      className="text-right"
+                      dir="rtl"
+                    />
+                  )}
+                </div>
                 <Button
                   onClick={handleExportPDF}
                   className="w-full"
                   size="lg"
+                  disabled={isSubmitting}
                 >
                   <FileText className="ml-2 h-5 w-5" />
-                  تصدير PDF
+                  {isSubmitting ? "جاري الحفظ..." : "إرسال الطلب وتصدير PDF"}
                 </Button>
               </div>
             )}
