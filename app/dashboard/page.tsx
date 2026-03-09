@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Package, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Edit, Trash2, Package, Search, LogOut } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -12,11 +13,26 @@ import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, type GiftTier, getGiftTierLabel, generateNextSKU, products as initialProducts } from "@/data/products";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [authOk, setAuthOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/session", { credentials: "include" })
+      .then((res) => {
+        if (res.ok) setAuthOk(true);
+        else setAuthOk(false);
+      })
+      .catch(() => setAuthOk(false));
+  }, []);
+
+  useEffect(() => {
+    if (authOk === false) router.replace("/login");
+  }, [authOk, router]);
 
   useEffect(() => {
     setMounted(true);
@@ -145,6 +161,23 @@ export default function DashboardPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    router.replace("/login");
+  };
+
+  if (authOk === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">جاري التحقق...</p>
+      </div>
+    );
+  }
+
+  if (authOk === false) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -155,10 +188,16 @@ export default function DashboardPage() {
               <h1 className="mb-2 text-3xl font-bold">لوحة التحكم</h1>
               <p className="text-muted-foreground">إدارة المنتجات والهدايا المعروضة</p>
             </div>
-            <Button onClick={handleAddProduct} size="lg">
-              <Plus className="ml-2 h-5 w-5" />
-              إضافة منتج جديد
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleAddProduct} size="lg">
+                <Plus className="ml-2 h-5 w-5" />
+                إضافة منتج جديد
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleLogout} title="تسجيل الخروج">
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">تسجيل الخروج</span>
+              </Button>
+            </div>
           </div>
 
           <Card className="mb-6">
