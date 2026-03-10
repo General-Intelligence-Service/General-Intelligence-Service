@@ -286,33 +286,6 @@ export default function ProductPage({ params }: ProductPageProps) {
                   <p className="text-base text-muted-foreground">
                     كود المنتج: <span className="font-semibold">{product.sku}</span>
                   </p>
-                  {product.availableQuantity !== undefined && (
-                    <div className="mt-4 flex items-center gap-2">
-                      <span className="text-base font-medium text-muted-foreground">
-                        الكمية المتوفرة:
-                      </span>
-                      <Badge
-                        variant={
-                          product.availableQuantity > 5
-                            ? "default"
-                            : product.availableQuantity > 0
-                            ? "secondary"
-                            : "destructive"
-                        }
-                        className={
-                          product.availableQuantity > 5
-                            ? "bg-brand-green-dark"
-                            : product.availableQuantity > 0
-                            ? "bg-brand-gold text-white"
-                            : ""
-                        }
-                      >
-                        {product.availableQuantity > 0
-                          ? `${product.availableQuantity} قطعة`
-                          : "غير متوفر"}
-                      </Badge>
-                    </div>
-                  )}
                 </div>
 
                 <Separator />

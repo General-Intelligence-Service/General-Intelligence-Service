@@ -222,25 +222,6 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
             </div>
           </div>
 
-          {/* الكمية المتوفرة */}
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              الكمية المتوفرة *
-            </label>
-            <Input
-              type="number"
-              value={formData.availableQuantity || 0}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  availableQuantity: parseInt(e.target.value) || 0,
-                })
-              }
-              required
-              min="0"
-            />
-          </div>
-
           {/* المحتويات */}
           <div>
             <label className="mb-2 block text-sm font-medium">محتويات الهدية</label>

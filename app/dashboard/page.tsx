@@ -295,13 +295,12 @@ export default function DashboardPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = ["الاسم", "الكود", "التصنيف", "الفئة", "الكمية المتوفرة", "السعر", "الوصف"];
+    const headers = ["الاسم", "الكود", "التصنيف", "الفئة", "السعر", "الوصف"];
     const rows = products.map((p) => [
       p.name,
       p.sku,
       getGiftTierLabel(p.giftTier),
       p.category ?? "",
-      p.availableQuantity ?? 0,
       p.price ?? "",
       (p.shortDescription ?? "").replace(/\s+/g, " "),
     ]);
@@ -667,11 +666,6 @@ export default function DashboardPage() {
                     {product.shortDescription}
                   </p>
                   <div className="mb-4 space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">الكمية المتوفرة:</span>
-                      <span className="font-semibold">{product.availableQuantity || 0} قطعة</span>
-                    </div>
                     <div className="text-sm text-muted-foreground">
                       <span className="font-medium">المحتويات:</span>
                       <ul className="mt-1 list-inside list-disc space-y-1">
