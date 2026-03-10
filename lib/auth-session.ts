@@ -90,12 +90,17 @@ export function isAllowedEmail(email: string): boolean {
 function parseAdminCredentials(): Record<string, string> {
   const raw = (process.env.ADMIN_CREDENTIALS ?? "").trim();
   if (!raw) return {};
-  const pairs = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  // Support comma/newline/semicolon separated pairs (Vercel UI sometimes uses new lines)
+  const pairs = raw
+    .split(/[,;\n\r]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
   const out: Record<string, string> = {};
   for (const p of pairs) {
     const idx = p.indexOf(":");
     if (idx <= 0) continue;
     const email = p.slice(0, idx).trim().toLowerCase();
+    // Keep internal spaces, but ignore accidental leading/trailing spaces
     const pass = p.slice(idx + 1).trim();
     if (email && pass) out[email] = pass;
   }
@@ -104,7 +109,7 @@ function parseAdminCredentials(): Record<string, string> {
 
 export function checkAdminPassword(email: string, password: string): boolean {
   const e = email.trim().toLowerCase();
-  const pass = password ?? "";
+  const pass = (password ?? "").trim();
   const map = parseAdminCredentials();
   if (map[e] !== undefined) {
     return pass === map[e];

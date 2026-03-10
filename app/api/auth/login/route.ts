@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const pass = typeof password === "string" ? password : "";
+    const pass = typeof password === "string" ? password.trim() : "";
 
     if (!isAllowedEmail(email)) {
       return NextResponse.json(
