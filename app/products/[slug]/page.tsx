@@ -26,7 +26,6 @@ interface ProductPageProps {
 export default function ProductPage({ params }: ProductPageProps) {
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<Product | undefined>(undefined);
   const [orderQty, setOrderQty] = useState(1);
@@ -177,72 +176,52 @@ export default function ProductPage({ params }: ProductPageProps) {
         <section className="py-6 sm:py-8 md:py-16">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
-              {/* Images */}
+              {/* Images - شبكة 4 صور */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
                 className="space-y-4"
               >
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-lg">
-                  {product.images && product.images.length > 0 && (product.images[selectedImageIndex] || product.images[0]) ? (
-                    <Image
-                      src={product.images[selectedImageIndex] || product.images[0]}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      className="object-cover transition-opacity duration-300"
-                      priority
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="flex h-full w-full items-center justify-center text-muted-foreground"><span>لا توجد صورة</span></div>';
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                      <span>لا توجد صورة</span>
-                    </div>
-                  )}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  {[0, 1, 2, 3].map((slotIndex) => {
+                    const imgSrc = product.images?.length
+                      ? product.images[Math.min(slotIndex, product.images.length - 1)]
+                      : null;
+                    return (
+                      <div
+                        key={slotIndex}
+                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md"
+                      >
+                        {imgSrc ? (
+                          <Image
+                            src={imgSrc}
+                            alt={`${product.name} - ${slotIndex + 1}`}
+                            fill
+                            sizes="(max-width: 1024px) 50vw, 25vw"
+                            className="object-cover transition-opacity duration-300"
+                            loading={slotIndex < 2 ? "eager" : "lazy"}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              const parent = target.parentElement;
+                              if (parent && !parent.querySelector(".fallback-text")) {
+                                const fallback = document.createElement("div");
+                                fallback.className = "fallback-text flex h-full w-full items-center justify-center text-muted-foreground text-sm";
+                                fallback.textContent = "لا توجد صورة";
+                                parent.appendChild(fallback);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-muted-foreground text-sm">
+                            لا توجد صورة
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                {product.images.length > 1 && (
-                  <div className="space-y-2">
-                    <p className="text-base font-medium text-muted-foreground">
-                      اختر صورة ({selectedImageIndex + 1} من {product.images.length})
-                    </p>
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                      {product.images && product.images.length > 0 && product.images.map((image, index) => (
-                        image ? (
-                          <button
-                            key={index}
-                            onClick={() => setSelectedImageIndex(index)}
-                            className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all cursor-pointer ${
-                              selectedImageIndex === index
-                                ? "border-brand-green-dark ring-2 ring-brand-green-dark ring-offset-2 scale-105"
-                                : "border-transparent hover:border-brand-green-dark/50 hover:scale-105"
-                            }`}
-                          >
-                            <Image
-                              src={image}
-                              alt={`${product.name} - ${index + 1}`}
-                              fill
-                              sizes="(max-width: 640px) 25vw, 20vw"
-                              className="object-cover"
-                              loading="lazy"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                              }}
-                            />
-                          </button>
-                        ) : null
-                      ))}
-                    </div>
-                  </div>
-                )}
               </motion.div>
 
               {/* Product Info */}
