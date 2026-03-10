@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!checkAdminPassword(pass)) {
+    if (!checkAdminPassword(email, pass)) {
       return NextResponse.json(
         { success: false, error: "كلمة المرور غير صحيحة" },
         { status: 401 }

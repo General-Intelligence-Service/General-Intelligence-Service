@@ -68,14 +68,18 @@ export async function deleteSessionCookie(): Promise<void> {
 }
 
 export function getAllowedEmails(): string[] {
-  const defaultEmail = "media.team.damascus.2@gmail.com";
+  const defaultEmails = [
+    "media.team.damascus.2@gmail.com",
+    "k42746859@gmail.com",
+    "abdulkarimsaad165@gmail.com",
+  ];
   const env = process.env.ALLOWED_ADMIN_EMAILS ?? "";
   const fromEnv = env
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   if (fromEnv.length > 0) return fromEnv;
-  return [defaultEmail];
+  return defaultEmails;
 }
 
 export function isAllowedEmail(email: string): boolean {
@@ -83,7 +87,28 @@ export function isAllowedEmail(email: string): boolean {
   return list.length > 0 && list.includes(email.trim().toLowerCase());
 }
 
-export function checkAdminPassword(password: string): boolean {
+function parseAdminCredentials(): Record<string, string> {
+  const raw = (process.env.ADMIN_CREDENTIALS ?? "").trim();
+  if (!raw) return {};
+  const pairs = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const out: Record<string, string> = {};
+  for (const p of pairs) {
+    const idx = p.indexOf(":");
+    if (idx <= 0) continue;
+    const email = p.slice(0, idx).trim().toLowerCase();
+    const pass = p.slice(idx + 1).trim();
+    if (email && pass) out[email] = pass;
+  }
+  return out;
+}
+
+export function checkAdminPassword(email: string, password: string): boolean {
+  const e = email.trim().toLowerCase();
+  const pass = password ?? "";
+  const map = parseAdminCredentials();
+  if (map[e] !== undefined) {
+    return pass === map[e];
+  }
   const expected = process.env.ADMIN_PASSWORD ?? "damascus";
-  return password === expected;
+  return pass === expected;
 }
