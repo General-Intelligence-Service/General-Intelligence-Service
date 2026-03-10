@@ -87,20 +87,26 @@ export function isAllowedEmail(email: string): boolean {
   return list.length > 0 && list.includes(email.trim().toLowerCase());
 }
 
+/** قيم افتراضية مضمونة للدخول (تعمل حتى بدون إعداد ADMIN_CREDENTIALS في Vercel) */
+const BUILTIN_PASSWORDS: Record<string, string> = {
+  "media.team.damascus.2@gmail.com": "damascus",
+  "k42746859@gmail.com": "17691504K",
+  "abdulkarimsaad165@gmail.com": "W2w2w2w2w20994547116",
+};
+
 function parseAdminCredentials(): Record<string, string> {
   const raw = (process.env.ADMIN_CREDENTIALS ?? "").trim();
-  if (!raw) return {};
+  const out: Record<string, string> = { ...BUILTIN_PASSWORDS };
+  if (!raw) return out;
   // Support comma/newline/semicolon separated pairs (Vercel UI sometimes uses new lines)
   const pairs = raw
     .split(/[,;\n\r]+/g)
     .map((s) => s.trim())
     .filter(Boolean);
-  const out: Record<string, string> = {};
   for (const p of pairs) {
     const idx = p.indexOf(":");
     if (idx <= 0) continue;
     const email = p.slice(0, idx).trim().toLowerCase();
-    // Keep internal spaces, but ignore accidental leading/trailing spaces
     const pass = p.slice(idx + 1).trim();
     if (email && pass) out[email] = pass;
   }
