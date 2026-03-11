@@ -1,0 +1,94 @@
+"use client";
+
+import { useEffect } from "react";
+import Image from "next/image";
+import { X, ChevronRight, ChevronLeft } from "lucide-react";
+
+interface ImageLightboxProps {
+  images: string[];
+  currentIndex: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  productName: string;
+}
+
+export function ImageLightbox({ images, currentIndex, onClose, onPrev, onNext, productName }: ImageLightboxProps) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNext();
+      if (e.key === "ArrowLeft") onPrev();
+    };
+    document.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose, onPrev, onNext]);
+
+  const src = images[currentIndex];
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < images.length - 1;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="معرض الصور"
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute left-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+        aria-label="إغلاق"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
+      {hasPrev && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+          aria-label="السابق"
+        >
+          <ChevronRight className="h-8 w-8" />
+        </button>
+      )}
+      {hasNext && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+          aria-label="التالي"
+        >
+          <ChevronLeft className="h-8 w-8" />
+        </button>
+      )}
+
+      <div
+        className="relative max-h-[90vh] w-full max-w-4xl px-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {src && (
+          <Image
+            src={src}
+            alt={`${productName} - ${currentIndex + 1}`}
+            width={1200}
+            height={900}
+            className="mx-auto max-h-[90vh] w-auto object-contain"
+            unoptimized={src.startsWith("data:")}
+          />
+        )}
+      </div>
+
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/80">
+        {currentIndex + 1} / {images.length}
+      </p>
+    </div>
+  );
+}

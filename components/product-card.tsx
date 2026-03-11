@@ -10,14 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Product, getGiftTierLabel } from "@/data/products";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 
 interface ProductCardProps {
   product: Product;
   index?: number;
   onAddToOrder?: (product: Product, quantity?: number) => void;
+  onQuickView?: (product: Product) => void;
 }
 
-export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardProps) {
+export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [showAdded, setShowAdded] = useState(false);
 
@@ -51,6 +53,8 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover transition-transform duration-300 group-hover:scale-110"
                   loading="lazy"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -94,6 +98,15 @@ export function ProductCard({ product, index = 0, onAddToOrder }: ProductCardPro
             {product.shortDescription}
           </p>
           <p className="text-base text-muted-foreground">كود: {product.sku}</p>
+          {onQuickView && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onQuickView(product); }}
+              className="text-sm font-medium text-primary hover:underline mt-1"
+            >
+              عرض سريع
+            </button>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col gap-2 p-3 sm:p-4 pt-0">
           {onAddToOrder && (

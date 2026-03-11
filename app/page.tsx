@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
+import { QuickViewModal } from "@/components/quick-view-modal";
 import { Badge } from "@/components/ui/badge";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
 import { useOrder } from "@/contexts/order-context";
@@ -20,6 +21,7 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -276,6 +278,7 @@ function HomeContent() {
                     product={product}
                     index={index}
                     onAddToOrder={addToOrder}
+                    onQuickView={setQuickViewProduct}
                   />
                 ))}
               </div>
@@ -290,6 +293,14 @@ function HomeContent() {
         </section>
 
       </main>
+
+      {quickViewProduct && (
+        <QuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToOrder={addToOrder}
+        />
+      )}
 
       <Footer />
     </div>

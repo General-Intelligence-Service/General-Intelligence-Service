@@ -16,6 +16,8 @@ import { ProductCard } from "@/components/product-card";
 import { getProductBySlug, products as initialProducts, getGiftTierLabel, type Product } from "@/data/products";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { useOrder } from "@/contexts/order-context";
+import { ImageLightbox } from "@/components/image-lightbox";
+import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 
 interface ProductPageProps {
   params: {
@@ -31,6 +33,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [orderQty, setOrderQty] = useState(1);
   const [shareDone, setShareDone] = useState(false);
   const [orderAdded, setOrderAdded] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const handleShare = async () => {
     if (!product) return;
@@ -188,10 +192,18 @@ export default function ProductPage({ params }: ProductPageProps) {
                     const imgSrc = product.images?.length
                       ? product.images[Math.min(slotIndex, product.images.length - 1)]
                       : null;
+                    const imageIndex = Math.min(slotIndex, (product.images?.length ?? 1) - 1);
                     return (
-                      <div
+                      <button
                         key={slotIndex}
-                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md"
+                        type="button"
+                        onClick={() => {
+                          if (product.images?.length) {
+                            setLightboxIndex(imageIndex);
+                            setLightboxOpen(true);
+                          }
+                        }}
+                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {imgSrc ? (
                           <Image
@@ -201,6 +213,8 @@ export default function ProductPage({ params }: ProductPageProps) {
                             sizes="(max-width: 1024px) 50vw, 25vw"
                             className="object-cover transition-opacity duration-300"
                             loading={slotIndex < 2 ? "eager" : "lazy"}
+                            placeholder="blur"
+                            blurDataURL={BLUR_DATA_URL}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
@@ -218,10 +232,20 @@ export default function ProductPage({ params }: ProductPageProps) {
                             لا توجد صورة
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
+                {lightboxOpen && product.images?.length ? (
+                  <ImageLightbox
+                    images={product.images}
+                    currentIndex={lightboxIndex}
+                    onClose={() => setLightboxOpen(false)}
+                    onPrev={() => setLightboxIndex((i) => Math.max(0, i - 1))}
+                    onNext={() => setLightboxIndex((i) => Math.min(product.images!.length - 1, i + 1))}
+                    productName={product.name}
+                  />
+                ) : null}
               </motion.div>
 
               {/* Product Info */}

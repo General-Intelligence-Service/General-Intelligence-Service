@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail, Save, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,17 @@ export function OrderCart() {
       setDraftExists(!!getOrderDraft());
     }
   }, [isOpen, orderItems.length]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (orderItems.length > 0) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [orderItems.length]);
 
   const handleSaveDraft = () => {
     if (orderItems.length === 0) return;
@@ -158,7 +170,11 @@ export function OrderCart() {
     <>
       {/* Floating Cart Button */}
       {totalItems > 0 && (
-        <div className="fixed bottom-6 left-6 z-50">
+        <motion.div
+          className="fixed bottom-6 left-6 z-50"
+          animate={{ scale: lastAddedName ? 1.2 : 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
           <button
             type="button"
             onClick={() => setIsOpen(true)}
@@ -170,7 +186,7 @@ export function OrderCart() {
               {totalItems}
             </span>
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Order Cart Sidebar */}
@@ -182,7 +198,7 @@ export function OrderCart() {
             aria-hidden
           />
           <div className="relative ml-auto flex h-full w-full max-w-md flex-col bg-background shadow-xl">
-            <div className="flex h-16 items-center justify-between border-b px-6">
+            <div className="flex h-14 sm:h-16 items-center justify-between border-b px-4 sm:px-6">
               <h2 className="text-xl font-bold">طلبية الهدايا</h2>
               {lastAddedName && (
                 <span className="text-sm text-green-600 font-medium animate-pulse">
@@ -199,7 +215,7 @@ export function OrderCart() {
               </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               {orderItems.length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center gap-4 text-center">
                   {draftExists && (
@@ -217,14 +233,14 @@ export function OrderCart() {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {orderItems.map((item) => (
                     <Card key={item.product.slug}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{item.product.name}</h3>
-                            <p className="text-sm text-muted-foreground">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm sm:text-base truncate">{item.product.name}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               كود: {item.product.sku}
                             </p>
                           </div>
@@ -232,17 +248,17 @@ export function OrderCart() {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeFromOrder(item.product.slug)}
-                            className="text-destructive hover:text-destructive"
+                            className="h-10 w-10 sm:h-8 sm:w-8 shrink-0 text-destructive hover:text-destructive touch-manipulation"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                         <div className="mt-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
                               onClick={() =>
                                 updateQuantity(
                                   item.product.slug,
@@ -258,7 +274,7 @@ export function OrderCart() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
                               onClick={() =>
                                 updateQuantity(
                                   item.product.slug,
@@ -278,7 +294,7 @@ export function OrderCart() {
             </div>
 
             {orderItems.length > 0 && (
-              <div className="border-t p-6 space-y-4">
+              <div className="border-t p-4 sm:p-6 space-y-3 sm:space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="requester" className="text-sm font-medium text-foreground block text-right">
                     الجهة الطالبة للهدية
@@ -325,7 +341,7 @@ export function OrderCart() {
                 </div>
                 <Button
                   onClick={handleExportPDF}
-                  className="w-full"
+                  className="w-full min-h-12 sm:min-h-10 touch-manipulation"
                   size="lg"
                   disabled={isSubmitting}
                 >
