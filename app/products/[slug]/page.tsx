@@ -203,7 +203,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                             setLightboxOpen(true);
                           }
                         }}
-                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary transition-shadow duration-200 hover:shadow-lg"
                       >
                         {imgSrc ? (
                           <Image
@@ -280,7 +280,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                       variant="outline"
                       size="sm"
                       onClick={handleShare}
-                      className="shrink-0"
+                      className="shrink-0 min-h-[44px]"
                     >
                       <Share2 className="ml-2 h-4 w-4" />
                       {shareDone ? "تم النسخ!" : "مشاركة"}
@@ -326,7 +326,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => setOrderQty((q) => Math.max(1, q - 1))}
                       >
                         <Minus className="h-5 w-5" />
@@ -338,15 +338,15 @@ export default function ProductPage({ params }: ProductPageProps) {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10"
+                        className="min-h-[44px] min-w-[44px]"
                         onClick={() => setOrderQty((q) => Math.min(99, q + 1))}
                       >
                         <Plus className="h-5 w-5" />
                       </Button>
                     </div>
                     {orderAdded ? (
-                      <div className="flex h-11 items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 px-6 text-sm font-medium text-green-700">
-                        <Check className="h-5 w-5" />
+                      <div className="flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 px-6 py-3 text-sm font-medium text-green-700 transition-colors duration-200">
+                        <Check className="h-5 w-5 shrink-0" />
                         تمت الإضافة
                       </div>
                     ) : (
@@ -357,9 +357,9 @@ export default function ProductPage({ params }: ProductPageProps) {
                           setTimeout(() => setOrderAdded(false), 2200);
                         }}
                         variant="outline"
-                        className="border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white h-11 px-6"
+                        className="min-h-[44px] border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white hover:shadow-md active:bg-brand-gold/90 px-6"
                       >
-                        <ShoppingCart className="ml-2 h-5 w-5" />
+                        <ShoppingCart className="ml-2 h-5 w-5 shrink-0" />
                         أضف للطلبية
                       </Button>
                     )}
@@ -372,7 +372,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   href={generateWhatsAppLink(product.name, product.sku)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker h-11 rounded-md px-8"
+                  className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] active:shadow-inner min-h-[44px] h-12 rounded-md px-8 touch-manipulation"
                 >
                   استفسر عن المنتج
                 </a>

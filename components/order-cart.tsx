@@ -193,7 +193,7 @@ export function OrderCart() {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/50"
+            className="fixed inset-0 bg-black/50 transition-opacity duration-200"
             onClick={() => setIsOpen(false)}
             aria-hidden
           />
@@ -248,7 +248,7 @@ export function OrderCart() {
                             variant="ghost"
                             size="icon"
                             onClick={() => removeFromOrder(item.product.slug)}
-                            className="h-10 w-10 sm:h-8 sm:w-8 shrink-0 text-destructive hover:text-destructive touch-manipulation"
+                            className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 shrink-0 text-destructive hover:text-destructive touch-manipulation"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -258,7 +258,7 @@ export function OrderCart() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
+                              className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 touch-manipulation"
                               onClick={() =>
                                 updateQuantity(
                                   item.product.slug,
@@ -274,7 +274,7 @@ export function OrderCart() {
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-10 w-10 sm:h-8 sm:w-8 touch-manipulation"
+                              className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 touch-manipulation"
                               onClick={() =>
                                 updateQuantity(
                                   item.product.slug,
@@ -341,7 +341,7 @@ export function OrderCart() {
                 </div>
                 <Button
                   onClick={handleExportPDF}
-                  className="w-full min-h-12 sm:min-h-10 touch-manipulation"
+                  className="w-full min-h-[44px] touch-manipulation"
                   size="lg"
                   disabled={isSubmitting}
                 >

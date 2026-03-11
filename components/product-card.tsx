@@ -41,7 +41,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
       whileHover={{ y: -8 }}
       className="h-full"
     >
-      <Card className="group h-full overflow-hidden transition-shadow hover:shadow-lg">
+      <Card className="group h-full overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
         <Link href={`/products/${product.slug}`}>
           <CardHeader className="p-0">
             <div className="relative aspect-square w-full overflow-hidden bg-muted">
@@ -75,7 +75,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
         <CardContent className="p-3 sm:p-4">
           <div className="mb-2 flex items-start justify-between gap-2">
             <Link href={`/products/${product.slug}`}>
-              <h3 className="text-xl font-semibold leading-tight hover:text-brand-green-dark">
+              <h3 className="text-xl font-semibold leading-tight transition-colors duration-200 hover:text-brand-green-dark">
                 {product.name}
               </h3>
             </Link>
@@ -102,13 +102,13 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); onQuickView(product); }}
-              className="text-sm font-medium text-primary hover:underline mt-1"
+              className="text-sm font-medium text-primary hover:underline mt-1 transition-colors duration-200 active:opacity-80 min-h-[44px] px-3 py-2 inline-flex items-center justify-center rounded-md hover:bg-primary/5"
             >
               عرض سريع
             </button>
           )}
         </CardContent>
-        <CardFooter className="flex flex-col gap-2 p-3 sm:p-4 pt-0">
+        <CardFooter className="flex flex-col gap-3 p-3 sm:p-4 pt-0">
           {onAddToOrder && (
             <div className="flex flex-col gap-2 w-full">
               <div className="flex items-center justify-between gap-2">
@@ -118,19 +118,19 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation"
+                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 shrink-0 touch-manipulation"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="w-8 text-center text-sm font-semibold tabular-nums">
+                  <span className="w-10 text-center text-sm font-semibold tabular-nums">
                     {quantity}
                   </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation"
+                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 shrink-0 touch-manipulation"
                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                   >
                     <Plus className="h-4 w-4" />
@@ -138,17 +138,17 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
                 </div>
               </div>
               {showAdded ? (
-                <div className="flex items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 py-2.5 text-sm font-medium text-green-700">
-                  <Check className="h-4 w-4" />
+                <div className="flex items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 py-3 text-sm font-medium text-green-700 min-h-[44px] transition-colors duration-200">
+                  <Check className="h-4 w-4 shrink-0" />
                   تمت الإضافة
                 </div>
               ) : (
                 <Button
                   onClick={handleAdd}
                   variant="outline"
-                  className="w-full border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white"
+                  className="w-full min-h-[44px] border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white hover:shadow-md active:bg-brand-gold/90"
                 >
-                  <ShoppingCart className="ml-2 h-4 w-4" />
+                  <ShoppingCart className="ml-2 h-4 w-4 shrink-0" />
                   أضف للطلبية
                 </Button>
               )}
@@ -158,7 +158,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
             href={generateWhatsAppLink(product.name, product.sku)}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker h-12 sm:h-11 rounded-md px-5 py-3 sm:py-2 touch-manipulation"
+            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] active:shadow-inner min-h-[44px] h-12 rounded-md px-5 py-3 touch-manipulation"
           >
             استفسر عن المنتج
           </a>

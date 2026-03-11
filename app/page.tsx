@@ -229,7 +229,7 @@ function HomeContent() {
                 <div className="flex flex-wrap gap-3">
                   <Badge
                     variant={selectedGiftTier === null ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-1.5"
+                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                     onClick={() => setSelectedGiftTier(null)}
                   >
                     الكل
@@ -240,7 +240,7 @@ function HomeContent() {
                       variant={
                         selectedGiftTier === tier ? "default" : "outline"
                       }
-                      className="cursor-pointer text-base px-4 py-1.5"
+                      className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                       onClick={() => setSelectedGiftTier(tier)}
                     >
                       {getGiftTierLabel(tier)}
@@ -250,17 +250,17 @@ function HomeContent() {
               </div>
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">ترتيب:</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   <Badge
                     variant={sortOrder === "name-asc" ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-1.5"
+                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                     onClick={() => setSortOrder("name-asc")}
                   >
                     الاسم (أ → ي)
                   </Badge>
                   <Badge
                     variant={sortOrder === "name-desc" ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-1.5"
+                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                     onClick={() => setSortOrder("name-desc")}
                   >
                     الاسم (ي → أ)

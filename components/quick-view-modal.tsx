@@ -27,7 +27,7 @@ export function QuickViewModal({ product, onClose, onAddToOrder }: QuickViewModa
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -40,7 +40,7 @@ export function QuickViewModal({ product, onClose, onAddToOrder }: QuickViewModa
         <button
           type="button"
           onClick={onClose}
-          className="absolute left-3 top-3 z-10 rounded-full bg-background/80 p-2 shadow hover:bg-muted"
+          className="absolute left-3 top-3 z-10 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-background/80 p-2 shadow transition-all duration-200 hover:bg-muted hover:shadow-md active:scale-95"
           aria-label="إغلاق"
         >
           <X className="h-5 w-5" />
@@ -69,31 +69,31 @@ export function QuickViewModal({ product, onClose, onAddToOrder }: QuickViewModa
             <h2 className="text-xl font-bold">{product.name}</h2>
             <p className="text-sm text-muted-foreground">كود: {product.sku}</p>
             <p className="text-sm text-muted-foreground line-clamp-3">{product.shortDescription}</p>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <div className="flex items-center gap-1 border rounded-md">
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty((n) => Math.max(1, n - 1))}>
+                <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => setQty((n) => Math.max(1, n - 1))}>
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="w-8 text-center text-sm font-semibold">{qty}</span>
-                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setQty((n) => Math.min(99, n + 1))}>
+                <span className="w-10 text-center text-sm font-semibold">{qty}</span>
+                <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => setQty((n) => Math.min(99, n + 1))}>
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
               {added ? (
-                <span className="text-sm font-medium text-green-600">تمت الإضافة</span>
+                <span className="min-h-[44px] inline-flex items-center text-sm font-medium text-green-600">تمت الإضافة</span>
               ) : (
-                <Button size="sm" onClick={handleAdd} className="border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white">
+                <Button size="sm" onClick={handleAdd} className="min-h-[44px] border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white hover:shadow-md active:bg-brand-gold/90">
                   <ShoppingCart className="ml-2 h-4 w-4" />
                   أضف للطلبية
                 </Button>
               )}
             </div>
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-wrap gap-3 pt-3">
               <Link href={`/products/${product.slug}`} onClick={onClose}>
-                <Button variant="outline" size="sm" className="w-full">عرض كامل</Button>
+                <Button variant="outline" size="sm" className="w-full min-h-[44px]">عرض كامل</Button>
               </Link>
               <a href={generateWhatsAppLink(product.name, product.sku)} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="w-full bg-brand-green-dark hover:bg-brand-green-darker">استفسر</Button>
+                <Button size="sm" className="w-full min-h-[44px] bg-brand-green-dark hover:bg-brand-green-darker">استفسر</Button>
               </a>
             </div>
           </div>
