@@ -8,9 +8,42 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { QuickViewModal } from "@/components/quick-view-modal";
+import { ProductListItem } from "@/components/product-list-item";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
 import { useOrder } from "@/contexts/order-context";
+import { siteConfig } from "@/lib/config";
+
+function applyArabicSearchCorrections(input: string): string {
+  const s = (input ?? "").trim();
+  if (!s) return "";
+
+  // تصحيحات شائعة (قابلة للتوسيع لاحقاً)
+  const phraseMap: Array<[RegExp, string]> = [
+    [/\bهديه\b/g, "هدية"],
+    [/\bهدايا\b/g, "هدايا"], // placeholder to keep list structure
+    [/\bفاخره\b/g, "فاخرة"],
+    [/\bرسميه\b/g, "رسمية"],
+    [/\bمكتبيه\b/g, "مكتبية"],
+    [/\bترويجيه\b/g, "ترويجية"],
+  ];
+
+  let out = s;
+  for (const [re, rep] of phraseMap) out = out.replace(re, rep);
+
+  // تحسينات بسيطة لكتابة العربية
+  out = out
+    .replace(/[إأآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/ة/g, "ة") // نتركها كما هي (تعديلها قد يفسد كلمات صحيحة)
+    .replace(/ـ/g, "") // تطويل
+    .replace(/\s+/g, " ");
+
+  return out;
+}
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -22,6 +55,22 @@ function HomeContent() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const handleDownloadCatalog = async () => {
+    if (catalogLoading) return;
+    setCatalogLoading(true);
+    try {
+      const { downloadCatalogPDF } = await import("@/lib/catalog-pdf");
+      await downloadCatalogPDF(allProducts, siteConfig);
+    } catch (e) {
+      console.error(e);
+      alert("تعذر إنشاء كتالوج PDF");
+    } finally {
+      setCatalogLoading(false);
+    }
+  };
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -116,6 +165,15 @@ function HomeContent() {
   }, [allProducts, selectedGiftTier]);
 
   const searchLower = searchQuery.trim().toLowerCase();
+  const correctedSearchQuery = useMemo(() => {
+    // نعتمد التصحيح على النص الأصلي (قبل toLowerCase) كي نُظهره للمستخدم بشكل طبيعي
+    const corrected = applyArabicSearchCorrections(searchQuery);
+    if (!corrected) return "";
+    // لا تعرض اقتراحاً إذا كان مطابقاً فعلياً
+    if (corrected.trim() === searchQuery.trim()) return "";
+    return corrected;
+  }, [searchQuery]);
+
   const searchSuggestions = useMemo(() => {
     if (!searchLower || searchLower.length < 1) return [];
     return filteredByFilters
@@ -201,6 +259,28 @@ function HomeContent() {
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 pr-10 text-right focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {correctedSearchQuery && (
+                <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-right">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      هل تقصد:{" "}
+                      <span className="font-semibold text-foreground">{correctedSearchQuery}</span>
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="min-h-[44px]"
+                      onClick={() => {
+                        setSearchQuery(correctedSearchQuery);
+                        setSearchFocused(false);
+                      }}
+                    >
+                      تطبيق التصحيح
+                    </Button>
+                  </div>
+                </div>
+              )}
               {(searchFocused || searchQuery) && searchSuggestions.length > 0 && (
                 <ul className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-lg border bg-background shadow-lg">
                   {searchSuggestions.map((p) => (
@@ -224,6 +304,46 @@ function HomeContent() {
 
             {/* Filters + ترتيب */}
             <div className="mb-8 space-y-4">
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between">
+                <p className="text-base font-semibold text-foreground">خيارات العرض:</p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <div className="flex items-center gap-2 rounded-lg border bg-background p-1">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("grid")}
+                      className={
+                        viewMode === "grid"
+                          ? "min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-all duration-200 active:scale-[0.98]"
+                          : "min-h-[44px] rounded-md px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-[0.98]"
+                      }
+                    >
+                      شبكة
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("list")}
+                      className={
+                        viewMode === "list"
+                          ? "min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-all duration-200 active:scale-[0.98]"
+                          : "min-h-[44px] rounded-md px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-[0.98]"
+                      }
+                    >
+                      قائمة
+                    </button>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[44px]"
+                    onClick={handleDownloadCatalog}
+                    disabled={catalogLoading}
+                  >
+                    {catalogLoading ? "جاري إنشاء كتالوج PDF..." : "تحميل كتالوج PDF كامل"}
+                  </Button>
+                </div>
+              </div>
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
                 <div className="flex flex-wrap gap-3">
@@ -271,17 +391,30 @@ function HomeContent() {
 
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product, index) => (
-                  <ProductCard
-                    key={product.slug}
-                    product={product}
-                    index={index}
-                    onAddToOrder={addToOrder}
-                    onQuickView={setQuickViewProduct}
-                  />
-                ))}
-              </div>
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredProducts.map((product, index) => (
+                    <ProductCard
+                      key={product.slug}
+                      product={product}
+                      index={index}
+                      onAddToOrder={addToOrder}
+                      onQuickView={setQuickViewProduct}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {filteredProducts.map((product) => (
+                    <ProductListItem
+                      key={product.slug}
+                      product={product}
+                      onAddToOrder={addToOrder}
+                      onQuickView={setQuickViewProduct}
+                    />
+                  ))}
+                </div>
+              )
             ) : (
               <div className="py-12 text-center">
                 <p className="text-lg text-muted-foreground">

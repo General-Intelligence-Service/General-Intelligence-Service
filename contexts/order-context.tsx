@@ -30,6 +30,8 @@ interface OrderContextValue {
   setOrderNotes: (notes: string) => void;
   requesterName: string;
   setRequesterName: (name: string) => void;
+  /** فتح سلة الطلبية (يُستخدم من تذكير المسودة) */
+  openCartRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const OrderContext = createContext<OrderContextValue | null>(null);
@@ -40,6 +42,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [orderNotes, setOrderNotes] = useState("");
   const [requesterName, setRequesterName] = useState("");
   const lastAddedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openCartRef = useRef<(() => void) | null>(null);
 
   const addToOrder = useCallback((product: Product, quantity = 1) => {
     const qty = Math.max(1, Math.min(99, quantity));
@@ -106,6 +109,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setOrderNotes,
     requesterName,
     setRequesterName,
+    openCartRef,
   };
 
   return (

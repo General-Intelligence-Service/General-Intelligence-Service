@@ -49,6 +49,17 @@ export function saveOrderToHistory(order: OrderRecord): void {
   }
 }
 
+/** استبدال كل الطلبات المحفوظة (للاستعادة من نسخة احتياطية) */
+export function saveStoredOrders(orders: OrderRecord[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    const list = Array.isArray(orders) ? orders : [];
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(list));
+  } catch {
+    // ignore
+  }
+}
+
 /** مسودة طلبية (قبل التصدير) */
 export interface OrderDraft {
   items: { slug: string; quantity: number }[];

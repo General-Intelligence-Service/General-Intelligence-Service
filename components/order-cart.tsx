@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail, Save, RotateCcw } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail, Save, RotateCcw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,12 +36,37 @@ export function OrderCart() {
     requesterName,
     setRequesterName,
     orderNotes,
+    openCartRef,
   } = useOrder();
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    openCartRef.current = () => setIsOpen(true);
+    return () => {
+      openCartRef.current = null;
+    };
+  }, [openCartRef]);
   const [sendByEmail, setSendByEmail] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftExists, setDraftExists] = useState(false);
+  const [toast, setToast] = useState<null | { variant: "success" | "warning" | "error"; title: string; description?: string }>(null);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [toast]);
+
+  const makeOrderReference = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const rnd = Math.floor(1000 + Math.random() * 9000);
+    return `REF-${y}${m}${day}-${rnd}`;
+  };
 
   useEffect(() => {
     if (isOpen && orderItems.length === 0) {
@@ -69,7 +94,30 @@ export function OrderCart() {
       savedAt: new Date().toISOString(),
     });
     setDraftExists(false);
-    alert("تم حفظ المسودة. يمكنك استعادتها لاحقاً عند فتح الطلبية.");
+    setToast({ variant: "success", title: "تم حفظ المسودة", description: "يمكنك استعادتها لاحقاً عند فتح الطلبية." });
+  };
+
+  const handleShareOrderLink = () => {
+    if (orderItems.length === 0) return;
+    const payload = {
+      items: orderItems.map((i) => ({ slug: i.product.slug, quantity: i.quantity })),
+      requesterName: requesterName.trim() || "",
+      orderNotes: orderNotes?.trim() || "",
+    };
+    try {
+      const b64 = typeof btoa !== "undefined" ? btoa(encodeURIComponent(JSON.stringify(payload))) : "";
+      const url = `${typeof window !== "undefined" ? window.location.origin : ""}/order?d=${encodeURIComponent(b64)}`;
+      if (typeof navigator?.clipboard?.writeText === "function") {
+        navigator.clipboard.writeText(url);
+        setShareLinkCopied(true);
+        setToast({ variant: "success", title: "تم نسخ رابط الطلبية", description: "شارك الرابط مع زميلك لاستعراض أو استيراد الطلبية." });
+        setTimeout(() => setShareLinkCopied(false), 2500);
+      } else {
+        setToast({ variant: "success", title: "رابط الطلبية", description: url });
+      }
+    } catch (e) {
+      setToast({ variant: "error", title: "تعذر إنشاء الرابط", description: "حاول مرة أخرى." });
+    }
   };
 
   const handleRestoreDraft = () => {
@@ -109,6 +157,7 @@ export function OrderCart() {
       const notes = orderNotes?.trim() || undefined;
       const reqName = requesterName.trim() || undefined;
       const dateStr = new Date().toISOString().split("T")[0];
+      const orderRef = makeOrderReference();
 
       const { generatePDFBlob } = await import("@/lib/pdf-generator");
       const blob = await generatePDFBlob(orderItems, siteConfig, notes, reqName ?? undefined);
@@ -126,13 +175,12 @@ export function OrderCart() {
           });
         } catch (e) {
           console.error("Send email failed:", e);
-          alert("تم تنزيل PDF، لكن إرسال البريد فشل.");
+          setToast({ variant: "warning", title: "تم إنشاء PDF، لكن إرسال البريد فشل", description: "يمكنك تنزيل الملف واستخدامه يدوياً." });
         }
       }
 
-      const orderId = `order-${Date.now()}`;
       saveOrderToHistory({
-        id: orderId,
+        id: orderRef,
         date: dateStr,
         requesterName: reqName ?? "",
         notes,
@@ -155,19 +203,52 @@ export function OrderCart() {
       link.click();
       URL.revokeObjectURL(url);
 
+      setToast({ variant: "success", title: "تم إنشاء الطلبية بنجاح", description: `رقم مرجعي: ${orderRef}` });
       clearOrder();
       clearOrderDraft();
       setIsOpen(false);
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ أثناء إنشاء ملف PDF");
+      setToast({ variant: "error", title: "حدث خطأ أثناء إنشاء ملف PDF", description: "حاول مرة أخرى." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <>
+    <div className="no-print">
+      {toast && (
+        <div className="fixed bottom-24 left-4 right-4 z-[60] flex justify-center md:bottom-6">
+          <div
+            className={
+              toast.variant === "success"
+                ? "w-full max-w-md rounded-xl border border-green-200 bg-green-50 px-4 py-3 shadow-lg"
+                : toast.variant === "warning"
+                ? "w-full max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg"
+                : "w-full max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-lg"
+            }
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="text-right">
+                <p className="font-semibold text-foreground">{toast.title}</p>
+                {toast.description ? (
+                  <p className="mt-0.5 text-sm text-muted-foreground">{toast.description}</p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="min-h-[44px] min-w-[44px] rounded-md px-3 text-sm font-medium text-foreground/70 hover:bg-black/5"
+                onClick={() => setToast(null)}
+                aria-label="إغلاق"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Floating Cart Button */}
       {totalItems > 0 && (
         <motion.div
@@ -317,6 +398,10 @@ export function OrderCart() {
                   <Save className="ml-2 h-4 w-4" />
                   حفظ كمسودة
                 </Button>
+                <Button variant="outline" size="sm" className="w-full min-h-[44px]" onClick={handleShareOrderLink}>
+                  <Share2 className="ml-2 h-4 w-4" />
+                  {shareLinkCopied ? "تم النسخ!" : "مشاركة رابط الطلبية"}
+                </Button>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -353,6 +438,6 @@ export function OrderCart() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

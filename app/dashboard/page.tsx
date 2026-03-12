@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, type GiftTier, getGiftTierLabel, generateNextSKU, products as initialProducts } from "@/data/products";
-import { getStoredOrders, type OrderRecord } from "@/types/order";
+import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -529,6 +529,53 @@ export default function DashboardPage() {
                     <FileText className="ml-2 h-4 w-4" />
                     {reportLoading ? "جاري التصدير..." : "تحميل تقرير PDF"}
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const data = getStoredOrders();
+                      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `orders-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="ml-2 h-4 w-4" />
+                    تصدير نسخة احتياطية
+                  </Button>
+                  <label className="inline-flex cursor-pointer">
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          try {
+                            const raw = reader.result as string;
+                            const parsed = JSON.parse(raw) as OrderRecord[];
+                            if (!Array.isArray(parsed)) { alert("الملف يجب أن يحتوي مصفوفة طلبات."); return; }
+                            if (!confirm(`سيتم استبدال ${orders.length} طلبية حالية بـ ${parsed.length} طلبية من الملف. متابعة؟`)) return;
+                            saveStoredOrders(parsed);
+                            setOrders(parsed);
+                          } catch {
+                            alert("ملف غير صالح. تأكد أن الملف نسخة احتياطية صحيحة.");
+                          }
+                          e.target.value = "";
+                        };
+                        reader.readAsText(file);
+                      }}
+                    />
+                    <span className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-muted cursor-pointer min-h-[44px]">
+                      <Upload className="ml-2 h-4 w-4" />
+                      استعادة من نسخة
+                    </span>
+                  </label>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   عدد الطلبات في {periodLabel}: {ordersForPeriod.length} — إجمالي القطع: {ordersForPeriod.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}

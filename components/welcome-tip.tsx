@@ -26,7 +26,7 @@ export function WelcomeTip() {
   if (!show || !isCatalogPage) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto md:left-6 md:right-auto shadow-xl rounded-xl border bg-background p-4 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="no-print fixed bottom-20 left-4 right-4 z-40 max-w-md mx-auto md:left-6 md:right-auto shadow-xl rounded-xl border bg-background p-4 animate-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
           <ShoppingCart className="h-5 w-5 text-primary" />

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, ShoppingCart, Plus, Minus, Share2 } from "lucide-react";
+import { ArrowRight, Check, ShoppingCart, Plus, Minus, Share2, QrCode } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { getProductBySlug, products as initialProducts, getGiftTierLabel, type P
 import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { useOrder } from "@/contexts/order-context";
 import { ImageLightbox } from "@/components/image-lightbox";
+import { ProductQRModal } from "@/components/product-qr-modal";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 
 interface ProductPageProps {
@@ -35,6 +36,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [orderAdded, setOrderAdded] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const handleShare = async () => {
     if (!product) return;
@@ -236,6 +238,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                     );
                   })}
                 </div>
+                {qrOpen && product && (
+                  <ProductQRModal
+                    productUrl={typeof window !== "undefined" ? window.location.href : ""}
+                    productName={product.name}
+                    onClose={() => setQrOpen(false)}
+                  />
+                )}
                 {lightboxOpen && product.images?.length ? (
                   <ImageLightbox
                     images={product.images}
@@ -284,6 +293,15 @@ export default function ProductPage({ params }: ProductPageProps) {
                     >
                       <Share2 className="ml-2 h-4 w-4" />
                       {shareDone ? "تم النسخ!" : "مشاركة"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQrOpen(true)}
+                      className="shrink-0 min-h-[44px]"
+                    >
+                      <QrCode className="ml-2 h-4 w-4" />
+                      QR
                     </Button>
                   </div>
                   <p className="text-base text-muted-foreground">

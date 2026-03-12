@@ -50,3 +50,20 @@
   }
 }
 
+/* وضع الطباعة: إخفاء العناصر غير الضرورية وعرض المحتوى فقط */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  main {
+    padding-top: 0;
+  }
+  a[href]::after {
+    content: none;
+  }
+}
+

@@ -5,6 +5,7 @@ import { OrderCart } from "@/components/order-cart";
 import { AnnouncementBar } from "@/components/announcement-bar";
 import { WelcomeTip } from "@/components/welcome-tip";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { DraftReminder } from "@/components/draft-reminder";
 
 export function OrderLayoutClient({
   children,
@@ -15,6 +16,7 @@ export function OrderLayoutClient({
     <OrderProvider>
       <AnnouncementBar />
       <OrderCart />
+      <DraftReminder />
       <WelcomeTip />
       <ScrollToTop />
       {children}
