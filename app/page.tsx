@@ -8,7 +8,6 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { QuickViewModal } from "@/components/quick-view-modal";
-import { ProductListItem } from "@/components/product-list-item";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
@@ -50,14 +49,11 @@ function HomeContent() {
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
-  const [sortOrder, setSortOrder] = useState<"name-asc" | "name-desc">("name-asc");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
   const handleDownloadCatalog = async () => {
     if (catalogLoading) return;
     setCatalogLoading(true);
@@ -194,15 +190,7 @@ function HomeContent() {
     );
   }, [filteredByFilters, searchLower]);
 
-  const filteredProducts = useMemo(() => {
-    const list = [...filteredProductsRaw];
-    if (sortOrder === "name-asc") {
-      list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
-    } else {
-      list.sort((a, b) => b.name.localeCompare(a.name, "ar"));
-    }
-    return list;
-  }, [filteredProductsRaw, sortOrder]);
+  const filteredProducts = filteredProductsRaw;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -306,33 +294,7 @@ function HomeContent() {
             <div className="mb-8 space-y-4">
               <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between">
                 <p className="text-base font-semibold text-foreground">خيارات العرض:</p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <div className="flex items-center gap-2 rounded-lg border bg-background p-1">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode("grid")}
-                      className={
-                        viewMode === "grid"
-                          ? "min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-all duration-200 active:scale-[0.98]"
-                          : "min-h-[44px] rounded-md px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-[0.98]"
-                      }
-                    >
-                      شبكة
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode("list")}
-                      className={
-                        viewMode === "list"
-                          ? "min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-all duration-200 active:scale-[0.98]"
-                          : "min-h-[44px] rounded-md px-4 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted active:scale-[0.98]"
-                      }
-                    >
-                      قائمة
-                    </button>
-                  </div>
-
-                  <Button
+                <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -343,7 +305,6 @@ function HomeContent() {
                     {catalogLoading ? "جاري إنشاء كتالوج PDF..." : "تحميل كتالوج PDF كامل"}
                   </Button>
                 </div>
-              </div>
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
                 <div className="flex flex-wrap gap-3">
@@ -368,53 +329,21 @@ function HomeContent() {
                   ))}
                 </div>
               </div>
-              <div>
-                <p className="mb-3 text-base font-semibold text-foreground">ترتيب:</p>
-                <div className="flex flex-wrap gap-3">
-                  <Badge
-                    variant={sortOrder === "name-asc" ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
-                    onClick={() => setSortOrder("name-asc")}
-                  >
-                    الاسم (أ → ي)
-                  </Badge>
-                  <Badge
-                    variant={sortOrder === "name-desc" ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
-                    onClick={() => setSortOrder("name-desc")}
-                  >
-                    الاسم (ي → أ)
-                  </Badge>
-                </div>
-              </div>
             </div>
 
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-              viewMode === "grid" ? (
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredProducts.map((product, index) => (
-                    <ProductCard
-                      key={product.slug}
-                      product={product}
-                      index={index}
-                      onAddToOrder={addToOrder}
-                      onQuickView={setQuickViewProduct}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {filteredProducts.map((product) => (
-                    <ProductListItem
-                      key={product.slug}
-                      product={product}
-                      onAddToOrder={addToOrder}
-                      onQuickView={setQuickViewProduct}
-                    />
-                  ))}
-                </div>
-              )
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredProducts.map((product, index) => (
+                  <ProductCard
+                    key={product.slug}
+                    product={product}
+                    index={index}
+                    onAddToOrder={addToOrder}
+                    onQuickView={setQuickViewProduct}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="py-12 text-center">
                 <p className="text-lg text-muted-foreground">
