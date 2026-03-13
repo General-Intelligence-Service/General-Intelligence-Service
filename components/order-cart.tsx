@@ -52,6 +52,21 @@ export function OrderCart() {
   const [draftExists, setDraftExists] = useState(false);
   const [toast, setToast] = useState<null | { variant: "success" | "warning" | "error"; title: string; description?: string }>(null);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [orderStepsTipSeen, setOrderStepsTipSeen] = useState(true);
+  useEffect(() => {
+    try {
+      setOrderStepsTipSeen(localStorage.getItem("order_steps_tip_seen") === "1");
+    } catch {
+      setOrderStepsTipSeen(true);
+    }
+  }, []);
+  const showOrderStepsTip = orderItems.length > 0 && !orderStepsTipSeen;
+  const dismissOrderStepsTip = () => {
+    setOrderStepsTipSeen(true);
+    try {
+      localStorage.setItem("order_steps_tip_seen", "1");
+    } catch {}
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -297,6 +312,17 @@ export function OrderCart() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              {showOrderStepsTip && (
+                <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-right">
+                  <p className="text-sm font-semibold text-foreground mb-2">خطوات إتمام الطلب:</p>
+                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>اختر المنتجات من الكتالوج وأضفها للطلبية</li>
+                    <li>أدخل اسم الجهة الطالبة (اختياري)</li>
+                    <li>اضغط &quot;إرسال الطلب وتصدير PDF&quot; لتحميل الطلبية أو إرسالها بالبريد</li>
+                  </ol>
+                  <button type="button" onClick={dismissOrderStepsTip} className="mt-2 text-xs text-primary font-medium hover:underline">تم، إخفاء</button>
+                </div>
+              )}
               {orderItems.length === 0 ? (
                 <div className="flex flex-col h-full items-center justify-center gap-4 text-center">
                   {draftExists && (

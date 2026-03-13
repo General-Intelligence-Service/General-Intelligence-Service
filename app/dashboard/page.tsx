@@ -533,6 +533,29 @@ export default function DashboardPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      const rows = ordersForPeriod.map((o, i) => {
+                        const gifts = (o.items ?? []).map((it) => `${it.name} (${it.quantity})`).join(" - ");
+                        return [i + 1, o.date ?? "", o.requesterName ?? "", gifts, o.totalPieces ?? 0, (o.notes ?? "").replace(/\s+/g, " ")];
+                      });
+                      const header = ["رقم", "التاريخ", "الجهة الطالبة", "الهدايا", "القطع", "ملاحظات"];
+                      const csv = "\uFEFF" + [header.join(","), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))].join("\r\n");
+                      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `طلبات-${periodLabel.replace(/\s+/g, "-")}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    disabled={ordersForPeriod.length === 0}
+                  >
+                    <Download className="ml-2 h-4 w-4" />
+                    تصدير CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
                       const data = getStoredOrders();
                       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
                       const url = URL.createObjectURL(blob);
