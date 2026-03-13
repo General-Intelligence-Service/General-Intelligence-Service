@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 const QR_API = "https://api.qrserver.com/v1/create-qr-code";
@@ -14,7 +14,46 @@ export function ProductQRModal({
   productName: string;
   onClose: () => void;
 }) {
+  const [copyDone, setCopyDone] = useState(false);
+  const [downloadDone, setDownloadDone] = useState(false);
   const qrSrc = `${QR_API}/?size=256x256&data=${encodeURIComponent(productUrl)}`;
+
+  const handleCopyLink = async () => {
+    try {
+      if (typeof navigator?.clipboard?.writeText === "function") {
+        await navigator.clipboard.writeText(productUrl);
+        setCopyDone(true);
+        setTimeout(() => setCopyDone(false), 2500);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    try {
+      const res = await fetch(qrSrc);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `qr-${productName.replace(/\s+/g, "-")}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDownloadDone(true);
+      setTimeout(() => setDownloadDone(false), 2500);
+    } catch {
+      // fallback: open in new tab
+      const a = document.createElement("a");
+      a.href = qrSrc;
+      a.download = `qr-${productName.replace(/\s+/g, "-")}.png`;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+      setDownloadDone(true);
+      setTimeout(() => setDownloadDone(false), 2500);
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -59,25 +98,19 @@ export function ProductQRModal({
         </div>
 
         <div className="flex flex-wrap gap-2 justify-center">
-          <a
-            href={qrSrc}
-            target="_blank"
-            rel="noopener noreferrer"
-            download={`qr-${productName.replace(/\s+/g, "-")}.png`}
-            className="inline-flex items-center justify-center min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            تحميل صورة QR
-          </a>
           <button
             type="button"
-            onClick={() => {
-              if (typeof navigator?.clipboard?.writeText === "function") {
-                navigator.clipboard.writeText(productUrl);
-              }
-            }}
+            onClick={handleDownloadImage}
+            className="inline-flex items-center justify-center min-h-[44px] rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            {downloadDone ? "تم التحميل" : "تحميل صورة QR"}
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyLink}
             className="inline-flex items-center justify-center min-h-[44px] rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-muted transition-colors"
           >
-            نسخ الرابط
+            {copyDone ? "تم النسخ" : "نسخ الرابط"}
           </button>
         </div>
       </div>
