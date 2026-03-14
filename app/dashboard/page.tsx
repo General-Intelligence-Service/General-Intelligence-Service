@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -359,6 +359,12 @@ export default function DashboardPage() {
                 <Button variant="outline" size="lg" className="min-h-[44px]">
                   <QrCode className="ml-2 h-5 w-5" />
                   مسح الهدايا
+                </Button>
+              </Link>
+              <Link href="/dashboard/qr-codes">
+                <Button variant="outline" size="lg" className="min-h-[44px]">
+                  <DownloadCloud className="ml-2 h-5 w-5" />
+                  تحميل رموز QR
                 </Button>
               </Link>
               <Button onClick={handleAddProduct} size="lg">

@@ -7,10 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRScanner } from "@/components/qr-scanner";
-import { ArrowRight, CheckCircle2, XCircle, Download, Info } from "lucide-react";
-import { products as initialProducts } from "@/data/products";
-
-const QR_IMAGE_API = "https://api.qrserver.com/v1/create-qr-code";
+import { ArrowRight, CheckCircle2, XCircle, QrCode, Info } from "lucide-react";
 
 export interface ScanResponse {
   status: string;
@@ -113,44 +110,12 @@ export default function GiftScannerPage() {
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">تحميل رموز QR للمنتجات</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                حمّل صورة QR تحتوي على كود كل منتج ثم اطبعها والصقها على الهدايا.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {initialProducts.map((p) => (
-                  <li key={p.sku} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3">
-                    <div className="min-w-0">
-                      <span className="font-medium">{p.name}</span>
-                      <span className="text-muted-foreground text-sm mr-2"> — {p.sku}</span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 min-h-[44px]"
-                      onClick={() => {
-                        const url = `${QR_IMAGE_API}/?size=200x200&data=${encodeURIComponent(p.sku)}`;
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = `qr-${p.sku}-${p.name.replace(/\s+/g, "-").slice(0, 20)}.png`;
-                        a.target = "_blank";
-                        a.rel = "noopener";
-                        a.click();
-                      }}
-                    >
-                      <Download className="ml-2 h-4 w-4" />
-                      تحميل QR ({p.sku})
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <Link href="/dashboard/qr-codes">
+            <Button variant="outline" className="w-full mb-6 min-h-[44px]">
+              <QrCode className="ml-2 h-5 w-5" />
+              تحميل رموز QR للمنتجات (صفحة مستقلة)
+            </Button>
+          </Link>
 
           <Card className="mb-6">
             <CardHeader>
