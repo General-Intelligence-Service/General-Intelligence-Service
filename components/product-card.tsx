@@ -97,7 +97,10 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
           <p className="mb-3 line-clamp-2 text-base text-muted-foreground">
             {product.shortDescription}
           </p>
-          <p className="text-base text-muted-foreground">كود: {product.sku}</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-muted-foreground">
+            <span>كود: {product.sku}</span>
+            <span>العدد المتوفر: {product.availableQuantity ?? 0}</span>
+          </div>
           {onQuickView && (
             <button
               type="button"

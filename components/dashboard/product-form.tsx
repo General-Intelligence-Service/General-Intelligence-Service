@@ -203,6 +203,23 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
             />
           </div>
 
+          {/* الكمية المتوفرة (العدد) */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">الكمية المتوفرة (العدد)</label>
+            <Input
+              type="number"
+              min={0}
+              value={formData.availableQuantity ?? 0}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  availableQuantity: Math.max(0, parseInt(e.target.value, 10) || 0),
+                })
+              }
+              placeholder="0"
+            />
+          </div>
+
           {/* تصنيف الهدية */}
           <div>
             <label className="mb-2 block text-sm font-medium">تصنيف الهدية *</label>

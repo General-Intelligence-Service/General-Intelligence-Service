@@ -304,9 +304,10 @@ export default function ProductPage({ params }: ProductPageProps) {
                       QR
                     </Button>
                   </div>
-                  <p className="text-base text-muted-foreground">
-                    كود المنتج: <span className="font-semibold">{product.sku}</span>
-                  </p>
+                  <div className="space-y-1 text-base text-muted-foreground">
+                    <p>كود المنتج: <span className="font-semibold">{product.sku}</span></p>
+                    <p>العدد المتوفر: <span className="font-semibold">{product.availableQuantity ?? 0}</span></p>
+                  </div>
                 </div>
 
                 <Separator />

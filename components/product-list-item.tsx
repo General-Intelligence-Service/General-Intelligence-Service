@@ -54,7 +54,7 @@ export function ProductListItem({
                   {product.name}
                 </h3>
               </Link>
-              <p className="mt-1 text-sm text-muted-foreground truncate">كود: {product.sku}</p>
+              <p className="mt-1 text-sm text-muted-foreground truncate">كود: {product.sku} · العدد: {product.availableQuantity ?? 0}</p>
             </div>
 
             {product.giftTier ? (

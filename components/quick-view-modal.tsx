@@ -67,7 +67,10 @@ export function QuickViewModal({ product, onClose, onAddToOrder }: QuickViewModa
               </Badge>
             )}
             <h2 className="text-xl font-bold">{product.name}</h2>
-            <p className="text-sm text-muted-foreground">كود: {product.sku}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span>كود: {product.sku}</span>
+              <span>العدد المتوفر: {product.availableQuantity ?? 0}</span>
+            </div>
             <p className="text-sm text-muted-foreground line-clamp-3">{product.shortDescription}</p>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <div className="flex items-center gap-1 border rounded-md">

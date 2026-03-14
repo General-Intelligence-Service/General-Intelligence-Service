@@ -86,6 +86,10 @@ export async function processScan(qrCode: string): Promise<ScanResult | null> {
   }
 
   await sql`
+    UPDATE products SET available_quantity = ${newQty}, updated_at = NOW() WHERE sku = ${sku}
+  `;
+
+  await sql`
     INSERT INTO scan_logs (qr_code, gift_name, remaining_quantity, scanned_at)
     VALUES (${qrCode}, ${name}, ${newQty}, NOW())
   `;

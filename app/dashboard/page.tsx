@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -51,40 +51,28 @@ export default function DashboardPage() {
     if (authOk === false) router.replace("/login");
   }, [authOk, router]);
 
+  const refetchProducts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/products");
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setProducts(json.data);
+        if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
+      }
+    } catch {
+      //
+    }
+  }, []);
+
   useEffect(() => {
     setMounted(true);
-    const load = async () => {
-      try {
-        const res = await fetch("/api/products");
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          setProducts(json.data);
-          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
-          return;
-        }
-      } catch {
-        // fallback
-      }
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("products");
-        if (saved) {
-          try {
-            setProducts(JSON.parse(saved));
-            return;
-          } catch {
-            //
-          }
-        }
-      }
-      setProducts(initialProducts);
-    };
-    load();
+    refetchProducts();
     if (typeof window !== "undefined") {
       const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
       setVisitCount(n);
       setOrders(getStoredOrders());
     }
-  }, []);
+  }, [refetchProducts]);
 
   const ordersForMonth = orders.filter((o) => {
     const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);
@@ -677,6 +665,10 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
+                <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={refetchProducts} title="تحديث الأعداد من قاعدة البيانات (بعد مسح الهدايا)">
+                  <RefreshCw className="ml-2 h-4 w-4" />
+                  تحديث القائمة
+                </Button>
                 <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleExportCSV}>
                   <Download className="ml-2 h-4 w-4" />
                   تصدير CSV
@@ -718,6 +710,7 @@ export default function DashboardPage() {
                       <CardTitle className="mb-2 text-xl">{product.name}</CardTitle>
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">كود: {product.sku}</Badge>
+                        <Badge variant="outline">العدد: {product.availableQuantity ?? 0}</Badge>
                         <Badge
                           variant={product.giftTier === "luxury" ? "default" : "outline"}
                           className={product.giftTier === "luxury" ? "bg-brand-gold text-white" : ""}

@@ -34,9 +34,6 @@ export default function GiftScannerPage() {
   }, [authOk, router]);
 
   const handleScan = async (decodedText: string) => {
-    setError(null);
-    setResult(null);
-    setScannedValue(null);
     setLoading(true);
     try {
       const res = await fetch("/api/gifts/scan", {
@@ -47,16 +44,21 @@ export default function GiftScannerPage() {
       const data = await res.json();
 
       if (res.ok && data.status === "success") {
+        setError(null);
+        setScannedValue(null);
         setResult({
           status: data.status,
           gift_name: data.gift_name ?? "",
           remaining_quantity: data.remaining_quantity ?? 0,
         });
       } else {
+        setResult(null);
         setError(data.error ?? "رمز QR غير موجود في النظام");
         setScannedValue(typeof data.scanned_value === "string" ? data.scanned_value : decodedText.trim());
       }
     } catch {
+      setResult(null);
+      setScannedValue(null);
       setError("حدث خطأ في الاتصال. حاول مرة أخرى.");
     } finally {
       setLoading(false);
@@ -132,8 +134,11 @@ export default function GiftScannerPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">نتيجة المسح</CardTitle>
+              <p className="text-sm text-muted-foreground font-normal mt-1">
+                تظهر النتيجة ثابتة لفترة؛ انتظر حوالي ٣ ثوانٍ قبل مسح الرمز التالي.
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 min-h-[140px]">
               {loading && (
                 <p className="text-muted-foreground">جاري التسجيل...</p>
               )}

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 
 const SCANNER_ELEMENT_ID = "gift-qr-scanner";
 
+/** الفاصل الزمني بين مسح وآخر (بالثواني) - لا يُرسل مسح جديد قبل انتهائه */
+const SCAN_COOLDOWN_MS = 2800;
+
 interface QRScannerProps {
   onScan: (decodedText: string) => void;
   disabled?: boolean;
@@ -16,6 +19,7 @@ export function QRScanner({ onScan, disabled }: QRScannerProps) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScanTimeRef = useRef<number>(0);
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current && isScanning) {
@@ -49,10 +53,13 @@ export function QRScanner({ onScan, disabled }: QRScannerProps) {
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
+          fps: 6,
+          qrbox: { width: 260, height: 260 },
         },
         (decodedText) => {
+          const now = Date.now();
+          if (now - lastScanTimeRef.current < SCAN_COOLDOWN_MS) return;
+          lastScanTimeRef.current = now;
           onScan(decodedText);
         },
         () => {}
