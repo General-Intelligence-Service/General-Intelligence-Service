@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Minus, Trash2, ShoppingCart, FileText, Mail, Save, RotateCcw, Share2 } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, FileText, Save, RotateCcw, Share2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,8 +46,6 @@ export function OrderCart() {
       openCartRef.current = null;
     };
   }, [openCartRef]);
-  const [sendByEmail, setSendByEmail] = useState(false);
-  const [emailTo, setEmailTo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [draftExists, setDraftExists] = useState(false);
   const [toast, setToast] = useState<null | { variant: "success" | "warning" | "error"; title: string; description?: string }>(null);
@@ -176,23 +174,6 @@ export function OrderCart() {
 
       const { generatePDFBlob } = await import("@/lib/pdf-generator");
       const blob = await generatePDFBlob(orderItems, siteConfig, notes, reqName ?? undefined);
-
-      if (sendByEmail && (emailTo.trim() || true)) {
-        try {
-          const pdfBase64 = await blobToBase64(blob);
-          await fetch("/api/orders/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: emailTo.trim() || undefined,
-              pdfBase64,
-            }),
-          });
-        } catch (e) {
-          console.error("Send email failed:", e);
-          setToast({ variant: "warning", title: "تم إنشاء PDF، لكن إرسال البريد فشل", description: "يمكنك تنزيل الملف واستخدامه يدوياً." });
-        }
-      }
 
       saveOrderToHistory({
         id: orderRef,
@@ -428,27 +409,12 @@ export function OrderCart() {
                   <Share2 className="ml-2 h-4 w-4" />
                   {shareLinkCopied ? "تم النسخ!" : "مشاركة رابط الطلبية"}
                 </Button>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
-                    <input
-                      type="checkbox"
-                      checked={sendByEmail}
-                      onChange={(e) => setSendByEmail(e.target.checked)}
-                      className="rounded border-input"
-                    />
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    إرسال نسخة PDF بالبريد
-                  </label>
-                  {sendByEmail && (
-                    <Input
-                      type="email"
-                      placeholder="البريد المستلم (اختياري - يُستخدم البريد الافتراضي)"
-                      value={emailTo}
-                      onChange={(e) => setEmailTo(e.target.value)}
-                      className="text-right"
-                      dir="rtl"
-                    />
-                  )}
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-right text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground mb-1">إرسال نسخة إلى فرع الهدايا</p>
+                  <p className="flex items-center justify-end gap-2 flex-wrap">
+                    <Phone className="h-4 w-4 shrink-0" />
+                    عبر الرقم التالي: <a href="tel:00963991307978" className="font-semibold text-primary hover:underline">00963991307978</a>
+                  </p>
                 </div>
                 <Button
                   onClick={handleExportPDF}

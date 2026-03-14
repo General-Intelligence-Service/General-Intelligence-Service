@@ -293,7 +293,6 @@ function HomeContent() {
             {/* Filters + ترتيب */}
             <div className="mb-8 space-y-4">
               <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between">
-                <p className="text-base font-semibold text-foreground">خيارات العرض:</p>
                 <Button
                     type="button"
                     variant="outline"
