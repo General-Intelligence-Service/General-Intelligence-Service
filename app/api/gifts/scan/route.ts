@@ -1,0 +1,50 @@
+import { NextRequest, NextResponse } from "next/server";
+import { processScan, isPostgresConfigured } from "@/lib/gift-scan-db";
+
+export async function POST(request: NextRequest) {
+  try {
+    const configured = isPostgresConfigured();
+    if (!configured) {
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel (Storage).",
+        },
+        { status: 503 }
+      );
+    }
+
+    const body = await request.json();
+    const qrCode = typeof body?.qr_code === "string" ? body.qr_code.trim() : "";
+
+    if (!qrCode) {
+      return NextResponse.json(
+        { status: "error", error: "qr_code مطلوب" },
+        { status: 400 }
+      );
+    }
+
+    const result = await processScan(qrCode);
+
+    if (!result) {
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "QR Code not found in the system",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(result);
+  } catch (e) {
+    console.error("POST /api/gifts/scan:", e);
+    return NextResponse.json(
+      {
+        status: "error",
+        error: "حدث خطأ في الخادم",
+      },
+      { status: 500 }
+    );
+  }
+}

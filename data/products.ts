@@ -164,6 +164,10 @@ export function getProductBySlug(slug: string): Product | undefined {
   return products.find((product) => product.slug === slug);
 }
 
+export function getProductBySku(sku: string): Product | undefined {
+  return products.find((p) => p.sku === sku || p.sku.toUpperCase() === sku.toUpperCase());
+}
+
 export function getProductsByCategory(category: string): Product[] {
   return products.filter((product) => product.category === category);
 }

@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, type GiftTier, getGiftTierLabel, generateNextSKU, products as initialProducts } from "@/data/products";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
@@ -376,6 +377,12 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">إدارة المنتجات والهدايا المعروضة</p>
             </div>
             <div className="flex items-center gap-2">
+              <Link href="/dashboard/gift-scanner">
+                <Button variant="outline" size="lg" className="min-h-[44px]">
+                  <QrCode className="ml-2 h-5 w-5" />
+                  مسح الهدايا
+                </Button>
+              </Link>
               <Button onClick={handleAddProduct} size="lg">
                 <Plus className="ml-2 h-5 w-5" />
                 إضافة منتج جديد
