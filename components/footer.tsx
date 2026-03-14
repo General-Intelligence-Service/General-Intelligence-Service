@@ -7,9 +7,11 @@ export function Footer() {
   return (
     <footer className="no-print border-t bg-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center text-base text-muted-foreground">
+        <div className="text-center text-base text-muted-foreground space-y-2">
           <p>
-            © {currentYear} جميع الحقوق محفوظة.
+            <Link href="/login" className="underline hover:text-foreground">تسجيل الدخول</Link>
+            <span className="mx-2">·</span>
+            <span>© {currentYear} جميع الحقوق محفوظة.</span>
           </p>
         </div>
       </div>

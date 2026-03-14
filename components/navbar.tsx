@@ -39,6 +39,12 @@ export function Navbar() {
           >
             المنتجات
           </Link>
+          <Link
+            href="/login"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            تسجيل الدخول
+          </Link>
         </div>
 
         {/* Mobile Navigation */}
@@ -63,6 +69,13 @@ export function Navbar() {
                 className="text-lg font-medium transition-colors hover:text-brand-green-dark"
               >
                 المنتجات
+              </Link>
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                تسجيل الدخول
               </Link>
             </div>
           </SheetContent>
