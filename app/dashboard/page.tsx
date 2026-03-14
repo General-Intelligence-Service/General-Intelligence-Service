@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,12 @@ export default function DashboardPage() {
   });
   const [reportYear, setReportYear] = useState<string>(() => String(new Date().getFullYear()));
   const [reportLoading, setReportLoading] = useState(false);
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+
+  const LOW_STOCK_THRESHOLD = 3;
+  const lowStockProducts = products.filter(
+    (p) => !p.archived && (p.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD
+  );
 
   useEffect(() => {
     fetch("/api/auth/session", { credentials: "include" })
@@ -172,6 +178,46 @@ export default function DashboardPage() {
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const orderSearchLower = orderSearchQuery.trim().toLowerCase();
+  const ordersDisplayed = orderSearchLower
+    ? ordersForPeriod.filter(
+        (o) =>
+          (o.id ?? "").toLowerCase().includes(orderSearchLower) ||
+          (o.requesterName ?? "").toLowerCase().includes(orderSearchLower) ||
+          (o.date ?? "").toLowerCase().includes(orderSearchLower) ||
+          (o.notes ?? "").toLowerCase().includes(orderSearchLower) ||
+          (o.items ?? []).some((it) => (it.name ?? "").toLowerCase().includes(orderSearchLower))
+      )
+    : ordersForPeriod;
+
+  const last6Months = (() => {
+    const out: { month: string; label: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      out.push({
+        month: ym,
+        label: d.toLocaleDateString("ar-SA", { month: "short", year: "numeric" }),
+        count: orders.filter((o) => (o.date ?? o.createdAt ?? "").slice(0, 7) === ym).length,
+      });
+    }
+    return out;
+  })();
+  const maxOrdersMonth = Math.max(1, ...last6Months.map((m) => m.count));
+  const byRequester = (() => {
+    const map = new Map<string, number>();
+    orders.forEach((o) => {
+      const r = (o.requesterName ?? "—").trim() || "—";
+      map.set(r, (map.get(r) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+  })();
+  const maxByRequester = Math.max(1, ...byRequester.map((r) => r.count));
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -592,8 +638,19 @@ export default function DashboardPage() {
                     </span>
                   </label>
                 </div>
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="text"
+                    placeholder="بحث في الطلبات (الجهة، الرقم المرجعي، التاريخ، ملاحظات)..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    className="pr-10 min-h-[44px] text-base touch-manipulation mt-2"
+                  />
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  عدد الطلبات في {periodLabel}: {ordersForPeriod.length} — إجمالي القطع: {ordersForPeriod.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
+                  عدد الطلبات في {periodLabel}: {ordersDisplayed.length}
+                  {orderSearchQuery.trim() ? ` (مطابقة للبحث من ${ordersForPeriod.length})` : ""} — إجمالي القطع: {ordersDisplayed.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
                 </p>
                 <div className="overflow-x-auto rounded-md border -mx-3 sm:mx-0 overflow-y-visible" style={{ WebkitOverflowScrolling: "touch" }}>
                   <table className="w-full min-w-[640px] text-right text-sm">
@@ -608,10 +665,10 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ordersForPeriod.length === 0 ? (
-                        <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا توجد طلبات في الفترة المحددة</td></tr>
+                      {ordersDisplayed.length === 0 ? (
+                        <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">{orderSearchQuery.trim() ? "لا توجد نتائج تطابق البحث" : "لا توجد طلبات في الفترة المحددة"}</td></tr>
                       ) : (
-                        ordersForPeriod.map((o, i) => {
+                        ordersDisplayed.map((o, i) => {
                           const isToday = o.date === new Date().toISOString().slice(0, 10);
                           const isThisMonth = (o.date?.slice(0, 7) ?? o.createdAt?.slice(0, 7)) === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
                           return (
@@ -645,6 +702,52 @@ export default function DashboardPage() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  إحصائيات بصرية
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-3">طلبات آخر 6 أشهر</p>
+                  <div className="space-y-2">
+                    {last6Months.map((m) => (
+                      <div key={m.month} className="flex items-center gap-3">
+                        <span className="w-20 text-sm shrink-0">{m.label}</span>
+                        <div className="flex-1 h-6 bg-muted rounded overflow-hidden min-w-[60px]">
+                          <div
+                            className="h-full bg-primary rounded transition-all duration-300"
+                            style={{ width: `${(m.count / maxOrdersMonth) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-8">{m.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-3">توزيع الطلبات حسب الجهة الطالبة</p>
+                  <div className="space-y-2">
+                    {byRequester.map((r) => (
+                      <div key={r.name} className="flex items-center gap-3">
+                        <span className="flex-1 text-sm truncate max-w-[140px]" title={r.name}>{r.name}</span>
+                        <div className="flex-1 h-5 bg-muted rounded overflow-hidden min-w-[40px] max-w-[200px]">
+                          <div
+                            className="h-full bg-primary/80 rounded transition-all duration-300"
+                            style={{ width: `${(r.count / maxByRequester) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-6">{r.count}</span>
+                      </div>
+                    ))}
+                    {byRequester.length === 0 && <p className="text-sm text-muted-foreground">لا توجد طلبات مسجلة</p>}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -693,6 +796,28 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {lowStockProducts.length > 0 && (
+            <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-200 text-base">
+                  <AlertTriangle className="h-5 w-5 shrink-0" />
+                  منتجات تحتاج إعادة تخزين (الكمية ≤ {LOW_STOCK_THRESHOLD})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="flex flex-wrap gap-2">
+                  {lowStockProducts.map((p) => (
+                    <li key={p.slug}>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:border-amber-700 dark:text-amber-200">
+                        {p.name} — العدد: {p.availableQuantity ?? 0}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="mb-6">
             <CardContent className="pt-6 px-4 sm:px-6">
               <div className="relative">
@@ -709,8 +834,10 @@ export default function DashboardPage() {
           </Card>
 
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProducts.map((product) => (
-              <Card key={product.slug} className="overflow-hidden break-inside-avoid">
+            {filteredProducts.map((product) => {
+              const isLowStock = !product.archived && (product.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD;
+              return (
+              <Card key={product.slug} className={`overflow-hidden break-inside-avoid ${isLowStock ? "border-amber-400 dark:border-amber-600 ring-1 ring-amber-200 dark:ring-amber-800" : ""}`}>
                 <CardHeader>
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
@@ -718,6 +845,11 @@ export default function DashboardPage() {
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">كود: {product.sku}</Badge>
                         <Badge variant="outline">العدد: {product.availableQuantity ?? 0}</Badge>
+                        {!product.archived && (product.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD && (
+                          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:border-amber-700 dark:text-amber-200">
+                            يحتاج إعادة تخزين
+                          </Badge>
+                        )}
                         {product.archived && (
                           <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
                             الكمية منتهية
@@ -777,7 +909,8 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+            })}
           </div>
 
           {filteredProducts.length === 0 && (
