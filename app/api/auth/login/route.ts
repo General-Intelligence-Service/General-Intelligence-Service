@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     const token = createSessionToken(email);
     await setSessionCookie(token);
 
-    return NextResponse.json({ success: true, redirect: "/dashboard" });
+    const nextUrl = typeof body.next === "string" && body.next.startsWith("/") ? body.next : "/dashboard";
+    return NextResponse.json({ success: true, redirect: nextUrl });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

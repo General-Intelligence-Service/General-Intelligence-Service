@@ -370,7 +370,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground sm:text-base">إدارة المنتجات والهدايا المعروضة</p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
-              <Link href="/dashboard/gift-scanner" className="min-w-0">
+              <Link href="/scan" className="min-w-0">
                 <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
                   <QrCode className="ml-2 h-5 w-5 shrink-0" />
                   <span className="truncate">مسح الهدايا</span>
