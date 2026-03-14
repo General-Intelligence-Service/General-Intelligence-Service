@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
   const refetchProducts = useCallback(async () => {
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch("/api/products?include_archived=1");
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setProducts(json.data);
@@ -189,7 +189,7 @@ export default function DashboardPage() {
       const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, { method: "DELETE" });
       const result = await response.json();
       if (result.success) {
-        const refetch = await fetch("/api/products");
+        const refetch = await fetch("/api/products?include_archived=1");
         const refetchJson = await refetch.json();
         if (refetchJson.success && Array.isArray(refetchJson.data)) {
           setProducts(refetchJson.data);
@@ -245,7 +245,7 @@ export default function DashboardPage() {
       const result = await response.json();
 
       if (result.success) {
-        const refetch = await fetch("/api/products");
+        const refetch = await fetch("/api/products?include_archived=1");
         const refetchJson = await refetch.json();
         if (refetchJson.success && Array.isArray(refetchJson.data)) {
           setProducts(refetchJson.data);
@@ -718,6 +718,11 @@ export default function DashboardPage() {
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">كود: {product.sku}</Badge>
                         <Badge variant="outline">العدد: {product.availableQuantity ?? 0}</Badge>
+                        {product.archived && (
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                            الكمية منتهية
+                          </Badge>
+                        )}
                         <Badge
                           variant={product.giftTier === "luxury" ? "default" : "outline"}
                           className={product.giftTier === "luxury" ? "bg-brand-gold text-white" : ""}

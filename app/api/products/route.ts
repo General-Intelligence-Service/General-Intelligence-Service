@@ -17,15 +17,17 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-// GET - جلب جميع المنتجات (من قاعدة البيانات إن وُجدت، وإلا القائمة الثابتة)
-export async function GET() {
+// GET - جلب المنتجات. include_archived=1 للداشبورد (يعرض المحفوظة/الكمية منتهية أيضاً)
+export async function GET(request: NextRequest) {
   try {
     if (!isProductsDbConfigured()) {
       return NextResponse.json({ success: true, data: staticProducts });
     }
+    const { searchParams } = new URL(request.url);
+    const includeArchived = searchParams.get("include_archived") === "1" || searchParams.get("include_archived") === "true";
     await ensureProductsTable();
     await seedProductsIfEmpty();
-    const data = await getAllProducts();
+    const data = await getAllProducts(includeArchived);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("GET /api/products:", error);

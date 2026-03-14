@@ -20,10 +20,16 @@ export async function ensureProductsTable(): Promise<void> {
         available_quantity INTEGER NOT NULL DEFAULT 0,
         category VARCHAR(128),
         price VARCHAR(64),
+        archived BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
     `;
+    try {
+      await sql`ALTER TABLE products ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false`;
+    } catch {
+      /* العمود موجود مسبقاً */
+    }
     initDone = true;
   } catch (e) {
     console.error("products-db init:", e);
@@ -43,6 +49,7 @@ function rowToProduct(r: Record<string, unknown>): Product {
     availableQuantity: typeof r.available_quantity === "number" ? r.available_quantity : 0,
     category: r.category != null ? String(r.category) : undefined,
     price: r.price != null ? String(r.price) : undefined,
+    archived: Boolean(r.archived),
   };
 }
 
@@ -73,9 +80,11 @@ export async function seedProductsIfEmpty(): Promise<number> {
   return initialProducts.length;
 }
 
-export async function getAllProducts(): Promise<Product[]> {
+export async function getAllProducts(includeArchived = false): Promise<Product[]> {
   await ensureProductsTable();
-  const { rows } = await sql`SELECT * FROM products ORDER BY sku`;
+  const { rows } = includeArchived
+    ? await sql`SELECT * FROM products ORDER BY archived ASC, sku`
+    : await sql`SELECT * FROM products WHERE (archived IS NULL OR archived = false) ORDER BY sku`;
   return rows.map(rowToProduct);
 }
 
@@ -123,6 +132,7 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
     ...updates,
     slug: current.slug,
   };
+  const archived = merged.archived ?? false;
   await sql`
     UPDATE products SET
       sku = ${merged.sku},
@@ -134,15 +144,19 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
       available_quantity = ${merged.availableQuantity ?? 0},
       category = ${merged.category ?? null},
       price = ${merged.price ?? null},
+      archived = ${archived},
       updated_at = NOW()
     WHERE slug = ${slug}
   `;
   return merged;
 }
 
+/** حذف ناعم: المنتج يُحفظ في القاعدة ويُسجّل أن الكمية منتهية (لا يُحذف فعلياً) */
 export async function deleteProduct(slug: string): Promise<boolean> {
   await ensureProductsTable();
-  const { rowCount } = await sql`DELETE FROM products WHERE slug = ${slug}`;
+  const { rowCount } = await sql`
+    UPDATE products SET archived = true, available_quantity = 0, updated_at = NOW() WHERE slug = ${slug}
+  `;
   return (rowCount ?? 0) > 0;
 }
 

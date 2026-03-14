@@ -11,6 +11,7 @@ export interface Product {
   giftTier: GiftTier; // تصنيف الهدية: قياسية، مميزة، فاخرة
   images: string[];
   availableQuantity?: number; // الكمية المتوفرة
+  archived?: boolean; // محفوظ والكمية منتهية (لا يُحذف من القاعدة)
 }
 
 export const products: Product[] = [
