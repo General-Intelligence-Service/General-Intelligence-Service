@@ -12,18 +12,6 @@ import { siteConfig } from "@/lib/config";
 import { saveOrderToHistory, getOrderDraft, saveOrderDraft, clearOrderDraft } from "@/types/order";
 import { products as initialProducts, type Product } from "@/data/products";
 
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1] ?? "");
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
 export function OrderCart() {
   const {
     orderItems,
@@ -163,9 +151,7 @@ export function OrderCart() {
     setDraftExists(false);
   };
 
-  const TELEGRAM_LINK = "https://t.me/Mojahd_N";
-
-  const handleExportAndSendTelegram = async () => {
+  const handleExportPDF = async () => {
     if (isSubmitting || orderItems.length === 0) return;
     setIsSubmitting(true);
     try {
@@ -194,59 +180,20 @@ export function OrderCart() {
         createdAt: new Date().toISOString(),
       });
 
-      const caption = `طلبية هدايا — رقم مرجعي: ${orderRef}`;
-      const pdfBase64 = await blobToBase64(blob);
-      const apiRes = await fetch("/api/orders/send-telegram", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdfBase64, caption }),
-      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `طلبية-هدايا-${dateStr}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
 
-      if (apiRes.ok) {
-        setToast({ variant: "success", title: "تم إرسال الملف إلى تلغرام مباشرة", description: `رقم مرجعي: ${orderRef}` });
-        clearOrder();
-        clearOrderDraft();
-        setIsOpen(false);
-        return;
-      }
-
-      const canShare =
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function" &&
-        (() => {
-          try {
-            const file = new File([blob], `طلبية-هدايا-${dateStr}.pdf`, { type: "application/pdf" });
-            return typeof (navigator as any).canShare === "function" && (navigator as any).canShare({ files: [file] });
-          } catch {
-            return false;
-          }
-        })();
-
-      if (canShare) {
-        const file = new File([blob], `طلبية-هدايا-${dateStr}.pdf`, { type: "application/pdf" });
-        await navigator.share({
-          title: "طلبية الهدايا (PDF)",
-          text: caption,
-          files: [file],
-        });
-        setToast({ variant: "success", title: "تم فتح المشاركة", description: "اختر تلغرام ثم المحادثة لإرسال الملف." });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `طلبية-هدايا-${dateStr}.pdf`;
-        link.click();
-        URL.revokeObjectURL(url);
-        setToast({ variant: "success", title: "تم تحميل ملف PDF", description: `رقم مرجعي: ${orderRef} — تم فتح تلغرام. أرسل الملف من المحادثة.` });
-        if (typeof window !== "undefined") window.open(TELEGRAM_LINK, "_blank", "noopener,noreferrer");
-      }
-
+      setToast({ variant: "success", title: "تم تحميل ملف PDF", description: `رقم مرجعي: ${orderRef}` });
       clearOrder();
       clearOrderDraft();
       setIsOpen(false);
     } catch (e) {
       console.error(e);
-      setToast({ variant: "error", title: "تعذر إنشاء أو إرسال ملف PDF", description: "حاول مرة أخرى." });
+      setToast({ variant: "error", title: "تعذر إنشاء ملف PDF", description: "حاول مرة أخرى." });
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +287,7 @@ export function OrderCart() {
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                     <li>اختر المنتجات من الكتالوج وأضفها للطلبية</li>
                     <li>أدخل اسم الجهة الطالبة (اختياري)</li>
-                    <li>اضغط &quot;إرسال الطلب وتصدير PDF&quot; لتحميل الطلبية أو إرسالها بالبريد</li>
+                    <li>اضغط &quot;تحميل PDF&quot; لتحميل الطلبية</li>
                   </ol>
                   <button type="button" onClick={dismissOrderStepsTip} className="mt-2 text-xs text-primary font-medium hover:underline">تم، إخفاء</button>
                 </div>
@@ -451,13 +398,13 @@ export function OrderCart() {
                   {shareLinkCopied ? "تم النسخ!" : "مشاركة رابط الطلبية"}
                 </Button>
                 <Button
-                  onClick={handleExportAndSendTelegram}
+                  onClick={handleExportPDF}
                   className="w-full min-h-[44px] touch-manipulation"
                   size="lg"
                   disabled={isSubmitting}
                 >
                   <FileText className="ml-2 h-5 w-5" />
-                  {isSubmitting ? "جاري الحفظ..." : "إرسال الطلب وتصدير PDF إلى تلغرام"}
+                  {isSubmitting ? "جاري التحميل..." : "تحميل PDF"}
                 </Button>
               </div>
             )}
