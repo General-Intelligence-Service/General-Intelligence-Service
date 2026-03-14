@@ -53,20 +53,32 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    const loadProducts = (): Product[] => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setProducts(json.data);
+          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
+          return;
+        }
+      } catch {
+        // fallback
+      }
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("products");
         if (saved) {
           try {
-            return JSON.parse(saved);
+            setProducts(JSON.parse(saved));
+            return;
           } catch {
-            return initialProducts;
+            //
           }
         }
       }
-      return initialProducts;
+      setProducts(initialProducts);
     };
-    setProducts(loadProducts());
+    load();
     if (typeof window !== "undefined") {
       const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
       setVisitCount(n);
@@ -179,12 +191,19 @@ export default function DashboardPage() {
   const handleDeleteProduct = async (slug: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
     try {
-      const response = await fetch(`/api/products?slug=${slug}`, { method: "DELETE" });
+      const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, { method: "DELETE" });
       const result = await response.json();
       if (result.success) {
-        setProducts(products.filter((p) => p.slug !== slug));
+        const refetch = await fetch("/api/products");
+        const refetchJson = await refetch.json();
+        if (refetchJson.success && Array.isArray(refetchJson.data)) {
+          setProducts(refetchJson.data);
+          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(refetchJson.data));
+        } else {
+          setProducts(products.filter((p) => p.slug !== slug));
+        }
       } else {
-        alert("فشل في حذف المنتج");
+        alert(result.error ?? "فشل في حذف المنتج");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -231,12 +250,13 @@ export default function DashboardPage() {
       const result = await response.json();
 
       if (result.success) {
-        if (editingProduct) {
-          setProducts(
-            products.map((p) =>
-              p.slug === editingProduct.slug ? ({ ...p, ...productData } as Product) : p
-            )
-          );
+        const refetch = await fetch("/api/products");
+        const refetchJson = await refetch.json();
+        if (refetchJson.success && Array.isArray(refetchJson.data)) {
+          setProducts(refetchJson.data);
+          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(refetchJson.data));
+        } else if (editingProduct) {
+          setProducts(products.map((p) => (p.slug === editingProduct.slug ? ({ ...p, ...productData } as Product) : p)));
         } else {
           const newProduct: Product = {
             slug: productData.slug!,
@@ -255,7 +275,7 @@ export default function DashboardPage() {
         setIsFormOpen(false);
         setEditingProduct(null);
       } else {
-        alert("فشل في حفظ المنتج");
+        alert(result.error ?? "فشل في حفظ المنتج");
       }
     } catch (error) {
       console.error("Error saving product:", error);

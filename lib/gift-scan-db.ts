@@ -1,5 +1,28 @@
 import { sql } from "@vercel/postgres";
-import { getProductBySku } from "@/data/products";
+import {
+  ensureProductsTable,
+  seedProductsIfEmpty,
+  getProductBySku,
+  getProductBySlug,
+} from "@/lib/products-db";
+
+async function resolveProductFromQrContent(
+  qrCode: string
+): Promise<{ sku: string; name: string; availableQuantity: number } | null> {
+  const trimmed = qrCode.trim();
+  let product = await getProductBySku(trimmed);
+  if (product) {
+    return { sku: product.sku, name: product.name, availableQuantity: product.availableQuantity ?? 0 };
+  }
+  const slugMatch = trimmed.match(/\/products\/([^/?\s]+)/);
+  if (slugMatch) {
+    product = await getProductBySlug(slugMatch[1]);
+    if (product) {
+      return { sku: product.sku, name: product.name, availableQuantity: product.availableQuantity ?? 0 };
+    }
+  }
+  return null;
+}
 
 let initDone = false;
 
@@ -37,12 +60,13 @@ export interface ScanResult {
 
 export async function processScan(qrCode: string): Promise<ScanResult | null> {
   await ensureGiftTables();
+  await ensureProductsTable();
+  await seedProductsIfEmpty();
 
-  const product = getProductBySku(qrCode.trim());
-  if (!product) return null;
+  const resolved = await resolveProductFromQrContent(qrCode);
+  if (!resolved) return null;
 
-  const sku = product.sku;
-  const defaultQty = product.availableQuantity ?? 0;
+  const { sku, name, availableQuantity: defaultQty } = resolved;
 
   const { rows: invRows } = await sql`
     SELECT quantity FROM inventory WHERE sku = ${sku}
@@ -63,12 +87,12 @@ export async function processScan(qrCode: string): Promise<ScanResult | null> {
 
   await sql`
     INSERT INTO scan_logs (qr_code, gift_name, remaining_quantity, scanned_at)
-    VALUES (${qrCode}, ${product.name}, ${newQty}, NOW())
+    VALUES (${qrCode}, ${name}, ${newQty}, NOW())
   `;
 
   return {
     status: "success",
-    gift_name: product.name,
+    gift_name: name,
     remaining_quantity: newQty,
   };
 }

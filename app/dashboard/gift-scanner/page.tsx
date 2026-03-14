@@ -20,6 +20,7 @@ export default function GiftScannerPage() {
   const [authOk, setAuthOk] = useState<boolean | null>(null);
   const [result, setResult] = useState<ScanResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scannedValue, setScannedValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function GiftScannerPage() {
   const handleScan = async (decodedText: string) => {
     setError(null);
     setResult(null);
+    setScannedValue(null);
     setLoading(true);
     try {
       const res = await fetch("/api/gifts/scan", {
@@ -51,7 +53,8 @@ export default function GiftScannerPage() {
           remaining_quantity: data.remaining_quantity ?? 0,
         });
       } else {
-        setError(data.error ?? "QR Code not found in the system");
+        setError(data.error ?? "رمز QR غير موجود في النظام");
+        setScannedValue(typeof data.scanned_value === "string" ? data.scanned_value : decodedText.trim());
       }
     } catch {
       setError("حدث خطأ في الاتصال. حاول مرة أخرى.");
@@ -99,7 +102,7 @@ export default function GiftScannerPage() {
                 <div className="space-y-2 text-sm">
                   <p className="font-semibold text-foreground">ما الذي يجب أن يكون داخل رمز QR؟</p>
                   <p className="text-muted-foreground">
-                    يجب أن يحتوي الرمز على <strong>كود الهدية (SKU)</strong> فقط، مثل: <code className="rounded bg-muted px-1.5 py-0.5">G01</code> أو <code className="rounded bg-muted px-1.5 py-0.5">G02</code>. عند المسح يبحث النظام عن المنتج بهذا الكود وينقص الكمية.
+                    يجب أن يحتوي الرمز على <strong>كود الهدية (SKU)</strong> مثل <code className="rounded bg-muted px-1.5 py-0.5">G01</code> أو <code className="rounded bg-muted px-1.5 py-0.5">G02</code>، أو <strong>رابط صفحة المنتج</strong> من الموقع. عند المسح يبحث النظام عن المنتج وينقص الكمية.
                   </p>
                   <p className="font-semibold text-foreground mt-3">أين يوضع رمز QR؟</p>
                   <p className="text-muted-foreground">
@@ -151,9 +154,19 @@ export default function GiftScannerPage() {
                 </div>
               )}
               {error && !loading && (
-                <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-right text-destructive">
-                  <XCircle className="h-5 w-5 shrink-0" />
-                  <span>{error}</span>
+                <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-right">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <XCircle className="h-5 w-5 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                  {scannedValue && (
+                    <p className="mt-2 text-sm text-muted-foreground break-all">
+                      الكود المقروء: <code className="rounded bg-muted px-1.5 py-0.5">{scannedValue}</code>
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    تأكد أن الرمز يحتوي على كود المنتج (مثل G01) أو رابط صفحة المنتج من الموقع.
+                  </p>
                 </div>
               )}
               {!result && !error && !loading && (

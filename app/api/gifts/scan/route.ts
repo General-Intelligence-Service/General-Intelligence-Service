@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           status: "error",
-          error: "QR Code not found in the system",
+          error: "رمز QR غير موجود في النظام",
+          scanned_value: qrCode,
         },
         { status: 404 }
       );

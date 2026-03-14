@@ -84,66 +84,53 @@ function HomeContent() {
     }
   }, []);
 
-  // تحميل المنتجات من localStorage بعد mount على العميل فقط
+  // تحميل المنتجات: من API (قاعدة البيانات) ثم localStorage ثم الافتراضي
   useEffect(() => {
     setMounted(true);
-    const loadProducts = (): Product[] => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("products");
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            // دمج البيانات المحملة مع البيانات الأولية (للتأكد من عدم فقدان أي منتج)
-            const merged = [...initialProducts];
-            parsed.forEach((p: Product) => {
-              const existingIndex = merged.findIndex((existing) => existing.slug === p.slug);
-              if (existingIndex >= 0) {
-                merged[existingIndex] = p; // تحديث المنتج الموجود
-              } else {
-                merged.push(p); // إضافة منتج جديد
-              }
-            });
-            return merged;
-          } catch {
-            return initialProducts;
-          }
-        }
+    const loadFromStorage = (): Product[] => {
+      if (typeof window === "undefined") return initialProducts;
+      const saved = localStorage.getItem("products");
+      if (!saved) return initialProducts;
+      try {
+        const parsed = JSON.parse(saved);
+        const merged = [...initialProducts];
+        parsed.forEach((p: Product) => {
+          const i = merged.findIndex((existing) => existing.slug === p.slug);
+          if (i >= 0) merged[i] = p;
+          else merged.push(p);
+        });
+        return merged;
+      } catch {
+        return initialProducts;
       }
-      return initialProducts;
     };
 
-    setAllProducts(loadProducts());
+    const load = async () => {
+      try {
+        const res = await fetch("/api/products");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setAllProducts(json.data);
+          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
+          return;
+        }
+      } catch {
+        //
+      }
+      setAllProducts(loadFromStorage());
+    };
+    load();
 
     // الاستماع لتغييرات localStorage
     const handleStorageChange = () => {
-      setAllProducts(loadProducts());
+      setAllProducts(loadFromStorage());
     };
 
     window.addEventListener("storage", handleStorageChange);
     // التحقق من التحديثات كل ثانية (للتحديثات من نفس التبويب)
     const interval = setInterval(() => {
-      const saved = localStorage.getItem("products");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          // دمج البيانات المحملة مع البيانات الأولية
-          const merged = [...initialProducts];
-          parsed.forEach((p: Product) => {
-            const existingIndex = merged.findIndex((existing) => existing.slug === p.slug);
-            if (existingIndex >= 0) {
-              merged[existingIndex] = p; // تحديث المنتج الموجود
-            } else {
-              merged.push(p); // إضافة منتج جديد
-            }
-          });
-          setAllProducts((prev) => {
-            if (JSON.stringify(merged) !== JSON.stringify(prev)) {
-              return merged;
-            }
-            return prev;
-          });
-        } catch {}
-      }
+      const next = loadFromStorage();
+      setAllProducts((prev) => (JSON.stringify(next) !== JSON.stringify(prev) ? next : prev));
     }, 1000);
 
     return () => {
