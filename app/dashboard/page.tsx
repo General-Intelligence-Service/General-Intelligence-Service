@@ -154,28 +154,6 @@ export default function DashboardPage() {
 
   const refreshOrders = () => setOrders(getStoredOrders());
 
-  /** إحصائيات أكثر المنتجات طلباً (حسب عدد القطع) */
-  const topProductsByPieces = (() => {
-    const map = new Map<string, { name: string; pieces: number; orders: number }>();
-    orders.forEach((o) => {
-      o.items?.forEach((it) => {
-        const key = it.slug || it.name;
-        const cur = map.get(key);
-        if (cur) {
-          cur.pieces += it.quantity ?? 0;
-          cur.orders += 1;
-        } else {
-          map.set(key, { name: it.name, pieces: it.quantity ?? 0, orders: 1 });
-        }
-      });
-    });
-    return Array.from(map.entries())
-      .map(([_, v]) => v)
-      .sort((a, b) => b.pieces - a.pieces)
-      .slice(0, 10);
-  })();
-
-
   useEffect(() => {
     if (mounted && typeof window !== "undefined") {
       localStorage.setItem("products", JSON.stringify(products));
@@ -417,23 +395,6 @@ export default function DashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-                {topProductsByPieces.length > 0 && (
-                  <Card className="mb-6">
-                    <CardHeader>
-                      <CardTitle className="text-lg">أكثر المنتجات طلباً (القطع)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        {topProductsByPieces.map((p, i) => (
-                          <li key={i} className="flex justify-between gap-2 border-b border-dashed pb-2 last:border-0">
-                            <span className="font-medium truncate">{p.name}</span>
-                            <span className="text-primary font-bold shrink-0">{p.pieces} قطعة</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
               </>
             );
           })()}
