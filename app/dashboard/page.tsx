@@ -705,8 +705,8 @@ export default function DashboardPage() {
             {filteredProducts.map((product) => (
               <Card key={product.slug} className="overflow-hidden break-inside-avoid">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
                       <CardTitle className="mb-2 text-xl">{product.name}</CardTitle>
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">كود: {product.sku}</Badge>
@@ -719,6 +719,21 @@ export default function DashboardPage() {
                         </Badge>
                       </div>
                     </div>
+                    <a
+                      href={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(product.sku)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 rounded border border-border bg-white p-1.5 shadow-sm hover:shadow-md transition-shadow"
+                      title="رمز QR للمنتج"
+                    >
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&data=${encodeURIComponent(product.sku)}`}
+                        alt={`QR ${product.sku}`}
+                        width={88}
+                        height={88}
+                        className="block rounded"
+                      />
+                    </a>
                   </div>
                 </CardHeader>
                 <CardContent>
