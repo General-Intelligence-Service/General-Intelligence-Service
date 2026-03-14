@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Minus, Trash2, ShoppingCart, FileText, Save, RotateCcw, Share2, Phone, Send } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, FileText, Save, RotateCcw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -163,57 +163,9 @@ export function OrderCart() {
     setDraftExists(false);
   };
 
-  const handleExportPDF = async () => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const notes = orderNotes?.trim() || undefined;
-      const reqName = requesterName.trim() || undefined;
-      const dateStr = new Date().toISOString().split("T")[0];
-      const orderRef = makeOrderReference();
-
-      const { generatePDFBlob } = await import("@/lib/pdf-generator");
-      const blob = await generatePDFBlob(orderItems, siteConfig, notes, reqName ?? undefined);
-
-      saveOrderToHistory({
-        id: orderRef,
-        date: dateStr,
-        requesterName: reqName ?? "",
-        notes,
-        items: orderItems.map((item) => ({
-          slug: item.product.slug,
-          sku: item.product.sku,
-          name: item.product.name,
-          quantity: item.quantity,
-          giftTier: item.product.giftTier,
-          category: item.product.category,
-        })),
-        totalPieces: totalItems,
-        createdAt: new Date().toISOString(),
-      });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `طلبية-هدايا-${dateStr}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
-      setToast({ variant: "success", title: "تم إنشاء الطلبية بنجاح", description: `رقم مرجعي: ${orderRef}` });
-      clearOrder();
-      clearOrderDraft();
-      setIsOpen(false);
-    } catch (e) {
-      console.error(e);
-      setToast({ variant: "error", title: "حدث خطأ أثناء إنشاء ملف PDF", description: "حاول مرة أخرى." });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const TELEGRAM_LINK = "https://t.me/Mojahd_N";
 
-  const handleSendToTelegram = async () => {
+  const handleExportAndSendTelegram = async () => {
     if (isSubmitting || orderItems.length === 0) return;
     setIsSubmitting(true);
     try {
@@ -249,7 +201,7 @@ export function OrderCart() {
         createdAt: new Date().toISOString(),
       });
 
-      setToast({ variant: "success", title: "تم تحميل ملف PDF", description: "تم فتح تلغرام @Mojahd_N — أرسل الملف من محادثتك." });
+      setToast({ variant: "success", title: "تم إنشاء الطلبية بنجاح", description: `رقم مرجعي: ${orderRef} — تم تحميل PDF وفتح تلغرام. أرسل الملف من المحادثة.` });
       clearOrder();
       clearOrderDraft();
       setIsOpen(false);
@@ -461,34 +413,14 @@ export function OrderCart() {
                   <Share2 className="ml-2 h-4 w-4" />
                   {shareLinkCopied ? "تم النسخ!" : "مشاركة رابط الطلبية"}
                 </Button>
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-right text-sm text-muted-foreground">
-                  <p className="font-medium text-foreground mb-1">إرسال نسخة إلى فرع الهدايا</p>
-                  <p className="flex items-center justify-end gap-2 flex-wrap">
-                    <Phone className="h-4 w-4 shrink-0" />
-                    عبر الرقم: <a href="tel:00963991307978" className="font-semibold text-primary hover:underline">00963991307978</a>
-                  </p>
-                  <p className="mt-2 flex items-center justify-end gap-2 flex-wrap">
-                    أو عبر تلغرام: <a href="https://t.me/Mojahd_N" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">@Mojahd_N</a>
-                  </p>
-                </div>
                 <Button
-                  onClick={handleSendToTelegram}
-                  className="w-full min-h-[44px] touch-manipulation"
-                  variant="outline"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  <Send className="ml-2 h-5 w-5" />
-                  {isSubmitting ? "جاري الإعداد..." : "إرسال إلى تلغرام (PDF)"}
-                </Button>
-                <Button
-                  onClick={handleExportPDF}
+                  onClick={handleExportAndSendTelegram}
                   className="w-full min-h-[44px] touch-manipulation"
                   size="lg"
                   disabled={isSubmitting}
                 >
                   <FileText className="ml-2 h-5 w-5" />
-                  {isSubmitting ? "جاري الحفظ..." : "إرسال الطلب وتصدير PDF"}
+                  {isSubmitting ? "جاري الحفظ..." : "إرسال الطلب وتصدير PDF إلى تلغرام"}
                 </Button>
               </div>
             )}
