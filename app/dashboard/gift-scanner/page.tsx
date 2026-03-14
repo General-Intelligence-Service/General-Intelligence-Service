@@ -7,7 +7,10 @@ import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRScanner } from "@/components/qr-scanner";
-import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, XCircle, Download, Info } from "lucide-react";
+import { products as initialProducts } from "@/data/products";
+
+const QR_IMAGE_API = "https://api.qrserver.com/v1/create-qr-code";
 
 export interface ScanResponse {
   status: string;
@@ -91,6 +94,63 @@ export default function GiftScannerPage() {
               </Button>
             </Link>
           </div>
+
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex gap-3 text-right">
+                <Info className="h-5 w-5 shrink-0 mt-0.5 text-primary" />
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold text-foreground">ما الذي يجب أن يكون داخل رمز QR؟</p>
+                  <p className="text-muted-foreground">
+                    يجب أن يحتوي الرمز على <strong>كود الهدية (SKU)</strong> فقط، مثل: <code className="rounded bg-muted px-1.5 py-0.5">G01</code> أو <code className="rounded bg-muted px-1.5 py-0.5">G02</code>. عند المسح يبحث النظام عن المنتج بهذا الكود وينقص الكمية.
+                  </p>
+                  <p className="font-semibold text-foreground mt-3">أين يوضع رمز QR؟</p>
+                  <p className="text-muted-foreground">
+                    على <strong>الهدية نفسها</strong> أو على <strong>غلافها</strong> أو على <strong>ملصق (ستيكر)</strong> تلصقه على الهدية، بحيث يمكن مسحه عند توزيع الهدية لتسجيل الخصم من المخزون.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg">تحميل رموز QR للمنتجات</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                حمّل صورة QR تحتوي على كود كل منتج ثم اطبعها والصقها على الهدايا.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {initialProducts.map((p) => (
+                  <li key={p.sku} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3">
+                    <div className="min-w-0">
+                      <span className="font-medium">{p.name}</span>
+                      <span className="text-muted-foreground text-sm mr-2"> — {p.sku}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 min-h-[44px]"
+                      onClick={() => {
+                        const url = `${QR_IMAGE_API}/?size=200x200&data=${encodeURIComponent(p.sku)}`;
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `qr-${p.sku}-${p.name.replace(/\s+/g, "-").slice(0, 20)}.png`;
+                        a.target = "_blank";
+                        a.rel = "noopener";
+                        a.click();
+                      }}
+                    >
+                      <Download className="ml-2 h-4 w-4" />
+                      تحميل QR ({p.sku})
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
 
           <Card className="mb-6">
             <CardHeader>
