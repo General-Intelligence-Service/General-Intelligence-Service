@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processScan, isPostgresConfigured } from "@/lib/gift-scan-db";
+import { getSession } from "@/lib/auth-session";
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { status: "error", error: "يجب تسجيل الدخول" },
+        { status: 401 }
+      );
+    }
     const configured = isPostgresConfigured();
     if (!configured) {
       return NextResponse.json(

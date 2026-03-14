@@ -9,6 +9,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "@/lib/products-db";
+import { getSession } from "@/lib/auth-session";
 
 function generateSlug(name: string): string {
   return name
@@ -38,9 +39,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - إضافة منتج جديد (في قاعدة البيانات)
+// POST - إضافة منتج جديد (في قاعدة البيانات) — يتطلب تسجيل دخول
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "يجب تسجيل الدخول" },
+        { status: 401 }
+      );
+    }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },
@@ -76,9 +84,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - تحديث منتج (في قاعدة البيانات)
+// PUT - تحديث منتج (في قاعدة البيانات) — يتطلب تسجيل دخول
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "يجب تسجيل الدخول" },
+        { status: 401 }
+      );
+    }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },
@@ -126,9 +141,16 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - حذف منتج (من قاعدة البيانات)
+// DELETE - حذف منتج (من قاعدة البيانات) — يتطلب تسجيل دخول
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "يجب تسجيل الدخول" },
+        { status: 401 }
+      );
+    }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },

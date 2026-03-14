@@ -51,6 +51,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   return verifySessionToken(token);
 }
 
+
 export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
