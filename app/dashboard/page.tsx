@@ -74,6 +74,13 @@ export default function DashboardPage() {
     }
   }, [refetchProducts]);
 
+  const PRODUCTS_AUTO_REFRESH_MS = 45 * 1000;
+  useEffect(() => {
+    if (!mounted) return;
+    const timer = setInterval(refetchProducts, PRODUCTS_AUTO_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [mounted, refetchProducts]);
+
   const ordersForMonth = orders.filter((o) => {
     const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);
     return ym === reportMonth;

@@ -52,13 +52,14 @@ export async function ensureGiftTables(): Promise<void> {
   }
 }
 
-export interface ScanResult {
-  status: "success";
+export interface ResolveResult {
+  sku: string;
   gift_name: string;
-  remaining_quantity: number;
+  current_quantity: number;
 }
 
-export async function processScan(qrCode: string): Promise<ScanResult | null> {
+/** استعلام فقط عن المنتج والكمية الحالية دون تعديل */
+export async function resolveGift(qrCode: string): Promise<ResolveResult | null> {
   await ensureGiftTables();
   await ensureProductsTable();
   await seedProductsIfEmpty();
@@ -71,13 +72,53 @@ export async function processScan(qrCode: string): Promise<ScanResult | null> {
   const { rows: invRows } = await sql`
     SELECT quantity FROM inventory WHERE sku = ${sku}
   `;
+  const currentQty = invRows.length > 0 ? Number(invRows[0].quantity) : defaultQty;
+
+  return {
+    sku,
+    gift_name: name,
+    current_quantity: Math.max(0, currentQty),
+  };
+}
+
+export interface ScanResult {
+  status: "success";
+  gift_name: string;
+  remaining_quantity: number;
+}
+
+export interface ProcessScanOptions {
+  action: "deduct" | "add";
+  quantity: number;
+}
+
+export async function processScan(
+  qrCode: string,
+  options: ProcessScanOptions = { action: "deduct", quantity: 1 }
+): Promise<ScanResult | null> {
+  await ensureGiftTables();
+  await ensureProductsTable();
+  await seedProductsIfEmpty();
+
+  const resolved = await resolveProductFromQrContent(qrCode);
+  if (!resolved) return null;
+
+  const { sku, name, availableQuantity: defaultQty } = resolved;
+  const { action, quantity } = options;
+  const qty = Math.max(1, Math.floor(quantity));
+
+  const { rows: invRows } = await sql`
+    SELECT quantity FROM inventory WHERE sku = ${sku}
+  `;
   let currentQty = invRows.length > 0 ? Number(invRows[0].quantity) : defaultQty;
 
-  if (currentQty <= 0) {
-    return null;
+  let newQty: number;
+  if (action === "deduct") {
+    if (currentQty < qty) return null;
+    newQty = currentQty - qty;
+  } else {
+    newQty = currentQty + qty;
   }
-
-  const newQty = currentQty - 1;
 
   if (invRows.length > 0) {
     await sql`UPDATE inventory SET quantity = ${newQty}, updated_at = NOW() WHERE sku = ${sku}`;

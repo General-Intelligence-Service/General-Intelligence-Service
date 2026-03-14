@@ -105,7 +105,7 @@ function HomeContent() {
       }
     };
 
-    const load = async () => {
+    const fetchProducts = async () => {
       try {
         const res = await fetch("/api/products");
         const json = await res.json();
@@ -119,7 +119,10 @@ function HomeContent() {
       }
       setAllProducts(loadFromStorage());
     };
-    load();
+    fetchProducts();
+
+    const AUTO_REFRESH_MS = 45 * 1000;
+    const refreshTimer = setInterval(fetchProducts, AUTO_REFRESH_MS);
 
     // الاستماع لتغييرات localStorage
     const handleStorageChange = () => {
@@ -136,6 +139,7 @@ function HomeContent() {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       clearInterval(interval);
+      clearInterval(refreshTimer);
     };
   }, []);
 

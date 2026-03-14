@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const qrCode = typeof body?.qr_code === "string" ? body.qr_code.trim() : "";
+    const action = body?.action === "add" ? "add" : "deduct";
+    const quantity = Math.max(1, Math.floor(Number(body?.quantity) || 1));
 
     if (!qrCode) {
       return NextResponse.json(
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await processScan(qrCode);
+    const result = await processScan(qrCode, { action, quantity });
 
     if (!result) {
       return NextResponse.json(
