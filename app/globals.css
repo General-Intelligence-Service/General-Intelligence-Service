@@ -48,6 +48,10 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  /* هوامش آمنة للشاشات ذات النتوء (الجوال) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
 }
 
 /* وضع الطباعة: إخفاء العناصر غير الضرورية وعرض المحتوى فقط */

@@ -347,31 +347,31 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <main className="flex-1 bg-muted/30 min-h-screen">
+        <div className="container mx-auto max-w-full overflow-x-hidden px-3 py-6 sm:px-4 sm:py-8 pb-safe">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="mb-2 text-3xl font-bold">لوحة التحكم</h1>
-              <p className="text-muted-foreground">إدارة المنتجات والهدايا المعروضة</p>
+              <h1 className="mb-1 text-2xl font-bold sm:mb-2 sm:text-3xl">لوحة التحكم</h1>
+              <p className="text-sm text-muted-foreground sm:text-base">إدارة المنتجات والهدايا المعروضة</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href="/dashboard/gift-scanner">
-                <Button variant="outline" size="lg" className="min-h-[44px]">
-                  <QrCode className="ml-2 h-5 w-5" />
-                  مسح الهدايا
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+              <Link href="/dashboard/gift-scanner" className="min-w-0">
+                <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
+                  <QrCode className="ml-2 h-5 w-5 shrink-0" />
+                  <span className="truncate">مسح الهدايا</span>
                 </Button>
               </Link>
-              <Link href="/dashboard/qr-codes">
-                <Button variant="outline" size="lg" className="min-h-[44px]">
-                  <DownloadCloud className="ml-2 h-5 w-5" />
-                  تحميل رموز QR
+              <Link href="/dashboard/qr-codes" className="min-w-0">
+                <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
+                  <DownloadCloud className="ml-2 h-5 w-5 shrink-0" />
+                  <span className="truncate">رموز QR</span>
                 </Button>
               </Link>
-              <Button onClick={handleAddProduct} size="lg">
-                <Plus className="ml-2 h-5 w-5" />
+              <Button onClick={handleAddProduct} size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto col-span-2 sm:col-span-1">
+                <Plus className="ml-2 h-5 w-5 shrink-0" />
                 إضافة منتج جديد
               </Button>
-              <Button variant="outline" size="icon" onClick={handleLogout} title="تسجيل الخروج">
+              <Button variant="outline" size="icon" onClick={handleLogout} title="تسجيل الخروج" className="min-h-[44px] min-w-[44px] touch-manipulation col-span-2 sm:col-span-1">
                 <LogOut className="h-5 w-5" />
                 <span className="sr-only">تسجيل الخروج</span>
               </Button>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             return (
               <>
                 <Card className="mb-6 border-primary/20 bg-primary/5">
-                  <CardContent className="flex flex-row flex-wrap items-center justify-around gap-4 py-4">
+                  <CardContent className="flex flex-row flex-wrap items-center justify-around gap-4 px-4 py-5 sm:px-6 sm:py-4">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">طلبات هذا الشهر</p>
                       <p className="text-2xl font-bold text-primary">{thisMonthOrders.length}</p>
@@ -405,20 +405,20 @@ export default function DashboardPage() {
             );
           })()}
 
-          <div className="mb-6 flex gap-2 border-b">
+          <div className="mb-6 flex border-b">
             <button
               type="button"
               onClick={() => setDashboardTab("products")}
-              className={`px-4 py-2 font-medium transition-colors ${dashboardTab === "products" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex-1 min-h-[44px] px-4 py-2 font-medium transition-colors touch-manipulation flex items-center justify-center ${dashboardTab === "products" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
               المنتجات
             </button>
             <button
               type="button"
               onClick={() => { setDashboardTab("orders"); refreshOrders(); }}
-              className={`px-4 py-2 font-medium transition-colors ${dashboardTab === "orders" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex-1 min-h-[44px] px-4 py-2 font-medium transition-colors touch-manipulation flex items-center justify-center gap-1 ${dashboardTab === "orders" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <ClipboardList className="ml-2 inline h-4 w-4" />
+              <ClipboardList className="h-4 w-4 shrink-0" />
               الطلبات
             </button>
           </div>
@@ -432,30 +432,30 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                   <select
                     value={reportType}
                     onChange={(e) => setReportType(e.target.value as "month" | "quarter" | "year")}
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:w-auto sm:min-w-[120px]"
                   >
                     <option value="month">شهري</option>
                     <option value="quarter">ربع سنوي</option>
                     <option value="year">سنوي</option>
                   </select>
                   {reportType === "month" && (
-                    <label className="flex items-center gap-2">
+                    <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
                       <span className="text-sm text-muted-foreground">الشهر:</span>
                       <input
                         type="month"
                         value={reportMonth}
                         onChange={(e) => setReportMonth(e.target.value)}
-                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:w-auto"
                       />
                     </label>
                   )}
                   {reportType === "quarter" && (
                     <>
-                      <label className="flex items-center gap-2">
+                      <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
                         <span className="text-sm text-muted-foreground">السنة:</span>
                         <input
                           type="number"
@@ -463,15 +463,15 @@ export default function DashboardPage() {
                           max={2030}
                           value={reportQuarter.split("-")[0]}
                           onChange={(e) => setReportQuarter(`${e.target.value}-${reportQuarter.split("-")[1] || 1}`)}
-                          className="w-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:w-24"
                         />
                       </label>
-                      <label className="flex items-center gap-2">
+                      <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
                         <span className="text-sm text-muted-foreground">الربع:</span>
                         <select
                           value={reportQuarter.split("-")[1]}
                           onChange={(e) => setReportQuarter(`${reportQuarter.split("-")[0]}-${e.target.value}`)}
-                          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:w-auto"
                         >
                           <option value="1">الأول (يناير–مارس)</option>
                           <option value="2">الثاني (أبريل–يونيو)</option>
@@ -482,7 +482,7 @@ export default function DashboardPage() {
                     </>
                   )}
                   {reportType === "year" && (
-                    <label className="flex items-center gap-2">
+                    <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
                       <span className="text-sm text-muted-foreground">السنة:</span>
                       <input
                         type="number"
@@ -490,13 +490,14 @@ export default function DashboardPage() {
                         max={2030}
                         value={reportYear}
                         onChange={(e) => setReportYear(e.target.value)}
-                        className="w-20 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:w-24"
                       />
                     </label>
                   )}
                   <Button
                     variant="default"
                     size="sm"
+                    className="min-h-[44px] w-full sm:w-auto touch-manipulation"
                     onClick={handleDownloadReport}
                     disabled={ordersForPeriod.length === 0 || reportLoading}
                   >
@@ -506,6 +507,7 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="min-h-[44px] touch-manipulation"
                     onClick={() => {
                       const rows = ordersForPeriod.map((o, i) => {
                         const gifts = (o.items ?? []).map((it) => `${it.name} (${it.quantity})`).join(" - ");
@@ -529,6 +531,7 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="min-h-[44px] touch-manipulation"
                     onClick={() => {
                       const data = getStoredOrders();
                       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -543,7 +546,7 @@ export default function DashboardPage() {
                     <Download className="ml-2 h-4 w-4" />
                     تصدير نسخة احتياطية
                   </Button>
-                  <label className="inline-flex cursor-pointer">
+                  <label className="inline-flex cursor-pointer min-h-[44px]">
                     <input
                       type="file"
                       accept=".json,application/json"
@@ -577,16 +580,16 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">
                   عدد الطلبات في {periodLabel}: {ordersForPeriod.length} — إجمالي القطع: {ordersForPeriod.reduce((s, o) => s + (o.totalPieces ?? 0), 0)}
                 </p>
-                <div className="overflow-x-auto rounded-md border">
-                  <table className="w-full text-right text-sm">
+                <div className="overflow-x-auto rounded-md border -mx-3 sm:mx-0 overflow-y-visible" style={{ WebkitOverflowScrolling: "touch" }}>
+                  <table className="w-full min-w-[640px] text-right text-sm">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="p-2 w-10">#</th>
-                        <th className="p-2 w-28">التاريخ</th>
-                        <th className="p-2 min-w-[140px]">الجهة الطالبة</th>
-                        <th className="p-2 min-w-[220px]">الهدايا</th>
-                        <th className="p-2 w-16">القطع</th>
-                        <th className="p-2 max-w-[180px]">ملاحظات</th>
+                        <th className="p-2 sm:p-3 w-10">#</th>
+                        <th className="p-2 sm:p-3 w-28">التاريخ</th>
+                        <th className="p-2 sm:p-3 min-w-[120px]">الجهة الطالبة</th>
+                        <th className="p-2 sm:p-3 min-w-[180px]">الهدايا</th>
+                        <th className="p-2 sm:p-3 w-16">القطع</th>
+                        <th className="p-2 sm:p-3 max-w-[160px]">ملاحظات</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -601,14 +604,14 @@ export default function DashboardPage() {
                             key={o.id}
                             className={`border-t align-top ${isToday ? "bg-green-50 dark:bg-green-950/20" : isThisMonth ? "bg-primary/5" : ""}`}
                           >
-                            <td className="p-2">{i + 1}</td>
-                            <td className="p-2">
+                            <td className="p-2 sm:p-3">{i + 1}</td>
+                            <td className="p-2 sm:p-3">
                               <span className="inline-block">{o.date}</span>
                               {isToday && <Badge variant="default" className="mr-1 text-xs bg-green-600">اليوم</Badge>}
                               {!isToday && isThisMonth && <Badge variant="secondary" className="mr-1 text-xs">هذا الشهر</Badge>}
                             </td>
-                            <td className="p-2">{o.requesterName || "—"}</td>
-                            <td className="p-2">
+                            <td className="p-2 sm:p-3">{o.requesterName || "—"}</td>
+                            <td className="p-2 sm:p-3">
                               {o.items?.length ? (
                                 <ul className="list-inside list-disc space-y-0.5 text-muted-foreground">
                                   {o.items.map((it, idx) => (
@@ -619,8 +622,8 @@ export default function DashboardPage() {
                                 "—"
                               )}
                             </td>
-                            <td className="p-2">{o.totalPieces ?? 0}</td>
-                            <td className="p-2 max-w-[180px] truncate">{o.notes || "—"}</td>
+                            <td className="p-2 sm:p-3">{o.totalPieces ?? 0}</td>
+                            <td className="p-2 sm:p-3 max-w-[160px] truncate">{o.notes || "—"}</td>
                           </tr>
                           );
                         })
@@ -641,8 +644,8 @@ export default function DashboardPage() {
                 إحصائيات وأدوات
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-6 text-sm">
+            <CardContent className="space-y-4 px-4 sm:px-6">
+              <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
                 <div>
                   <span className="text-muted-foreground">عدد المنتجات:</span>
                   <span className="mr-2 font-bold text-lg">{products.length}</span>
@@ -653,16 +656,16 @@ export default function DashboardPage() {
                   <span className="text-muted-foreground text-xs">(هذا المتصفح)</span>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={handleExportCSV}>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleExportCSV}>
                   <Download className="ml-2 h-4 w-4" />
                   تصدير CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleBackup}>
+                <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleBackup}>
                   <Download className="ml-2 h-4 w-4" />
                   تحميل نسخة احتياطية
                 </Button>
-                <label className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 cursor-pointer">
+                <label className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground min-h-[44px] px-4 cursor-pointer touch-manipulation">
                   <Upload className="ml-2 h-4 w-4" />
                   استعادة من ملف
                   <input type="file" accept=".json,application/json" className="hidden" onChange={handleRestore} />
@@ -672,23 +675,23 @@ export default function DashboardPage() {
           </Card>
 
           <Card className="mb-6">
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 px-4 sm:px-6">
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   type="text"
                   placeholder="ابحث عن منتج..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
+                  className="pr-10 min-h-[44px] text-base touch-manipulation"
                 />
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => (
-              <Card key={product.slug} className="overflow-hidden">
+              <Card key={product.slug} className="overflow-hidden break-inside-avoid">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -722,13 +725,13 @@ export default function DashboardPage() {
                       </ul>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1" onClick={() => handleEditProduct(product)}>
-                      <Edit className="ml-2 h-4 w-4" />
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1 min-h-[44px] touch-manipulation" onClick={() => handleEditProduct(product)}>
+                      <Edit className="ml-2 h-4 w-4 shrink-0" />
                       تعديل
                     </Button>
-                    <Button variant="destructive" className="flex-1" onClick={() => handleDeleteProduct(product.slug)}>
-                      <Trash2 className="ml-2 h-4 w-4" />
+                    <Button variant="destructive" className="flex-1 min-h-[44px] touch-manipulation" onClick={() => handleDeleteProduct(product.slug)}>
+                      <Trash2 className="ml-2 h-4 w-4 shrink-0" />
                       حذف
                     </Button>
                   </div>
