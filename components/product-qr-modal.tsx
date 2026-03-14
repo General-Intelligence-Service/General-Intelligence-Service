@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { X } from "lucide-react";
 
 const QR_API = "https://api.qrserver.com/v1/create-qr-code";
@@ -88,10 +89,10 @@ export function ProductQRModal({
         <p className="text-sm text-muted-foreground text-center mb-4 line-clamp-2">{productName}</p>
 
         <div className="flex justify-center mb-4">
-          <img
+          <Image
             src={qrSrc}
             alt={`QR لصفحة ${productName}`}
-            className="w-48 h-48 rounded-lg border bg-white"
+            className="w-48 h-48 rounded-lg border bg-white object-contain"
             width={256}
             height={256}
           />

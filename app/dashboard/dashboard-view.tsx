@@ -74,7 +74,7 @@ export function DashboardView() {
     if (!mounted) return;
     const timer = setInterval(refetchProducts, PRODUCTS_AUTO_REFRESH_MS);
     return () => clearInterval(timer);
-  }, [mounted, refetchProducts]);
+  }, [mounted, refetchProducts, PRODUCTS_AUTO_REFRESH_MS]);
 
   const ordersForMonth = orders.filter((o) => {
     const ym = o.date ? o.date.slice(0, 7) : o.createdAt?.slice(0, 7);

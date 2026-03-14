@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -408,7 +409,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                         </div>
                       </div>
                       <a href={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(product.sku)}`} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded border border-border bg-white p-1.5 shadow-sm hover:shadow-md transition-shadow" title="رمز QR للمنتج">
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&data=${encodeURIComponent(product.sku)}`} alt={`QR ${product.sku}`} width={88} height={88} className="block rounded" />
+                        <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&data=${encodeURIComponent(product.sku)}`} alt={`QR ${product.sku}`} width={88} height={88} className="block rounded" />
                       </a>
                     </div>
                   </CardHeader>

@@ -124,7 +124,12 @@ export function CatalogPDFDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            {logoUrl ? <Image src={logoUrl} style={styles.logo} /> : <View style={styles.logo} />}
+            {logoUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image has no alt prop
+              <Image src={logoUrl} style={styles.logo} />
+            ) : (
+              <View style={styles.logo} />
+            )}
             <View style={styles.headerText}>
               <Text style={styles.headerTitle}>{title}</Text>
               <Text style={styles.headerSubtitle}>{subtitle || "قائمة المنتجات"}</Text>
