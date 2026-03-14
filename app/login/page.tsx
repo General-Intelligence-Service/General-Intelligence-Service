@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") ?? "";
@@ -43,59 +43,67 @@ export default function LoginPage() {
   };
 
   return (
+    <div className="w-full max-w-sm space-y-6 rounded-lg border bg-card p-6 shadow-sm">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold">تسجيل الدخول</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          للمسؤولين فقط - لوحة التحكم
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="mb-1 block text-sm font-medium">
+            البريد الإلكتروني المعتمد
+          </label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@example.com"
+            required
+            className="text-left"
+            dir="ltr"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="mb-1 block text-sm font-medium">
+            كلمة المرور
+          </label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="اختياري إذا لم تُضبط كلمة مرور"
+            className="text-left"
+            dir="ltr"
+          />
+        </div>
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? "جاري الدخول..." : "دخول"}
+        </Button>
+      </form>
+      <p className="text-center text-sm text-muted-foreground">
+        <Link href="/" className="underline hover:text-foreground">
+          العودة للرئيسية
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-sm space-y-6 rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">تسجيل الدخول</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              للمسؤولين فقط - لوحة التحكم
-            </p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="mb-1 block text-sm font-medium">
-                البريد الإلكتروني المعتمد
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                required
-                className="text-left"
-                dir="ltr"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium">
-                كلمة المرور
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="اختياري إذا لم تُضبط كلمة مرور"
-                className="text-left"
-                dir="ltr"
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "جاري الدخول..." : "دخول"}
-            </Button>
-          </form>
-          <p className="text-center text-sm text-muted-foreground">
-            <Link href="/" className="underline hover:text-foreground">
-              العودة للرئيسية
-            </Link>
-          </p>
-        </div>
+        <Suspense fallback={<div className="w-full max-w-sm rounded-lg border bg-card p-6 text-center text-muted-foreground">جاري التحميل...</div>}>
+          <LoginForm />
+        </Suspense>
       </main>
       <Footer />
     </div>
