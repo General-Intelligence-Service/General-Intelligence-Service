@@ -40,12 +40,6 @@ export function Navbar() {
             المنتجات
           </Link>
           <Link
-            href="/archive"
-            className="flex flex-col w-fit h-[29px] text-base font-medium transition-colors hover:text-brand-green-dark"
-          >
-            أرشيف الصور
-          </Link>
-          <Link
             href="/login"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -75,13 +69,6 @@ export function Navbar() {
                 className="text-lg font-medium transition-colors hover:text-brand-green-dark"
               >
                 المنتجات
-              </Link>
-              <Link
-                href="/archive"
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-medium transition-colors hover:text-brand-green-dark"
-              >
-                أرشيف الصور
               </Link>
               <Link
                 href="/login"

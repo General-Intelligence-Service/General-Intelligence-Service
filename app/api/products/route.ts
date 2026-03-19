@@ -4,6 +4,7 @@ import {
   isProductsDbConfigured,
   ensureProductsTable,
   seedProductsIfEmpty,
+  syncInitialProducts,
   getAllProducts,
   createProduct,
   updateProduct,
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
     const includeArchived = searchParams.get("include_archived") === "1" || searchParams.get("include_archived") === "true";
     await ensureProductsTable();
     await seedProductsIfEmpty();
+    await syncInitialProducts();
     const data = await getAllProducts(includeArchived);
     return NextResponse.json({ success: true, data });
   } catch (error) {

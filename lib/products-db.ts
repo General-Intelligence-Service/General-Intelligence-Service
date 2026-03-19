@@ -80,6 +80,34 @@ export async function seedProductsIfEmpty(): Promise<number> {
   return initialProducts.length;
 }
 
+/**
+ * مزامنة المنتجات الأولية (من data/products) مع القاعدة:
+ * - تُدرج أي منتج غير موجود
+ * - لا تُعدّل المنتجات الموجودة (حتى لا نكسر تعديلات الداشبورد)
+ */
+export async function syncInitialProducts(): Promise<void> {
+  await ensureProductsTable();
+  for (const p of initialProducts) {
+    await sql`
+      INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, updated_at)
+      VALUES (
+        ${p.slug},
+        ${p.sku},
+        ${p.name},
+        ${p.shortDescription ?? ""},
+        ${JSON.stringify(p.contents ?? [])}::jsonb,
+        ${p.giftTier},
+        ${JSON.stringify(p.images ?? [])}::jsonb,
+        ${p.availableQuantity ?? 0},
+        ${p.category ?? null},
+        ${p.price ?? null},
+        NOW()
+      )
+      ON CONFLICT (slug) DO NOTHING
+    `;
+  }
+}
+
 export async function getAllProducts(includeArchived = false): Promise<Product[]> {
   await ensureProductsTable();
   const { rows } = includeArchived
