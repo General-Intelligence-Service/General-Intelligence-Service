@@ -1,3 +1,5 @@
+import { ARCHIVE_CATEGORIES, getArchiveImageSrc } from "@/lib/archive-data";
+
 export type GiftTier = "standard" | "premium" | "luxury";
 
 export interface Product {
@@ -12,6 +14,93 @@ export interface Product {
   images: string[];
   availableQuantity?: number; // الكمية المتوفرة
   archived?: boolean; // محفوظ والكمية منتهية (لا يُحذف من القاعدة)
+}
+
+/** slug آمن من اسم فئة الأرشيف */
+function slugFromArchiveCategory(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const ARCHIVE_DESCRIPTIONS: Record<string, string> = {
+  "درع جلد بني صغير":
+    "درع تكريمي بحجم عملي بتغليف جلدي بني، مناسب للمكاتب والتكريمات اليومية.",
+  "درع جلد اخضر صحن":
+    "درع بشكل صحن أنيق مع تفاصيل جلدية خضراء، يجمع الأصالة بلمسة عصرية.",
+  "درع ورقة وريشة":
+    "تصميم فني يجمع ورقة وريشة بحرفية دقيقة، مثالي للديكور والإهداء الثقافي.",
+  "صدوق مصب قهوة وفناجين":
+    "صندوق فاخر لمضب القهوة والفناجين، يناسب الضيافة العربية والهدايا الرسمية.",
+  "شنطا يدوية":
+    "شنطة يدوية أنيقة من مجموعتنا، عملية وأنيقة للاستخدام اليومي والهدايا.",
+  "صندوق بروكار شنطا مصدفة":
+    "صندوق بروكار مزين بالصدف بتصميم شنطة، قطعة فاخرة للتقديم والإهداء.",
+  "صندوق بروكار كبير":
+    "صندوق بروكار بحجم كبير، مناسب للمجموعات والهدايا المؤسسية الفاخرة.",
+  "صندوق دفتر وقلم":
+    "طقم دفتر وقلم في صندوق أنيق، مثالي للمكاتب والتخرج والمناسبات المهنية.",
+  "صندوق دلة":
+    "صندوق مخصص لدلة القهوة التراثية، يعكس الهوية والضيافة العربية الأصيلة.",
+  "صندوق شاشة":
+    "صندوق تقديم أنيق يناسب الشاشات والقطع التقنية، تصميم عصري للهدايا الرسمية.",
+  "صندوق مستطيل خشب ثقيل":
+    "صندوق خشبي ثقيل بجودة عالية، يدوم طويلاً ويليق بالهدايا القيّمة.",
+  "صندوق مبخرة نحاسية":
+    "صندوق لمبخرة نحاسية بتفاصيل تراثية، للمنزل أو المكتب المميز.",
+  "صندوق تمر فاخر 3":
+    "تنسيق فاخر للتمر بثلاثة مستويات، هدية راقية لرمضان والمناسبات.",
+  "صندوق تمر وسجادة صلاة 2":
+    "مجموعة تجمع التمر الفاخر مع سجادة صلاة في تغليف واحد أنيق.",
+  "فولدر جديد":
+    "فولدر وثائق بتصميم حديث، عملي للمؤتمرات والمكاتب والهدايا الترويجية.",
+  "فولدر شكلة":
+    "فولدر بشكل مميز، يجمع الأناقة والوظيفية في قطعة واحدة.",
+  "لوحة الجامع الاموي":
+    "لوحة فنية لمعلم الجامع الأموي، تعبير عن التراث الدمشقي الأصيل.",
+  "لوحة قلعة حلب":
+    "لوحة تذكارية لقلعة حلب، رمز حضاري لعشاق التاريخ والمعالم.",
+  "مبخرة عامودية":
+    "مبخرة عامودية أنيقة من التراث العربي، قطعة ديكور وروائح زكية.",
+  "مبخرة سكي لاين":
+    "مبخرة بتصميم أفق مدني عصري يلتقي بروح التراث.",
+};
+
+function defaultArchiveDescription(name: string): string {
+  return `قطعة من أرشيف صور المعرض: ${name}. للمعاينة؛ السعر والتوفر حسب الاستفسار.`;
+}
+
+function buildArchiveCatalogProducts(): Product[] {
+  return ARCHIVE_CATEGORIES.map((cat, idx) => {
+    const slug = `archive-${slugFromArchiveCategory(cat.name)}`;
+    const sku = `G${String(9 + idx).padStart(2, "0")}`;
+    const images = cat.images.map((filename) => getArchiveImageSrc(cat.name, filename));
+    const shortDescription =
+      ARCHIVE_DESCRIPTIONS[cat.name] ?? defaultArchiveDescription(cat.name);
+    const isLuxury =
+      cat.name.includes("فاخر") ||
+      cat.name.includes("بروكار") ||
+      cat.name.includes("مصدف");
+    return {
+      slug,
+      sku,
+      name: cat.name,
+      shortDescription,
+      contents: [cat.name, "معاينة من أرشيف الصور", "السعر والتوفر حسب الطلب"],
+      category: "أرشيف الصور",
+      giftTier: isLuxury ? ("luxury" as const) : ("premium" as const),
+      images,
+      availableQuantity: 10 + (idx % 6),
+    };
+  });
+}
+
+/** منتجات تعتمد صور مجلد public/archive-images (أرشيف التصوير) */
+export function isArchiveCatalogProduct(product: Product): boolean {
+  return (product.images ?? []).some(
+    (src) => typeof src === "string" && src.includes("/archive-images/")
+  );
 }
 
 export const products: Product[] = [
@@ -159,6 +248,7 @@ export const products: Product[] = [
     images: ["/images/بكج vip.jpg"],
     availableQuantity: 2,
   },
+  ...buildArchiveCatalogProducts(),
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {

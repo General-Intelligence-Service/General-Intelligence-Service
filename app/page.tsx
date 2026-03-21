@@ -10,7 +10,14 @@ import { ProductCard } from "@/components/product-card";
 import { QuickViewModal } from "@/components/quick-view-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { products as initialProducts, getAllGiftTiers, getGiftTierLabel, type GiftTier, type Product } from "@/data/products";
+import {
+  products as initialProducts,
+  getAllGiftTiers,
+  getGiftTierLabel,
+  isArchiveCatalogProduct,
+  type GiftTier,
+  type Product,
+} from "@/data/products";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
 
@@ -183,6 +190,26 @@ function HomeContent() {
 
   const filteredProducts = filteredProductsRaw;
 
+  const { archiveGridProducts, catalogGridProducts } = useMemo(() => {
+    const archive = filteredProducts.filter(isArchiveCatalogProduct);
+    const catalog = filteredProducts.filter((p) => !isArchiveCatalogProduct(p));
+    return { archiveGridProducts: archive, catalogGridProducts: catalog };
+  }, [filteredProducts]);
+
+  const renderProductGrid = (list: Product[], keyPrefix: string) => (
+    <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {list.map((product, index) => (
+        <ProductCard
+          key={`${keyPrefix}-${product.slug}`}
+          product={product}
+          index={index}
+          onAddToOrder={addToOrder}
+          onQuickView={setQuickViewProduct}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -321,18 +348,30 @@ function HomeContent() {
               </div>
             </div>
 
-            {/* Products Grid */}
+            {/* Grids: أرشيف الصور بنفس كروت الكتالوج، ثم باقي المنتجات */}
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product, index) => (
-                  <ProductCard
-                    key={product.slug}
-                    product={product}
-                    index={index}
-                    onAddToOrder={addToOrder}
-                    onQuickView={setQuickViewProduct}
-                  />
-                ))}
+              <div className="space-y-12">
+                {archiveGridProducts.length > 0 && (
+                  <div>
+                    <h2 className="mb-6 text-center text-2xl font-bold text-foreground sm:text-3xl">
+                      من أرشيف الصور
+                    </h2>
+                    <p className="mb-6 text-center text-muted-foreground max-w-2xl mx-auto">
+                      معاينة حية لصور التصوير؛ نفس بطاقة المنتج (كود، كمية، عرض سريع، إضافة للطلبية، واتساب).
+                    </p>
+                    {renderProductGrid(archiveGridProducts, "arch")}
+                  </div>
+                )}
+                {catalogGridProducts.length > 0 && (
+                  <div>
+                    {archiveGridProducts.length > 0 && (
+                      <h2 className="mb-6 text-center text-xl font-semibold text-foreground sm:text-2xl">
+                        منتجات الكتالوج
+                      </h2>
+                    )}
+                    {renderProductGrid(catalogGridProducts, "cat")}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="py-12 text-center">
