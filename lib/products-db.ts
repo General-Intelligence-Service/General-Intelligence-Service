@@ -37,6 +37,19 @@ export async function ensureProductsTable(): Promise<void> {
   }
 }
 
+/** دمج التحديثات دون مسح الحقول عند وصول undefined من JSON (كان يُفقد الوصف/الصور إلخ) */
+function mergeProductUpdate(current: Product, updates: Partial<Product>): Product {
+  const merged: Product = { ...current };
+  const m = merged as unknown as Record<string, unknown>;
+  (Object.entries(updates) as [keyof Product, unknown][]).forEach(([key, value]) => {
+    if (value !== undefined) {
+      m[key as string] = value;
+    }
+  });
+  merged.slug = current.slug;
+  return merged;
+}
+
 function rowToProduct(r: Record<string, unknown>): Product {
   return {
     slug: String(r.slug),
@@ -155,11 +168,7 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
   const { rows: existing } = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`;
   if (existing.length === 0) return null;
   const current = rowToProduct(existing[0]);
-  const merged: Product = {
-    ...current,
-    ...updates,
-    slug: current.slug,
-  };
+  const merged = mergeProductUpdate(current, updates);
   const archived = merged.archived ?? false;
   await sql`
     UPDATE products SET

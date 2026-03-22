@@ -178,7 +178,11 @@ export function DashboardView() {
       /** عند التعديل يجب إرسال slug الأصلي من القاعدة؛ النموذج لا يضمّن slug فيصل undefined وكان يُستبدل بـ product-timestamp فيفشل PUT */
       let slug: string;
       if (isEdit) {
-        slug = editingProduct!.slug;
+        slug = (editingProduct?.slug || product.slug || "").trim();
+        if (!slug) {
+          alert("تعذر تحديد المنتج. أغلق النافذة وأعد فتح التعديل.");
+          return;
+        }
       } else {
         slug =
           (product.slug && product.slug.trim()) ||
@@ -209,18 +213,26 @@ export function DashboardView() {
         credentials: "include",
         body: JSON.stringify(payload),
       });
-      const result = await response.json();
-      if (result.success && result.data) {
-        if (isEdit) {
-          setProducts((prev) => prev.map((p) => (p.slug === editingProduct?.slug ? result.data : p)));
-        } else {
-          setProducts((prev) => [...prev, result.data]);
-        }
+      const text = await response.text();
+      let result: { success?: boolean; error?: string; data?: Product } = {};
+      try {
+        result = text ? (JSON.parse(text) as typeof result) : {};
+      } catch {
+        alert(`رد غير صالح من الخادم (${response.status}). تحقق من الاتصال أو سجّل الدخول مجدداً.`);
+        return;
+      }
+      if (result.success) {
+        await refetchProducts();
         setIsFormOpen(false);
         setEditingProduct(null);
-      } else {
-        alert(result.error || "حدث خطأ");
+        return;
       }
+      if (response.status === 401) {
+        alert(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        router.replace("/login?next=/dashboard");
+        return;
+      }
+      alert(result.error || `تعذر الحفظ (${response.status})`);
     } catch (e) {
       console.error(e);
       alert("حدث خطأ أثناء الحفظ");

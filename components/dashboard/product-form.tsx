@@ -18,10 +18,11 @@ import { Product, type GiftTier, getGiftTierLabel, getAllGiftTiers, generateNext
 interface ProductFormProps {
   product: Product | null;
   onClose: () => void;
-  onSubmit: (data: Partial<Product>) => void;
+  onSubmit: (data: Partial<Product>) => void | Promise<void>;
 }
 
 export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<Product>>({
     name: "",
     sku: "",
@@ -38,8 +39,9 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
 
   useEffect(() => {
     if (product) {
-      // تعديل منتج موجود - استخدام SKU الحالي
+      // تعديل منتج موجود - يُحفظ slug للمرجعية (الحفظ الفعلي يستخدم slug من الداشبورد)
       setFormData({
+        slug: product.slug,
         name: product.name,
         sku: product.sku,
         shortDescription: product.shortDescription,
@@ -49,6 +51,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
         availableQuantity: product.availableQuantity || 0,
         category: product.category,
         price: product.price,
+        archived: product.archived,
       });
     } else {
       // منتج جديد - توليد SKU تلقائياً
@@ -64,9 +67,14 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
     }
   }, [product]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setSaving(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addContent = () => {
@@ -339,11 +347,11 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
               إلغاء
             </Button>
-            <Button type="submit">
-              {product ? "حفظ التعديلات" : "إضافة المنتج"}
+            <Button type="submit" disabled={saving}>
+              {saving ? "جاري الحفظ..." : product ? "حفظ التعديلات" : "إضافة المنتج"}
             </Button>
           </DialogFooter>
         </form>

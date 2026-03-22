@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest) {
       );
     }
     const body = await request.json();
-    const slug = body.slug;
+    const slug = typeof body.slug === "string" ? body.slug.trim() : "";
     if (!slug) {
       return NextResponse.json(
         { success: false, error: "معرف المنتج (slug) مطلوب" },
@@ -114,6 +114,7 @@ export async function PUT(request: NextRequest) {
       availableQuantity: body.availableQuantity,
       category: body.category,
       price: body.price,
+      archived: body.archived,
     };
     await ensureProductsTable();
     const updated = await updateProduct(slug, updatedData);
