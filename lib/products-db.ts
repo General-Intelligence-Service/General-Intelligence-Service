@@ -37,19 +37,6 @@ export async function ensureProductsTable(): Promise<void> {
   }
 }
 
-/** دمج التحديثات دون مسح الحقول عند وصول undefined من JSON (كان يُفقد الوصف/الصور إلخ) */
-function mergeProductUpdate(current: Product, updates: Partial<Product>): Product {
-  const merged: Product = { ...current };
-  const m = merged as unknown as Record<string, unknown>;
-  (Object.entries(updates) as [keyof Product, unknown][]).forEach(([key, value]) => {
-    if (value !== undefined) {
-      m[key as string] = value;
-    }
-  });
-  merged.slug = current.slug;
-  return merged;
-}
-
 function rowToProduct(r: Record<string, unknown>): Product {
   return {
     slug: String(r.slug),
@@ -163,29 +150,42 @@ export async function createProduct(p: Product): Promise<Product> {
   return p;
 }
 
+/**
+ * تحديث منتج في جولة شبكة واحدة (بدون SELECT ثم UPDATE) لتقليل زمن الحفظ على Neon/Vercel.
+ * الحقول غير المرسلة (undefined) تُمرَّر كـ NULL إلى COALESCE فتُحفَظ القيمة القديمة.
+ */
 export async function updateProduct(slug: string, updates: Partial<Product>): Promise<Product | null> {
   await ensureProductsTable();
-  const { rows: existing } = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`;
-  if (existing.length === 0) return null;
-  const current = rowToProduct(existing[0]);
-  const merged = mergeProductUpdate(current, updates);
-  const archived = merged.archived ?? false;
-  await sql`
-    UPDATE products SET
-      sku = ${merged.sku},
-      name = ${merged.name},
-      short_description = ${merged.shortDescription ?? ""},
-      contents = ${JSON.stringify(merged.contents ?? [])}::jsonb,
-      gift_tier = ${merged.giftTier},
-      images = ${JSON.stringify(merged.images ?? [])}::jsonb,
-      available_quantity = ${merged.availableQuantity ?? 0},
-      category = ${merged.category ?? null},
-      price = ${merged.price ?? null},
-      archived = ${archived},
+  const sku = updates.sku !== undefined ? updates.sku : null;
+  const name = updates.name !== undefined ? updates.name : null;
+  const shortDescription = updates.shortDescription !== undefined ? updates.shortDescription : null;
+  const contentsJson =
+    updates.contents !== undefined ? JSON.stringify(updates.contents ?? []) : null;
+  const giftTier = updates.giftTier !== undefined ? updates.giftTier : null;
+  const imagesJson = updates.images !== undefined ? JSON.stringify(updates.images ?? []) : null;
+  const qty = updates.availableQuantity !== undefined ? updates.availableQuantity : null;
+  const category = updates.category !== undefined ? updates.category : null;
+  const price = updates.price !== undefined ? updates.price : null;
+  const archived = updates.archived !== undefined ? updates.archived : null;
+
+  const { rows } = await sql`
+    UPDATE products AS p SET
+      sku = COALESCE(${sku}, p.sku),
+      name = COALESCE(${name}, p.name),
+      short_description = COALESCE(${shortDescription}, p.short_description),
+      contents = COALESCE(${contentsJson}::jsonb, p.contents),
+      gift_tier = COALESCE(${giftTier}, p.gift_tier),
+      images = COALESCE(${imagesJson}::jsonb, p.images),
+      available_quantity = COALESCE(${qty}, p.available_quantity),
+      category = COALESCE(${category}, p.category),
+      price = COALESCE(${price}, p.price),
+      archived = COALESCE(${archived}, p.archived),
       updated_at = NOW()
-    WHERE slug = ${slug}
+    WHERE p.slug = ${slug}
+    RETURNING *
   `;
-  return merged;
+  if (rows.length === 0) return null;
+  return rowToProduct(rows[0]);
 }
 
 /** حذف ناعم: المنتج يُحفظ في القاعدة ويُسجّل أن الكمية منتهية (لا يُحذف فعلياً) */
