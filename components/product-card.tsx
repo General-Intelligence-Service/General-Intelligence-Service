@@ -38,20 +38,20 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -8 }}
       className="h-full"
     >
-      <Card className="group h-full overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
+      <Card className="group h-full overflow-hidden rounded-lg shadow-sm transition-all duration-200 sm:rounded-xl sm:shadow-md sm:hover:shadow-lg sm:hover:shadow-primary/10 sm:hover:-translate-y-2">
         <Link href={`/products/${product.slug}`}>
           <CardHeader className="p-0">
-            <div className="relative aspect-square w-full overflow-hidden bg-muted">
+            {/* جوال: صورة أقل ارتفاعاً؛ سطح المكتب: مربع */}
+            <div className="relative aspect-[5/4] w-full overflow-hidden bg-muted sm:aspect-square">
               {product.images && product.images.length > 0 && product.images[0] ? (
                 <Image
                   src={product.images[0]}
                   alt={product.name}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-300 sm:group-hover:scale-105"
                   loading="lazy"
                   unoptimized={product.images[0].includes("/archive-images/")}
                   placeholder="blur"
@@ -67,16 +67,16 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
-                  <span>لا توجد صورة</span>
+                  <span className="text-xs sm:text-sm">لا توجد صورة</span>
                 </div>
               )}
             </div>
           </CardHeader>
         </Link>
-        <CardContent className="p-3 sm:p-4">
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <Link href={`/products/${product.slug}`}>
-              <h3 className="text-xl font-semibold leading-tight transition-colors duration-200 hover:text-brand-green-dark">
+        <CardContent className="p-2 sm:p-4">
+          <div className="mb-1.5 flex items-start justify-between gap-1.5 sm:mb-2 sm:gap-2">
+            <Link href={`/products/${product.slug}`} className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold leading-snug transition-colors duration-200 hover:text-brand-green-dark sm:text-xl sm:leading-tight">
                 {product.name}
               </h3>
             </Link>
@@ -84,75 +84,80 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
               <Badge 
                 variant={product.giftTier === "luxury" ? "default" : "outline"}
                 className={
-                  product.giftTier === "luxury" 
+                  "shrink-0 text-[10px] px-1.5 py-0 leading-tight sm:text-xs sm:px-2.5 sm:py-0.5 " +
+                  (product.giftTier === "luxury" 
                     ? "bg-brand-gold text-white border-brand-gold" 
                     : product.giftTier === "premium"
                     ? "border-brand-green-dark text-brand-green-dark"
-                    : ""
+                    : "")
                 }
               >
                 {getGiftTierLabel(product.giftTier)}
               </Badge>
             )}
           </div>
-          <p className="mb-3 line-clamp-2 text-base text-muted-foreground">
+          <p className="mb-2 line-clamp-2 text-xs text-muted-foreground sm:mb-3 sm:text-base">
             {product.shortDescription}
           </p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-muted-foreground">
-            <span>كود: {product.sku}</span>
-            <span>العدد المتوفر: {product.availableQuantity ?? 0}</span>
+          <div className="flex flex-col gap-0.5 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1 sm:text-base">
+            <span className="truncate">كود: {product.sku}</span>
+            <span className="truncate">
+              <span className="sm:hidden">متوفّر: </span>
+              <span className="hidden sm:inline">العدد المتوفر: </span>
+              {product.availableQuantity ?? 0}
+            </span>
           </div>
           {onQuickView && (
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); onQuickView(product); }}
-              className="text-sm font-medium text-primary hover:underline mt-1 transition-colors duration-200 active:opacity-80 min-h-[44px] px-3 py-2 inline-flex items-center justify-center rounded-md hover:bg-primary/5"
+              className="mt-0.5 text-xs font-medium text-primary hover:underline transition-colors duration-200 active:opacity-80 min-h-10 px-2 py-1 inline-flex items-center justify-center rounded-md hover:bg-primary/5 sm:mt-1 sm:min-h-[44px] sm:px-3 sm:py-2 sm:text-sm"
             >
               عرض سريع
             </button>
           )}
         </CardContent>
-        <CardFooter className="flex flex-col gap-3 p-3 sm:p-4 pt-0">
+        <CardFooter className="flex flex-col gap-2 p-2 pt-0 sm:gap-3 sm:p-4">
           {onAddToOrder && (
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-muted-foreground">الكمية:</span>
-                <div className="flex items-center gap-1 border rounded-md">
+            <div className="flex flex-col gap-1.5 w-full sm:gap-2">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground sm:text-sm">الكمية:</span>
+                <div className="flex items-center gap-0.5 rounded-md border sm:gap-1">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 shrink-0 touch-manipulation"
+                    className="h-9 w-9 min-h-9 min-w-9 shrink-0 touch-manipulation sm:h-9 sm:w-9 sm:min-h-[44px] sm:min-w-[44px]"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
-                  <span className="w-10 text-center text-sm font-semibold tabular-nums">
+                  <span className="w-8 text-center text-xs font-semibold tabular-nums sm:w-10 sm:text-sm">
                     {quantity}
                   </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 shrink-0 touch-manipulation"
+                    className="h-9 w-9 min-h-9 min-w-9 shrink-0 touch-manipulation sm:h-9 sm:w-9 sm:min-h-[44px] sm:min-w-[44px]"
                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
               {showAdded ? (
-                <div className="flex items-center justify-center gap-2 rounded-md border border-green-600 bg-green-50 py-3 text-sm font-medium text-green-700 min-h-[44px] transition-colors duration-200">
-                  <Check className="h-4 w-4 shrink-0" />
+                <div className="flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-green-600 bg-green-50 py-2 text-xs font-medium text-green-700 transition-colors duration-200 sm:min-h-[44px] sm:gap-2 sm:py-3 sm:text-sm">
+                  <Check className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                   تمت الإضافة
                 </div>
               ) : (
                 <Button
                   onClick={handleAdd}
                   variant="outline"
-                  className="w-full min-h-[44px] border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-white hover:shadow-md active:bg-brand-gold/90"
+                  className="h-10 w-full min-h-10 border-brand-gold text-xs text-brand-gold hover:bg-brand-gold hover:text-white hover:shadow-md active:bg-brand-gold/90 sm:min-h-[44px] sm:text-sm"
                 >
-                  <ShoppingCart className="ml-2 h-4 w-4 shrink-0" />
+                  <ShoppingCart className="ml-1 h-3.5 w-3.5 shrink-0 sm:ml-2 sm:h-4 sm:w-4" />
                   أضف للطلبية
                 </Button>
               )}
@@ -162,7 +167,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
             href={generateWhatsAppLink(product.name, product.sku)}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-base font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] active:shadow-inner min-h-[44px] h-12 rounded-md px-5 py-3 touch-manipulation"
+            className="inline-flex h-10 min-h-10 w-full items-center justify-center rounded-md bg-brand-green-dark px-2 py-2 text-center text-[11px] font-medium leading-tight text-white ring-offset-background transition-all duration-200 hover:bg-brand-green-darker hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] active:shadow-inner touch-manipulation sm:h-12 sm:min-h-[44px] sm:px-5 sm:text-base sm:leading-normal"
           >
             استفسر عن المنتج
           </a>

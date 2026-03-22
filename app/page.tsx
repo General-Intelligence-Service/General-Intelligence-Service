@@ -197,7 +197,7 @@ function HomeContent() {
   }, [filteredProducts]);
 
   const renderProductGrid = (list: Product[], keyPrefix: string) => (
-    <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">
       {list.map((product, index) => (
         <ProductCard
           key={`${keyPrefix}-${product.slug}`}
@@ -237,7 +237,7 @@ function HomeContent() {
         </section>
 
         {/* Products Section */}
-        <section id="products" className="py-10 sm:py-14 md:py-24">
+        <section id="products" className="py-6 sm:py-14 md:py-24">
           <div className="container mx-auto px-4 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -348,19 +348,11 @@ function HomeContent() {
               </div>
             </div>
 
-            {/* Grids: أرشيف الصور بنفس كروت الكتالوج، ثم باقي المنتجات */}
+            {/* شبكة المنتجات: عناصر الأرشيف أولاً ثم باقي الكتالوج */}
             {filteredProducts.length > 0 ? (
-              <div className="space-y-12">
+              <div className="space-y-6 sm:space-y-12">
                 {archiveGridProducts.length > 0 && (
-                  <div>
-                    <h2 className="mb-6 text-center text-2xl font-bold text-foreground sm:text-3xl">
-                      من أرشيف الصور
-                    </h2>
-                    <p className="mb-6 text-center text-muted-foreground max-w-2xl mx-auto">
-                      معاينة حية لصور التصوير؛ نفس بطاقة المنتج (كود، كمية، عرض سريع، إضافة للطلبية، واتساب).
-                    </p>
-                    {renderProductGrid(archiveGridProducts, "arch")}
-                  </div>
+                  <div>{renderProductGrid(archiveGridProducts, "arch")}</div>
                 )}
                 {catalogGridProducts.length > 0 && (
                   <div>
