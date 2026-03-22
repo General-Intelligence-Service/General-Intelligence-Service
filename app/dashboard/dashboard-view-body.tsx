@@ -337,7 +337,15 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                 <div><span className="text-muted-foreground">عدد زيارات الصفحة الرئيسية:</span> <span className="mr-2 font-bold text-lg">{visitCount}</span> <span className="text-muted-foreground text-xs">(هذا المتصفح)</span></div>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={refetchProducts} title="تحديث الأعداد من قاعدة البيانات">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[44px] touch-manipulation"
+                  onClick={() => {
+                    void refetchProducts(false);
+                  }}
+                  title="تحديث الأعداد من قاعدة البيانات"
+                >
                   <RefreshCw className="ml-2 h-4 w-4" /> تحديث القائمة
                 </Button>
                 <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleExportCSV}>

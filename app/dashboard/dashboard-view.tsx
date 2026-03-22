@@ -47,9 +47,11 @@ export function DashboardView() {
     (p) => !p.archived && (p.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD
   );
 
-  const refetchProducts = useCallback(async () => {
+  const refetchProducts = useCallback(async (quick = false) => {
     try {
-      const res = await fetch("/api/products?include_archived=1", { credentials: "include" });
+      const qs = new URLSearchParams({ include_archived: "1" });
+      if (quick) qs.set("quick", "1");
+      const res = await fetch(`/api/products?${qs.toString()}`, { credentials: "include" });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setProducts(json.data);
@@ -62,7 +64,7 @@ export function DashboardView() {
 
   useEffect(() => {
     setMounted(true);
-    refetchProducts();
+    refetchProducts(false);
     if (typeof window !== "undefined") {
       const n = parseInt(localStorage.getItem("visit_count") ?? "0", 10);
       setVisitCount(n);
@@ -73,7 +75,9 @@ export function DashboardView() {
   const PRODUCTS_AUTO_REFRESH_MS = 45 * 1000;
   useEffect(() => {
     if (!mounted) return;
-    const timer = setInterval(refetchProducts, PRODUCTS_AUTO_REFRESH_MS);
+    const timer = setInterval(() => {
+      void refetchProducts(true);
+    }, PRODUCTS_AUTO_REFRESH_MS);
     return () => clearInterval(timer);
   }, [mounted, refetchProducts, PRODUCTS_AUTO_REFRESH_MS]);
 
@@ -222,7 +226,24 @@ export function DashboardView() {
         return;
       }
       if (result.success) {
-        await refetchProducts();
+        const saved = result.data;
+        if (saved) {
+          setProducts((prev) => {
+            const next = isEdit
+              ? prev.map((p) => (p.slug === slug ? saved : p))
+              : [...prev, saved];
+            try {
+              if (typeof window !== "undefined") {
+                localStorage.setItem("products", JSON.stringify(next));
+              }
+            } catch {
+              //
+            }
+            return next;
+          });
+        } else {
+          await refetchProducts(true);
+        }
         setIsFormOpen(false);
         setEditingProduct(null);
         return;

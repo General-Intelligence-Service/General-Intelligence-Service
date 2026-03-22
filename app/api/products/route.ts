@@ -21,9 +21,13 @@ export async function GET(request: NextRequest) {
     }
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get("include_archived") === "1" || searchParams.get("include_archived") === "true";
+    /** quick=1: جلب سريع للداشبورد — يتخطى syncInitialProducts (حلقة إدراج لكل منتج أولي) */
+    const quick = searchParams.get("quick") === "1" || searchParams.get("quick") === "true";
     await ensureProductsTable();
     await seedProductsIfEmpty();
-    await syncInitialProducts();
+    if (!quick) {
+      await syncInitialProducts();
+    }
     const data = await getAllProducts(includeArchived);
     return NextResponse.json({ success: true, data });
   } catch (error) {

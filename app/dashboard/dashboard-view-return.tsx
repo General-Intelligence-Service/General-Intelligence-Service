@@ -45,7 +45,7 @@ export type DashboardViewReturnProps = {
   handleRestore: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadReport: () => Promise<void>;
   refreshOrders: () => void;
-  refetchProducts: () => Promise<void>;
+  refetchProducts: (quick?: boolean) => Promise<void>;
   handleLogout: () => Promise<void>;
   [key: string]: unknown;
 };
