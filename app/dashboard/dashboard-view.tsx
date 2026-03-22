@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, getGiftTierLabel, products as initialProducts } from "@/data/products";
+import { generateProductSlug } from "@/lib/slug";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
 import { DashboardLayout } from "./dashboard-layout";
 import { DashboardViewReturn } from "./dashboard-view-return";
@@ -48,7 +49,7 @@ export function DashboardView() {
 
   const refetchProducts = useCallback(async () => {
     try {
-      const res = await fetch("/api/products?include_archived=1");
+      const res = await fetch("/api/products?include_archived=1", { credentials: "include" });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setProducts(json.data);
@@ -171,12 +172,18 @@ export function DashboardView() {
     }
   };
 
-  const handleFormSubmit = async (product: Product) => {
+  const handleFormSubmit = async (product: Partial<Product>) => {
     try {
       const isEdit = !!editingProduct?.slug;
-      let slug = product.slug?.trim();
-      if (!slug) slug = `product-${Date.now()}`;
-      if (isEdit && editingProduct?.slug !== slug) {
+      /** عند التعديل يجب إرسال slug الأصلي من القاعدة؛ النموذج لا يضمّن slug فيصل undefined وكان يُستبدل بـ product-timestamp فيفشل PUT */
+      let slug: string;
+      if (isEdit) {
+        slug = editingProduct!.slug;
+      } else {
+        slug =
+          (product.slug && product.slug.trim()) ||
+          generateProductSlug(product.name ?? "") ||
+          "product";
         const baseSlug = slug;
         let counter = 0;
         while (products.some((p) => p.slug === slug)) {
@@ -184,10 +191,23 @@ export function DashboardView() {
           slug = `${baseSlug}-${counter}`;
         }
       }
+      const payload = {
+        slug,
+        sku: product.sku ?? "",
+        name: product.name ?? "",
+        shortDescription: product.shortDescription ?? "",
+        contents: Array.isArray(product.contents) ? product.contents : [],
+        giftTier: product.giftTier ?? "standard",
+        images: Array.isArray(product.images) ? product.images : [],
+        availableQuantity: product.availableQuantity ?? 0,
+        category: product.category,
+        price: product.price,
+      };
       const response = await fetch("/api/products", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...product, slug }),
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
       const result = await response.json();
       if (result.success && result.data) {
@@ -325,7 +345,10 @@ export function DashboardView() {
   const handleDeleteProduct = async (slug: string) => {
     if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
     try {
-      const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, { method: "DELETE" });
+      const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       const result = await response.json();
       if (result.success) {
         setProducts((prev) => prev.filter((p) => p.slug !== slug));
@@ -347,7 +370,7 @@ export function DashboardView() {
             setIsFormOpen(false);
             setEditingProduct(null);
           }}
-          onSubmit={handleFormSubmit as (data: Partial<Product>) => void}
+          onSubmit={handleFormSubmit}
         />
       )}
       <Footer />

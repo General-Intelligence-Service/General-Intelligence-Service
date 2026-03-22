@@ -102,6 +102,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
 
       const response = await fetch("/api/upload", {
         method: "POST",
+        credentials: "include",
         body: uploadFormData,
       });
 

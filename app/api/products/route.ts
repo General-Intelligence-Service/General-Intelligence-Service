@@ -11,13 +11,7 @@ import {
   deleteProduct,
 } from "@/lib/products-db";
 import { getSession } from "@/lib/auth-session";
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0600-\u06FF]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { generateProductSlug } from "@/lib/slug";
 
 // GET - جلب المنتجات. include_archived=1 للداشبورد (يعرض المحفوظة/الكمية منتهية أيضاً)
 export async function GET(request: NextRequest) {
@@ -59,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
     const body = await request.json();
     const newProduct: Product = {
-      slug: body.slug || generateSlug(body.name),
+      slug: (body.slug && String(body.slug).trim()) || generateProductSlug(body.name ?? ""),
       sku: body.sku,
       name: body.name,
       shortDescription: body.shortDescription ?? "",

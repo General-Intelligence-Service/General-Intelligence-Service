@@ -392,6 +392,25 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                 <Card key={product.slug} className={`overflow-hidden break-inside-avoid ${isLowStock ? "border-amber-400 dark:border-amber-600 ring-1 ring-amber-200 dark:ring-amber-800" : ""}`}>
                   <CardHeader>
                     <div className="flex items-start gap-3">
+                      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-20 sm:w-20">
+                        {product.images?.[0] ? (
+                          <Image
+                            src={product.images[0]}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                            unoptimized={
+                              product.images[0].includes("/archive-images/") ||
+                              product.images[0].startsWith("http")
+                            }
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] leading-tight text-muted-foreground">
+                            بدون صورة
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <CardTitle className="mb-2 text-xl">{product.name}</CardTitle>
                         <div className="flex flex-wrap gap-2">
@@ -419,8 +438,10 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                       <div className="text-sm text-muted-foreground">
                         <span className="font-medium">المحتويات:</span>
                         <ul className="mt-1 list-inside list-disc space-y-1">
-                          {product.contents.slice(0, 3).map((item, idx) => (<li key={idx}>{item}</li>))}
-                          {product.contents.length > 3 && <li className="text-xs">+{product.contents.length - 3} أكثر</li>}
+                          {(product.contents ?? []).slice(0, 3).map((item, idx) => (<li key={idx}>{item}</li>))}
+                          {(product.contents ?? []).length > 3 && (
+                            <li className="text-xs">+{(product.contents ?? []).length - 3} أكثر</li>
+                          )}
                         </ul>
                       </div>
                     </div>
