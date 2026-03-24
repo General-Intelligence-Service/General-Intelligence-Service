@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         : 72;
     if (!slug) {
       return NextResponse.json(
-        { success: false, error: "معرف المنتج مطلوب" },
+        { success: false, error: "معرّف الهدية (slug) مطلوب" },
         { status: 400 }
       );
     }

@@ -79,9 +79,9 @@ export default function QRCodesPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div>
-              <h1 className="mb-2 text-3xl font-bold">تحميل رموز QR للمنتجات</h1>
+              <h1 className="mb-2 text-3xl font-bold">تحميل رموز QR للهدايا</h1>
               <p className="text-muted-foreground">
-                حمّل صورة QR تحتوي على كود كل منتج (اسم الملف: رقم الكود) ثم اطبعها والصقها على الهدايا.
+                حمّل صورة QR تحتوي على كود كل هدية (اسم الملف: رقم الكود) ثم اطبعها والصقها على العبوات.
               </p>
             </div>
             <Link href="/dashboard">
@@ -96,7 +96,7 @@ export default function QRCodesPage() {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-lg">المنتجات</CardTitle>
+                  <CardTitle className="text-lg">الهدايا</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
                     تحميل كل صورة لوحدها أو تحميل الكل معاً (ملف ZIP).
                   </p>

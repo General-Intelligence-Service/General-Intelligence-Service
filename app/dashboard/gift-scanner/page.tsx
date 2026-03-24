@@ -166,7 +166,7 @@ export default function GiftScannerPage() {
                 <div className="space-y-2 text-sm">
                   <p className="font-semibold text-foreground">ما الذي يجب أن يكون داخل رمز QR؟</p>
                   <p className="text-muted-foreground">
-                    يجب أن يحتوي الرمز على <strong>كود الهدية (SKU)</strong> مثل <code className="rounded bg-muted px-1.5 py-0.5">G01</code> أو <code className="rounded bg-muted px-1.5 py-0.5">G02</code>، أو <strong>رابط صفحة المنتج</strong> من الموقع. عند المسح يبحث النظام عن المنتج وينقص الكمية.
+                    يجب أن يحتوي الرمز على <strong>كود الهدية (SKU)</strong> مثل <code className="rounded bg-muted px-1.5 py-0.5">G01</code> أو <code className="rounded bg-muted px-1.5 py-0.5">G02</code>، أو <strong>رابط صفحة الهدية</strong> من الموقع. عند المسح يبحث النظام عن الهدية وينقص الكمية.
                   </p>
                   <p className="font-semibold text-foreground mt-3">أين يوضع رمز QR؟</p>
                   <p className="text-muted-foreground">
@@ -180,7 +180,7 @@ export default function GiftScannerPage() {
           <Link href="/dashboard/qr-codes">
             <Button variant="outline" className="w-full mb-6 min-h-[44px]">
               <QrCode className="ml-2 h-5 w-5" />
-              تحميل رموز QR للمنتجات (صفحة مستقلة)
+              تحميل رموز QR للهدايا (صفحة مستقلة)
             </Button>
           </Link>
 
@@ -293,7 +293,7 @@ export default function GiftScannerPage() {
                     </p>
                   )}
                   <p className="mt-2 text-xs text-muted-foreground">
-                    تأكد أن الرمز يحتوي على كود المنتج (مثل G01) أو رابط صفحة المنتج من الموقع.
+                    تأكد أن الرمز يحتوي على كود الهدية (مثل G01) أو رابط صفحة الهدية من الموقع.
                   </p>
                 </div>
               )}

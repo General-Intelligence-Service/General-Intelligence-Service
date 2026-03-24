@@ -8,7 +8,7 @@ export const defaultMetadata: Metadata = {
     template: `%s - ${siteConfig.name}`,
   },
   description: siteConfig.description,
-  keywords: ["هدايا", "هدايا فاخرة", "هدايا تراثية", "كتالوج هدايا", "معرض هدايا", "عرض منتجات"],
+  keywords: ["هدايا", "هدايا فاخرة", "هدايا تراثية", "كتالوج هدايا", "معرض هدايا", "عرض هدايا"],
   authors: [{ name: siteConfig.name }],
   openGraph: {
     type: "website",

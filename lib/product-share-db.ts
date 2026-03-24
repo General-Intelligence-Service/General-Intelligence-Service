@@ -43,7 +43,7 @@ export async function createOneTimeShareLink(
   const slug = productSlug.trim();
   const { rows } = await sql`SELECT 1 FROM products WHERE slug = ${slug} LIMIT 1`;
   if (rows.length === 0) {
-    return { ok: false, error: "المنتج غير موجود" };
+    return { ok: false, error: "الهدية غير موجودة" };
   }
   const hours = Math.min(Math.max(1, Math.floor(expiresInHours || 72)), 720);
   const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);

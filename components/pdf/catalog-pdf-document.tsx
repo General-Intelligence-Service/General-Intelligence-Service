@@ -132,14 +132,14 @@ export function CatalogPDFDocument({
             )}
             <View style={styles.headerText}>
               <Text style={styles.headerTitle}>{title}</Text>
-              <Text style={styles.headerSubtitle}>{subtitle || "قائمة المنتجات"}</Text>
+              <Text style={styles.headerSubtitle}>{subtitle || "قائمة الهدايا"}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.meta}>
           <Text style={styles.metaText}>تاريخ التصدير: {dateStr}</Text>
-          <Text style={styles.metaText}>عدد المنتجات: {products.length}</Text>
+          <Text style={styles.metaText}>عدد الهدايا: {products.length}</Text>
         </View>
 
         <View style={styles.tableWrapper}>
@@ -148,7 +148,7 @@ export function CatalogPDFDocument({
             <Text style={[styles.th, { width: col.sku }]}>الكود</Text>
             <Text style={[styles.th, { width: col.tier }]}>التصنيف</Text>
             <Text style={[styles.th, { width: col.cat }]}>الفئة</Text>
-            <Text style={[styles.th, { width: col.name, textAlign: "right" }]}>اسم المنتج</Text>
+            <Text style={[styles.th, { width: col.name, textAlign: "right" }]}>اسم الهدية</Text>
           </View>
 
           {products.map((p, i) => (

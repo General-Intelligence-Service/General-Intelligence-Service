@@ -184,7 +184,7 @@ export function DashboardView() {
       if (isEdit) {
         slug = (editingProduct?.slug || product.slug || "").trim();
         if (!slug) {
-          alert("تعذر تحديد المنتج. أغلق النافذة وأعد فتح التعديل.");
+          alert("تعذر تحديد الهدية. أغلق النافذة وأعد فتح التعديل.");
           return;
         }
       } else {
@@ -275,7 +275,7 @@ export function DashboardView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `منتجات-${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `هدايا-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -286,7 +286,7 @@ export function DashboardView() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `منتجات-نسخة-احتياطية-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `هدايا-نسخة-احتياطية-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -299,15 +299,15 @@ export function DashboardView() {
       try {
         const data = JSON.parse(reader.result as string);
         if (!Array.isArray(data) || data.length === 0) {
-          alert("الملف يجب أن يحتوي على مصفوفة منتجات.");
+          alert("الملف يجب أن يحتوي على مصفوفة هدايا.");
           return;
         }
         const valid = data.every((p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p);
         if (!valid) {
-          alert("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من المنتجات.");
+          alert("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من الهدايا.");
           return;
         }
-        if (!confirm(`سيتم استبدال ${products.length} منتج بـ ${data.length} منتج. متابعة؟`)) return;
+        if (!confirm(`سيتم استبدال ${products.length} هدية بـ ${data.length} هدية. متابعة؟`)) return;
         setProducts(data as Product[]);
         if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(data));
         alert("تمت الاستعادة بنجاح.");
@@ -376,7 +376,7 @@ export function DashboardView() {
   };
 
   const handleDeleteProduct = async (slug: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذه الهدية؟")) return;
     try {
       const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, {
         method: "DELETE",

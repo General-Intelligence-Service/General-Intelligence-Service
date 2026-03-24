@@ -169,7 +169,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
             rel="noopener noreferrer"
             className="inline-flex h-10 min-h-10 w-full items-center justify-center rounded-md bg-brand-green-dark px-2 py-2 text-center text-[11px] font-medium leading-tight text-white ring-offset-background transition-all duration-200 hover:bg-brand-green-darker hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] active:shadow-inner touch-manipulation sm:h-12 sm:min-h-[44px] sm:px-5 sm:text-base sm:leading-normal"
           >
-            استفسر عن المنتج
+            استفسر عن الهدية
           </a>
         </CardFooter>
       </Card>

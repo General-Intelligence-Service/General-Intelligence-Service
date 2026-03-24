@@ -70,7 +70,7 @@ export function ProductQRModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="رمز QR للمنتج"
+      aria-label="رمز QR للهدية"
     >
       <div
         className="relative rounded-xl bg-background p-6 shadow-xl max-w-sm w-full"
@@ -85,7 +85,7 @@ export function ProductQRModal({
           <X className="h-5 w-5" />
         </button>
 
-        <h3 className="text-lg font-bold text-center mb-4 mt-2">رمز QR للمنتج</h3>
+        <h3 className="text-lg font-bold text-center mb-4 mt-2">رمز QR للهدية</h3>
         <p className="text-sm text-muted-foreground text-center mb-4 line-clamp-2">{productName}</p>
 
         <div className="flex justify-center mb-4">

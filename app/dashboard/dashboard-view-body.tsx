@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, Share2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, Share2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +79,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           ? new Date(j.expiresAt).toLocaleString("ar-SA")
           : "—";
         alert(
-          `تم نسخ رابط لعرض المنتج لمرة واحدة فقط.\n\nصالح حتى تقريباً: ${until}\n\nأول فتح للرابط يستهلكه ولا يعمل بعدها.`
+          `تم نسخ رابط لعرض الهدية لمرة واحدة فقط.\n\nصالح حتى تقريباً: ${until}\n\nأول فتح للرابط يستهلكه ولا يعمل بعدها.`
         );
       } else {
         alert(j.error || "تعذر إنشاء الرابط");
@@ -87,6 +87,23 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
     } catch {
       alert("تعذر الاتصال بالخادم");
     }
+  };
+
+  /** للتجريب: مسح نسخة بيانات الهدايا المحلية وإعادة تحميل الصفحة بالكامل (لا يمس جلسة الدخول) */
+  const handleDashboardRestart = () => {
+    if (
+      !confirm(
+        "إعادة تشغيل اللوحة؟\n\nسيتم مسح نسخة بيانات الهدايا المخبأة في المتصفح وإعادة تحميل الصفحة لجلب بيانات جديدة من الخادم.\n(طلباتك المحلية في الطلبات لا تُحذف.)"
+      )
+    ) {
+      return;
+    }
+    try {
+      localStorage.removeItem("products");
+    } catch {
+      //
+    }
+    window.location.reload();
   };
 
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
@@ -101,7 +118,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
       <div className="mb-6 flex flex-col gap-4 sm:mb-8 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="mb-1 text-2xl font-bold sm:mb-2 sm:text-3xl">لوحة التحكم</h1>
-          <p className="text-sm text-muted-foreground sm:text-base">إدارة المنتجات والهدايا المعروضة</p>
+          <p className="text-sm text-muted-foreground sm:text-base">إدارة الهدايا المعروضة</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
           <Link href="/scan" className="min-w-0">
@@ -118,7 +135,18 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           </Link>
           <Button onClick={handleAddProduct} size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto col-span-2 sm:col-span-1">
             <Plus className="ml-2 h-5 w-5 shrink-0" />
-            إضافة منتج جديد
+            إضافة هدية جديدة
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="min-h-[44px] w-full touch-manipulation sm:w-auto col-span-2 sm:col-span-1 border-dashed"
+            onClick={handleDashboardRestart}
+            title="مسح كاش بيانات الهدايا وإعادة تحميل الصفحة — مفيد أثناء التجريب"
+          >
+            <RotateCcw className="ml-2 h-5 w-5 shrink-0" />
+            ريستارت اللوحة
           </Button>
           <Button variant="outline" size="icon" onClick={handleLogout} title="تسجيل الخروج" className="min-h-[44px] min-w-[44px] touch-manipulation col-span-2 sm:col-span-1">
             <LogOut className="h-5 w-5" />
@@ -146,7 +174,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           onClick={() => setDashboardTab("products")}
           className={`flex-1 min-h-[44px] px-4 py-2 font-medium transition-colors touch-manipulation flex items-center justify-center ${dashboardTab === "products" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
         >
-          المنتجات
+          الهدايا
         </button>
         <button
           type="button"
@@ -368,7 +396,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
             </CardHeader>
             <CardContent className="space-y-4 px-4 sm:px-6">
               <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
-                <div><span className="text-muted-foreground">عدد المنتجات:</span> <span className="mr-2 font-bold text-lg">{products.length}</span></div>
+                <div><span className="text-muted-foreground">عدد الهدايا:</span> <span className="mr-2 font-bold text-lg">{products.length}</span></div>
                 <div><span className="text-muted-foreground">عدد زيارات الصفحة الرئيسية:</span> <span className="mr-2 font-bold text-lg">{visitCount}</span> <span className="text-muted-foreground text-xs">(هذا المتصفح)</span></div>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -402,7 +430,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-200 text-base">
                   <AlertTriangle className="h-5 w-5 shrink-0" />
-                  منتجات تحتاج إعادة تخزين (الكمية ≤ {LOW_STOCK_THRESHOLD})
+                  هدايا تحتاج إعادة تخزين (الكمية ≤ {LOW_STOCK_THRESHOLD})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -423,7 +451,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
             <CardContent className="pt-6 px-4 sm:px-6">
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input type="text" placeholder="ابحث عن منتج..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10 min-h-[44px] text-base touch-manipulation" />
+                <Input type="text" placeholder="ابحث عن هدية..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-10 min-h-[44px] text-base touch-manipulation" />
               </div>
             </CardContent>
           </Card>
@@ -470,7 +498,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                           </Badge>
                         </div>
                       </div>
-                      <a href={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(product.sku)}`} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded border border-border bg-white p-1.5 shadow-sm hover:shadow-md transition-shadow" title="رمز QR للمنتج">
+                      <a href={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(product.sku)}`} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded border border-border bg-white p-1.5 shadow-sm hover:shadow-md transition-shadow" title="رمز QR للهدية">
                         <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&data=${encodeURIComponent(product.sku)}`} alt={`QR ${product.sku}`} width={88} height={88} className="block rounded" />
                       </a>
                     </div>
@@ -515,7 +543,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           {filteredProducts.length === 0 && (
             <div className="py-12 text-center">
               <p className="text-lg text-muted-foreground">
-                {searchQuery ? "لم يتم العثور على منتجات تطابق البحث" : "لا توجد منتجات"}
+                {searchQuery ? "لم يتم العثور على هدايا تطابق البحث" : "لا توجد هدايا"}
               </p>
             </div>
           )}

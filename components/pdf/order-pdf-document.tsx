@@ -294,7 +294,7 @@ export function OrderPDFDocument({
               <Text style={[styles.tableHeaderCell, { width: "20%" }]}>التصنيف</Text>
               <Text style={[styles.tableHeaderCell, { width: "20%" }]}>الكود</Text>
               <Text style={[styles.tableHeaderCell, { width: "40%", textAlign: "right" }]}>
-                اسم المنتج
+                اسم الهدية
               </Text>
             </View>
             {orderItems.map((item, index) => (

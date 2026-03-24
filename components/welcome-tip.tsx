@@ -34,7 +34,7 @@ export function WelcomeTip() {
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground mb-1">كيف تطلب؟</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            اختر المنتجات واضغط <strong>أضف للطلبية</strong>، ثم افتح سلة الطلبية (أيقونة الأسفل) وادخل الجهة الطالبة إن رغبت، واضغط <strong>تصدير PDF</strong> لتحميل الطلبية أو إرسالها بالبريد.
+            اختر الهدايا واضغط <strong>أضف للطلبية</strong>، ثم افتح سلة الطلبية (أيقونة الأسفل) وادخل الجهة الطالبة إن رغبت، واضغط <strong>تصدير PDF</strong> لتحميل الطلبية أو إرسالها بالبريد.
           </p>
         </div>
         <button

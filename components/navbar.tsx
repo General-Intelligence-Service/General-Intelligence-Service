@@ -37,7 +37,7 @@ export function Navbar() {
             href="/#products"
             className="flex flex-col w-fit h-[29px] text-base font-medium transition-colors hover:text-brand-green-dark"
           >
-            المنتجات
+            الهدايا
           </Link>
           <Link
             href="/login"
@@ -68,7 +68,7 @@ export function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className="text-lg font-medium transition-colors hover:text-brand-green-dark"
               >
-                المنتجات
+                الهدايا
               </Link>
               <Link
                 href="/login"

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("GET /api/products:", error);
     return NextResponse.json(
-      { success: false, error: "فشل في جلب المنتجات" },
+      { success: false, error: "فشل في جلب الهدايا" },
       { status: 500 }
     );
   }
@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
     await createProduct(newProduct);
     return NextResponse.json({
       success: true,
-      message: "تم إضافة المنتج بنجاح",
+      message: "تم إضافة الهدية بنجاح",
       data: newProduct,
     });
   } catch (error) {
     console.error("POST /api/products:", error);
     return NextResponse.json(
-      { success: false, error: "فشل في إضافة المنتج" },
+      { success: false, error: "فشل في إضافة الهدية" },
       { status: 500 }
     );
   }
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
     const slug = typeof body.slug === "string" ? body.slug.trim() : "";
     if (!slug) {
       return NextResponse.json(
-        { success: false, error: "معرف المنتج (slug) مطلوب" },
+        { success: false, error: "معرّف الهدية (slug) مطلوب" },
         { status: 400 }
       );
     }
@@ -124,19 +124,19 @@ export async function PUT(request: NextRequest) {
     const updated = await updateProduct(slug, updatedData);
     if (!updated) {
       return NextResponse.json(
-        { success: false, error: "المنتج غير موجود" },
+        { success: false, error: "الهدية غير موجودة" },
         { status: 404 }
       );
     }
     return NextResponse.json({
       success: true,
-      message: "تم تحديث المنتج بنجاح",
+      message: "تم تحديث الهدية بنجاح",
       data: updated,
     });
   } catch (error) {
     console.error("PUT /api/products:", error);
     return NextResponse.json(
-      { success: false, error: "فشل في تحديث المنتج" },
+      { success: false, error: "فشل في تحديث الهدية" },
       { status: 500 }
     );
   }
@@ -162,7 +162,7 @@ export async function DELETE(request: NextRequest) {
     const slug = searchParams.get("slug");
     if (!slug) {
       return NextResponse.json(
-        { success: false, error: "معرف المنتج مطلوب" },
+        { success: false, error: "معرّف الهدية مطلوب" },
         { status: 400 }
       );
     }
@@ -170,18 +170,18 @@ export async function DELETE(request: NextRequest) {
     const deleted = await deleteProduct(slug);
     if (!deleted) {
       return NextResponse.json(
-        { success: false, error: "المنتج غير موجود" },
+        { success: false, error: "الهدية غير موجودة" },
         { status: 404 }
       );
     }
     return NextResponse.json({
       success: true,
-      message: "تم حذف المنتج بنجاح",
+      message: "تم حذف الهدية بنجاح",
     });
   } catch (error) {
     console.error("DELETE /api/products:", error);
     return NextResponse.json(
-      { success: false, error: "فشل في حذف المنتج" },
+      { success: false, error: "فشل في حذف الهدية" },
       { status: 500 }
     );
   }

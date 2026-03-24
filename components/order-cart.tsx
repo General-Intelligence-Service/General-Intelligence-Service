@@ -285,7 +285,7 @@ export function OrderCart() {
                 <div className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-right">
                   <p className="text-sm font-semibold text-foreground mb-2">خطوات إتمام الطلب:</p>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>اختر المنتجات من الكتالوج وأضفها للطلبية</li>
+                    <li>اختر الهدايا من الكتالوج وأضفها للطلبية</li>
                     <li>أدخل اسم الجهة الطالبة (اختياري)</li>
                     <li>اضغط &quot;تحميل PDF&quot; لتحميل الطلبية</li>
                   </ol>
@@ -305,7 +305,7 @@ export function OrderCart() {
                   )}
                   <p className="text-muted-foreground">الطلبية فارغة</p>
                   <Link href="/#products" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline">تصفح المنتجات</Button>
+                    <Button variant="outline">تصفح الهدايا</Button>
                   </Link>
                 </div>
               ) : (

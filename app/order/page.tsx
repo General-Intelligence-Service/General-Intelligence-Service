@@ -74,7 +74,7 @@ function OrderContent() {
       })
       .filter((x): x is { product: Product; quantity: number } => x !== null);
     if (items.length === 0) {
-      setError("لم يتم العثور على المنتجات في الكتالوج الحالي.");
+      setError("لم يتم العثور على الهدايا في الكتالوج الحالي.");
       return;
     }
     restoreFromDraft(items, payload.requesterName || "", payload.orderNotes || "");

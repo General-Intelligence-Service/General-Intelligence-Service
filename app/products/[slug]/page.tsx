@@ -41,7 +41,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const handleShare = async () => {
     if (!product) return;
     const url = typeof window !== "undefined" ? window.location.href : "";
-    const text = `${product.name} - كتالوج الهدايا`;
+    const text = `${product.name} — كتالوج الهدايا`;
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({
@@ -170,7 +170,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               </Link>
               <ArrowRight className="h-5 w-5 rotate-180" />
               <Link href="/#products" className="hover:text-brand-green-dark">
-                المنتجات
+                الهدايا
               </Link>
               <ArrowRight className="h-5 w-5 rotate-180" />
               <span className="text-foreground">{product.name}</span>
@@ -305,7 +305,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     </Button>
                   </div>
                   <div className="space-y-1 text-base text-muted-foreground">
-                    <p>كود المنتج: <span className="font-semibold">{product.sku}</span></p>
+                    <p>كود الهدية: <span className="font-semibold">{product.sku}</span></p>
                     <p>العدد المتوفر: <span className="font-semibold">{product.availableQuantity ?? 0}</span></p>
                   </div>
                 </div>
@@ -393,7 +393,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] active:shadow-inner min-h-[44px] h-12 rounded-md px-8 touch-manipulation"
                 >
-                  استفسر عن المنتج
+                  استفسر عن الهدية
                 </a>
               </motion.div>
             </div>
@@ -412,7 +412,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 className="mb-8"
               >
                 <h2 className="text-2xl font-bold md:text-3xl">
-                  منتجات مشابهة
+                  هدايا مشابهة
                 </h2>
               </motion.div>
               <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">

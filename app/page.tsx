@@ -247,7 +247,7 @@ function HomeContent() {
               className="mb-8 text-center"
             >
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                معرض المنتجات
+                معرض الهدايا
               </h2>
               <p className="text-muted-foreground">
                 تصفح مجموعتنا المتنوعة من الهدايا الفاخرة والتراثية المعروضة
@@ -258,7 +258,7 @@ function HomeContent() {
             <div className="relative mb-6 max-w-md mx-auto">
               <input
                 type="text"
-                placeholder="ابحث عن منتج بالاسم أو الكود..."
+                placeholder="ابحث عن هدية بالاسم أو الكود..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
@@ -361,7 +361,7 @@ function HomeContent() {
             ) : (
               <div className="py-12 text-center">
                 <p className="text-lg text-muted-foreground">
-                  لم يتم العثور على منتجات تطابق البحث
+                  لم يتم العثور على هدايا تطابق البحث
                 </p>
               </div>
             )}

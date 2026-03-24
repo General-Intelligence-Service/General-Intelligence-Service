@@ -83,8 +83,8 @@ export default async function ShareOneTimePage({
   if (!product || product.archived) {
     return (
       <Message
-        title="المنتج غير متاح"
-        body="قد يكون المنتج غير معروض حالياً أو توقف عرضه."
+        title="الهدية غير متاحة"
+        body="قد تكون الهدية غير معروضة حالياً أو توقف عرضها."
       />
     );
   }
@@ -157,7 +157,7 @@ export default async function ShareOneTimePage({
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center rounded-md bg-brand-green-dark px-4 py-3 text-base font-medium text-white hover:bg-brand-green-darker"
               >
-                استفسر عن المنتج (واتساب)
+                استفسر عن الهدية (واتساب)
               </a>
             </div>
           </div>

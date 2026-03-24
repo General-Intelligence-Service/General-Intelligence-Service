@@ -155,15 +155,15 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {product ? "تعديل منتج" : "إضافة منتج جديد"}
+            {product ? "تعديل هدية" : "إضافة هدية جديدة"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* اسم المنتج */}
+          {/* اسم الهدية */}
           <div>
             <label className="mb-2 block text-sm font-medium">
-              اسم المنتج *
+              اسم الهدية *
             </label>
             <Input
               value={formData.name || ""}
@@ -175,10 +175,10 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
             />
           </div>
 
-          {/* كود المنتج */}
+          {/* كود الهدية */}
           <div>
             <label className="mb-2 block text-sm font-medium">
-              كود المنتج (SKU)
+              كود الهدية (SKU)
             </label>
             <div className="flex items-center gap-2">
               <Input
@@ -193,7 +193,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              يتم توليد كود المنتج تلقائياً عند إضافة منتج جديد
+              يتم توليد الكود تلقائياً عند إضافة هدية جديدة
             </p>
           </div>
 
@@ -208,7 +208,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
               required
               rows={4}
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="وصف مختصر للمنتج..."
+              placeholder="وصف مختصر للهدية..."
             />
           </div>
 
@@ -283,7 +283,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
 
           {/* الصور */}
           <div>
-            <label className="mb-2 block text-sm font-medium">صور المنتج</label>
+            <label className="mb-2 block text-sm font-medium">صور الهدية</label>
             <div className="mb-2 flex flex-wrap gap-2">
               <label className="cursor-pointer">
                 <input
@@ -351,7 +351,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
               إلغاء
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "جاري الحفظ..." : product ? "حفظ التعديلات" : "إضافة المنتج"}
+              {saving ? "جاري الحفظ..." : product ? "حفظ التعديلات" : "إضافة الهدية"}
             </Button>
           </DialogFooter>
         </form>
