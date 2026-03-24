@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   logo: {
-    width: 76,
-    height: 76,
+    width: 120,
+    height: 44,
     objectFit: "contain",
   },
   headerText: {

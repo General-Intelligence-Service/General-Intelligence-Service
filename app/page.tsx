@@ -222,15 +222,16 @@ function HomeContent() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              style={{ maxWidth: '400px', width: '100%' }}
+              className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl"
             >
               <Image
                 src={siteConfig.logoPath}
                 alt={siteConfig.logoAlt}
-                width={1500}
-                height={1500}
+                width={900}
+                height={320}
                 className="w-full h-auto object-contain"
                 priority
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 768px"
               />
             </motion.div>
           </div>
