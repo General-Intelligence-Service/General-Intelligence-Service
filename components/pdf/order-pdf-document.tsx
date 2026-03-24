@@ -10,6 +10,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import { Product } from "@/data/products";
+import { siteConfig } from "@/lib/config";
 
 // تسجيل خط Tajawal بجميع الأوزان (من public/fonts/tajawal)
 const fontBase =
@@ -254,7 +255,11 @@ export function OrderPDFDocument({
 }: OrderPDFDocumentProps) {
   const hasNotes = Boolean(notes && notes.trim());
   const hasRequester = Boolean(requesterName && requesterName.trim());
-  const logoSource = logoUrl || (typeof window !== "undefined" ? `${window.location.origin}/LOGO_PDF.png` : "/LOGO_PDF.png");
+  const logoSource =
+    logoUrl ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}${siteConfig.logoPath}`
+      : siteConfig.logoPath);
 
   return (
     <Document>

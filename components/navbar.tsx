@@ -22,8 +22,8 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <div className="relative h-12 w-12 shrink-0">
             <Image
-              src="/1.png"
-              alt="شعار إدارة التأهيل والتدريب"
+              src={siteConfig.logoPath}
+              alt={siteConfig.logoAlt}
               fill
               className="object-contain text-[0px]"
               priority

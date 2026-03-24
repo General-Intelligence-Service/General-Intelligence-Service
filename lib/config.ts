@@ -1,6 +1,10 @@
 export const siteConfig = {
   name: "كتالوج الهدايا الفاخرة",
   description: "معرض للهدايا الفاخرة والتراثية",
+  /** شعار إدارة التأهيل والتدريب — ملف واحد لكل الأحجام (Navbar، الصفحة الرئيسية، PDF، الاختصارات) */
+  logoPath: "/brand-logo.png",
+  logoAlt:
+    "شعار إدارة التأهيل والتدريب — Training and Qualification Directorate",
   phone: "+963991307978",
   telegram: "Mojahd_N",
   telegramUrl: "https://t.me/Mojahd_N",

@@ -225,8 +225,8 @@ function HomeContent() {
               style={{ maxWidth: '400px', width: '100%' }}
             >
               <Image
-                src="/2.png"
-                alt="شعار المعرض"
+                src={siteConfig.logoPath}
+                alt={siteConfig.logoAlt}
                 width={1500}
                 height={1500}
                 className="w-full h-auto object-contain"

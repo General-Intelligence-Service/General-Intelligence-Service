@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "rtl",
     lang: "ar",
     icons: [
-      { src: "/1.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/1.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: siteConfig.logoPath, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: siteConfig.logoPath, sizes: "512x512", type: "image/png", purpose: "any" },
     ],
   };
 }
