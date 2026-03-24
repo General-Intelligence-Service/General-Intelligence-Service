@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,41 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
     refetchProducts,
     handleLogout,
   } = props;
+
+  const createOneTimeShareLinkForProduct = async (product: Product) => {
+    try {
+      const res = await fetch("/api/product-share", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: product.slug, expiresInHours: 72 }),
+      });
+      const j = (await res.json()) as {
+        success?: boolean;
+        url?: string;
+        expiresAt?: string;
+        error?: string;
+      };
+      if (j.success && j.url) {
+        try {
+          await navigator.clipboard.writeText(j.url);
+        } catch {
+          alert(`انسخ الرابط يدوياً:\n\n${j.url}`);
+          return;
+        }
+        const until = j.expiresAt
+          ? new Date(j.expiresAt).toLocaleString("ar-SA")
+          : "—";
+        alert(
+          `تم نسخ رابط لعرض المنتج لمرة واحدة فقط.\n\nصالح حتى تقريباً: ${until}\n\nأول فتح للرابط يستهلكه ولا يعمل بعدها.`
+        );
+      } else {
+        alert(j.error || "تعذر إنشاء الرابط");
+      }
+    } catch {
+      alert("تعذر الاتصال بالخادم");
+    }
+  };
 
   const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
   const thisMonthOrders = orders.filter((o) => {
@@ -453,11 +488,21 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                         </ul>
                       </div>
                     </div>
-                    <div className="flex gap-3">
-                      <Button variant="outline" className="flex-1 min-h-[44px] touch-manipulation" onClick={() => handleEditProduct(product)}>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="min-h-[44px] flex-1 touch-manipulation"
+                        onClick={() => createOneTimeShareLinkForProduct(product)}
+                        title="رابط يعمل لأول زيارة فقط (مثلاً لعميل محدد)"
+                      >
+                        <Share2 className="ml-2 h-4 w-4 shrink-0" />
+                        رابط لمرة واحدة
+                      </Button>
+                      <Button variant="outline" className="min-h-[44px] flex-1 touch-manipulation" onClick={() => handleEditProduct(product)}>
                         <Edit className="ml-2 h-4 w-4 shrink-0" /> تعديل
                       </Button>
-                      <Button variant="destructive" className="flex-1 min-h-[44px] touch-manipulation" onClick={() => handleDeleteProduct(product.slug)}>
+                      <Button variant="destructive" className="min-h-[44px] flex-1 touch-manipulation" onClick={() => handleDeleteProduct(product.slug)}>
                         <Trash2 className="ml-2 h-4 w-4 shrink-0" /> حذف
                       </Button>
                     </div>

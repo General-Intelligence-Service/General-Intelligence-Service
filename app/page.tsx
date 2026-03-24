@@ -355,14 +355,7 @@ function HomeContent() {
                   <div>{renderProductGrid(archiveGridProducts, "arch")}</div>
                 )}
                 {catalogGridProducts.length > 0 && (
-                  <div>
-                    {archiveGridProducts.length > 0 && (
-                      <h2 className="mb-6 text-center text-xl font-semibold text-foreground sm:text-2xl">
-                        منتجات الكتالوج
-                      </h2>
-                    )}
-                    {renderProductGrid(catalogGridProducts, "cat")}
-                  </div>
+                  <div>{renderProductGrid(catalogGridProducts, "cat")}</div>
                 )}
               </div>
             ) : (
