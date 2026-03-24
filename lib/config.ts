@@ -19,7 +19,7 @@
  *  د) ملفات PDF والشريط والصفحة الرئيسية تقرأ logoPath تلقائياً.
  * ═══════════════════════════════════════════════════════════════════════════
  */
-const defaultLogoPath = "/brand-logo.png";
+const defaultLogoPath = "/logo.png";
 
 function resolveLogoPath(): string {
   const fromEnv =
