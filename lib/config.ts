@@ -1,8 +1,42 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  الشعار — من هنا تغيّر الشعار متى شئت (مكان واحد)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *  أ) ضع ملف الصورة داخل المجلد: public/
+ *     مثال: public/شعاري.png  ←  المسار في الموقع يصبح /شعاري.png
+ *
+ *  ب) حدّد المسار في الأسطر التالية:
+ *     - إمّا غيّر القيمة الافتراضية في defaultLogoPath أدناه
+ *     - أو أنشئ ملف .env.local (انظر .env.example) واضبط:
+ *       NEXT_PUBLIC_SITE_LOGO_PATH=/شعاري.png
+ *       (يبدأ المسار دائماً بـ /)
+ *
+ *  ج) أيقونة تبويب المتصفح: انسخ نفس ملف الشعار إلى
+ *     app/icon.png و app/apple-icon.png
+ *     (أو ملفات png أصغر إن رغبت)
+ *
+ *  د) ملفات PDF والشريط والصفحة الرئيسية تقرأ logoPath تلقائياً.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+const defaultLogoPath = "/brand-logo.png";
+
+function resolveLogoPath(): string {
+  const fromEnv =
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_SITE_LOGO_PATH?.trim()
+      : undefined;
+  if (fromEnv) {
+    return fromEnv.startsWith("/") ? fromEnv : `/${fromEnv}`;
+  }
+  return defaultLogoPath;
+}
+
 export const siteConfig = {
   name: "كتالوج الهدايا الفاخرة",
   description: "معرض للهدايا الفاخرة والتراثية",
-  /** شعار إدارة التأهيل والتدريب — ملف واحد لكل الأحجام (Navbar، الصفحة الرئيسية، PDF، الاختصارات) */
-  logoPath: "/brand-logo.png",
+  logoPath: resolveLogoPath(),
+  /** نص يظهر عند تعطيل الصور أو قارئ الشاشة */
   logoAlt:
     "شعار إدارة التأهيل والتدريب — Training and Qualification Directorate",
   phone: "+963991307978",
