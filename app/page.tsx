@@ -215,30 +215,24 @@ function HomeContent() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero Section — خلفية هوية خضراء لتقليل تباين «الإطار» إن كان ملف الشعار بخلفية داكنة */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-brand-green via-brand-green to-background pb-14 pt-8 sm:pb-20 sm:pt-10">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_60%_at_50%_0%,rgba(186,169,124,0.14),transparent_55%)]"
-            aria-hidden
-          />
-          <div className="relative flex justify-center px-4">
+        {/* Hero Section */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-background via-brand-green-light/5 to-brand-gold-light/10 py-4">
+          <div className="flex justify-center px-4">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl"
             >
-              <div className="rounded-2xl bg-brand-green-dark/40 px-3 py-4 ring-1 ring-brand-gold/25 backdrop-blur-[2px] sm:px-5 sm:py-5">
-                <Image
-                  src={siteConfig.logoPath}
-                  alt={siteConfig.logoAlt}
-                  width={900}
-                  height={320}
-                  className="w-full h-auto object-contain drop-shadow-sm"
-                  priority
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 768px"
-                />
-              </div>
+              <Image
+                src={siteConfig.logoPath}
+                alt={siteConfig.logoAlt}
+                width={900}
+                height={320}
+                className="w-full h-auto object-contain"
+                priority
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 768px"
+              />
             </motion.div>
           </div>
         </section>
