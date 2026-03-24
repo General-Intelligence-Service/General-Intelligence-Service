@@ -102,12 +102,12 @@ export default async function ShareOneTimePage({
           </p>
           <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
             {img ? (
-              <div className="relative aspect-square w-full bg-muted">
+              <div className="relative aspect-square w-full bg-white dark:bg-muted">
                 <Image
                   src={img}
                   alt={product.name}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   sizes="(max-width: 768px) 100vw, 672px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}

@@ -47,14 +47,14 @@ export function QuickViewModal({ product, onClose, onAddToOrder }: QuickViewModa
         </button>
 
         <div className="max-h-[90vh] overflow-y-auto">
-          <div className="relative aspect-square w-full bg-muted">
+          <div className="relative aspect-square w-full bg-white dark:bg-muted">
             {product.images?.[0] ? (
               <Image
                 src={product.images[0]}
                 alt={product.name}
                 fill
                 sizes="(max-width: 512px) 100vw, 512px"
-                className="object-cover"
+                className="object-contain"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">لا توجد صورة</div>

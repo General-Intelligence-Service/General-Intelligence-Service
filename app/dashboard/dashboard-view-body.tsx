@@ -463,7 +463,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                 <Card key={product.slug} className={`overflow-hidden break-inside-avoid ${isLowStock ? "border-amber-400 dark:border-amber-600 ring-1 ring-amber-200 dark:ring-amber-800" : ""}`}>
                   <CardHeader>
                     <div className="flex items-start gap-3">
-                      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-20 sm:w-20">
+                      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg border border-border bg-white dark:bg-muted sm:h-20 sm:w-20">
                         {product.images?.[0] ? (
                           <Image
                             src={product.images[0]}

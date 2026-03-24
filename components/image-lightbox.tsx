@@ -75,14 +75,16 @@ export function ImageLightbox({ images, currentIndex, onClose, onPrev, onNext, p
         onClick={(e) => e.stopPropagation()}
       >
         {src && (
-          <Image
-            src={src}
-            alt={`${productName} - ${currentIndex + 1}`}
-            width={1200}
-            height={900}
-            className="mx-auto max-h-[90vh] w-auto object-contain"
-            unoptimized={src.startsWith("data:")}
-          />
+          <div className="mx-auto w-fit max-w-full rounded-lg bg-white p-2 shadow-2xl ring-1 ring-white/20">
+            <Image
+              src={src}
+              alt={`${productName} - ${currentIndex + 1}`}
+              width={1200}
+              height={900}
+              className="max-h-[85vh] w-auto object-contain"
+              unoptimized={src.startsWith("data:")}
+            />
+          </div>
         )}
       </div>
 

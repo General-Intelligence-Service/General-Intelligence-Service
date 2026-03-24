@@ -32,14 +32,14 @@ export function ProductListItem({
   return (
     <div className="rounded-xl border bg-background p-3 sm:p-4 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
       <div className="flex items-start gap-3 sm:gap-4">
-        <Link href={`/products/${product.slug}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:h-24 sm:w-24">
+        <Link href={`/products/${product.slug}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white dark:bg-muted sm:h-24 sm:w-24">
           {product.images?.[0] ? (
             <Image
               src={product.images[0]}
               alt={product.name}
               fill
               sizes="96px"
-              className="object-cover"
+              className="object-contain"
               placeholder="blur"
               blurDataURL={BLUR_DATA_URL}
             />

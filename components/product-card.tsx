@@ -44,14 +44,14 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
         <Link href={`/products/${product.slug}`}>
           <CardHeader className="p-0">
             {/* جوال: صورة أقل ارتفاعاً؛ سطح المكتب: مربع */}
-            <div className="relative aspect-[5/4] w-full overflow-hidden bg-muted sm:aspect-square">
+            <div className="relative aspect-[5/4] w-full overflow-hidden bg-white dark:bg-muted sm:aspect-square">
               {product.images && product.images.length > 0 && product.images[0] ? (
                 <Image
                   src={product.images[0]}
                   alt={product.name}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-300 sm:group-hover:scale-105"
+                  className="object-contain transition-transform duration-300 sm:group-hover:scale-105"
                   loading="lazy"
                   unoptimized={product.images[0].includes("/archive-images/")}
                   placeholder="blur"

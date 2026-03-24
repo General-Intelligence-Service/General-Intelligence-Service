@@ -325,12 +325,12 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
                         <X className="mr-1 h-3 w-3 absolute right-1" />
                       </Badge>
                       {image.startsWith("/images/") && (
-                        <div className="mt-1 relative w-20 h-20 border rounded overflow-hidden">
+                        <div className="mt-1 relative w-20 h-20 border rounded overflow-hidden bg-white dark:bg-muted">
                           <Image
                             src={image}
                             alt={`Preview ${index + 1}`}
                             fill
-                            className="object-cover"
+                            className="object-contain"
                             sizes="80px"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;

@@ -205,7 +205,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                             setLightboxOpen(true);
                           }
                         }}
-                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary transition-shadow duration-200 hover:shadow-lg"
+                        className="relative aspect-square w-full overflow-hidden rounded-lg bg-white dark:bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary transition-shadow duration-200 hover:shadow-lg"
                       >
                         {imgSrc ? (
                           <Image
@@ -213,7 +213,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                             alt={`${product.name} - ${slotIndex + 1}`}
                             fill
                             sizes="(max-width: 1024px) 50vw, 25vw"
-                            className="object-cover transition-opacity duration-300"
+                            className="object-contain transition-opacity duration-300"
                             loading={slotIndex < 2 ? "eager" : "lazy"}
                             placeholder="blur"
                             blurDataURL={BLUR_DATA_URL}
