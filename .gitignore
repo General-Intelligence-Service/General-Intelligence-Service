@@ -34,3 +34,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# نسخة مكررة من الأرشيف (الصور المخدّمة من public/archive-images)
+/ارشيف الصور/
+
