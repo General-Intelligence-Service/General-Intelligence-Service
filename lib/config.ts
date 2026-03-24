@@ -12,14 +12,17 @@
  *       NEXT_PUBLIC_SITE_LOGO_PATH=/شعاري.png
  *       (يبدأ المسار دائماً بـ /)
  *
- *  ج) أيقونة تبويب المتصفح: انسخ نفس ملف الشعار إلى
- *     app/icon.png و app/apple-icon.png
- *     (أو ملفات png أصغر إن رغبت)
+ *  ج) الشعار الأفقي (الرأس + الصفحة الرئيسية + PDF): logoPath أدناه.
  *
- *  د) ملفات PDF والشريط والصفحة الرئيسية تقرأ logoPath تلقائياً.
+ *  د) أيقونة الدرع (تبويب المتصفح + اختصار التطبيق PWA): iconPath أدناه.
+ *     الملف في public/ (مثال public/emblem.png) وانسخه أيضاً إلى
+ *     app/icon.png و app/apple-icon.png ليتمكّن Next من توليد favicon.
+ *
+ *  هـ) ملفات PDF والشريط والصفحة الرئيسية تقرأ logoPath تلقائياً.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 const defaultLogoPath = "/logo.png";
+const defaultIconPath = "/emblem.png";
 
 function resolveLogoPath(): string {
   const fromEnv =
@@ -32,10 +35,23 @@ function resolveLogoPath(): string {
   return defaultLogoPath;
 }
 
+function resolveIconPath(): string {
+  const fromEnv =
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_SITE_ICON_PATH?.trim()
+      : undefined;
+  if (fromEnv) {
+    return fromEnv.startsWith("/") ? fromEnv : `/${fromEnv}`;
+  }
+  return defaultIconPath;
+}
+
 export const siteConfig = {
   name: "كتالوج الهدايا الفاخرة",
   description: "معرض للهدايا الفاخرة والتراثية",
   logoPath: resolveLogoPath(),
+  /** أيقونة مربعة/درع — تبويب المتصفح وmanifest التطبيق (ليس الشعار الأفقي) */
+  iconPath: resolveIconPath(),
   /** نص يظهر عند تعطيل الصور أو قارئ الشاشة */
   logoAlt:
     "شعار إدارة التأهيل والتدريب — Training and Qualification Directorate",

@@ -17,13 +17,13 @@ export async function GET() {
     lang: "ar",
     icons: [
       {
-        src: siteConfig.logoPath,
+        src: siteConfig.iconPath,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: siteConfig.logoPath,
+        src: siteConfig.iconPath,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
