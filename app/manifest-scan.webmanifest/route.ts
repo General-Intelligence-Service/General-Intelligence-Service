@@ -11,7 +11,7 @@ export async function GET() {
     scope: "/scan",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0b443a",
+    background_color: "#ffffff",
     theme_color: "#0b443a",
     dir: "rtl",
     lang: "ar",
