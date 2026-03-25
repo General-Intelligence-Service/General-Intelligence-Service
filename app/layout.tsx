@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import "./globals.css";
 import { defaultMetadata } from "./metadata";
 import { OrderLayoutClient } from "@/components/order-layout-client";
+import { SWRegister } from "@/components/sw-register";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html dir="rtl" lang="ar" className={cairo.variable}>
       <body className={`${cairo.className} antialiased`}>
         <OrderLayoutClient>{children}</OrderLayoutClient>
+        <SWRegister />
       </body>
     </html>
   );
