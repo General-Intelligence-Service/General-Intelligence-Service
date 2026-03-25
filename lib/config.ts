@@ -22,7 +22,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 const defaultLogoPath = "/new-logo.png";
-const defaultIconPath = "/emblem.png";
+const defaultIconPath = "/new-logo-icon.ico";
 
 function resolveLogoPath(): string {
   const fromEnv =

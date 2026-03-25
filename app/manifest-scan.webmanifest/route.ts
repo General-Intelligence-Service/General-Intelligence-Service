@@ -18,14 +18,8 @@ export async function GET() {
     icons: [
       {
         src: siteConfig.iconPath,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: siteConfig.iconPath,
-        sizes: "512x512",
-        type: "image/png",
+        sizes: "any",
+        type: "image/x-icon",
         purpose: "any",
       },
     ],
