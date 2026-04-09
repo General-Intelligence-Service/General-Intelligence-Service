@@ -258,8 +258,8 @@ export function OrderPDFDocument({
   const logoSource =
     logoUrl ||
     (typeof window !== "undefined"
-      ? `${window.location.origin}${siteConfig.logoPath}`
-      : siteConfig.logoPath);
+      ? `${window.location.origin}${siteConfig.pdfLogoPath}`
+      : siteConfig.pdfLogoPath);
 
   return (
     <Document>

@@ -18,10 +18,11 @@
  *     ضع ملف الأيقونة في public/ (مثال: public/new-logo-icon.ico) ويفضّل
  *     أيضاً نسخها إلى app/icon.ico ليستخدمها Next كـ favicon.
  *
- *  هـ) ملفات PDF والشريط والصفحة الرئيسية تقرأ logoPath تلقائياً.
+ *  هـ) ملفات PDF تقرأ pdfLogoPath (افتراضيًا /logo_pdf.png).
  * ═══════════════════════════════════════════════════════════════════════════
  */
 const defaultLogoPath = "/new-logo.png";
+const defaultPdfLogoPath = "/logo_pdf.png";
 const defaultIconPath = "/new-logo-icon.ico";
 
 function resolveLogoPath(): string {
@@ -46,10 +47,23 @@ function resolveIconPath(): string {
   return defaultIconPath;
 }
 
+function resolvePdfLogoPath(): string {
+  const fromEnv =
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_PDF_LOGO_PATH?.trim()
+      : undefined;
+  if (fromEnv) {
+    return fromEnv.startsWith("/") ? fromEnv : `/${fromEnv}`;
+  }
+  return defaultPdfLogoPath;
+}
+
 export const siteConfig = {
   name: "كتالوج الهدايا الفاخرة",
   description: "معرض للهدايا الفاخرة والتراثية",
   logoPath: resolveLogoPath(),
+  /** شعار خاص بملفات الـPDF */
+  pdfLogoPath: resolvePdfLogoPath(),
   /** أيقونة مربعة/درع — تبويب المتصفح وmanifest التطبيق (ليس الشعار الأفقي) */
   iconPath: resolveIconPath(),
   /** نص يظهر عند تعطيل الصور أو قارئ الشاشة */

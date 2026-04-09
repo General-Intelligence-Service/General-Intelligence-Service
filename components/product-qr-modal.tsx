@@ -7,22 +7,22 @@ import { X } from "lucide-react";
 const QR_API = "https://api.qrserver.com/v1/create-qr-code";
 
 export function ProductQRModal({
-  productUrl,
+  sku,
   productName,
   onClose,
 }: {
-  productUrl: string;
+  sku: string;
   productName: string;
   onClose: () => void;
 }) {
   const [copyDone, setCopyDone] = useState(false);
   const [downloadDone, setDownloadDone] = useState(false);
-  const qrSrc = `${QR_API}/?size=256x256&data=${encodeURIComponent(productUrl)}`;
+  const qrSrc = `${QR_API}/?size=256x256&data=${encodeURIComponent(sku)}`;
 
-  const handleCopyLink = async () => {
+  const handleCopySku = async () => {
     try {
       if (typeof navigator?.clipboard?.writeText === "function") {
-        await navigator.clipboard.writeText(productUrl);
+        await navigator.clipboard.writeText(sku);
         setCopyDone(true);
         setTimeout(() => setCopyDone(false), 2500);
       }
@@ -87,11 +87,12 @@ export function ProductQRModal({
 
         <h3 className="text-lg font-bold text-center mb-4 mt-2">رمز QR للهدية</h3>
         <p className="text-sm text-muted-foreground text-center mb-4 line-clamp-2">{productName}</p>
+        <p className="text-xs text-muted-foreground text-center mb-4">الكود: <span className="font-semibold text-foreground">{sku}</span></p>
 
         <div className="flex justify-center mb-4">
           <Image
             src={qrSrc}
-            alt={`QR لصفحة ${productName}`}
+            alt={`QR ${sku}`}
             className="w-48 h-48 rounded-lg border bg-white object-contain"
             width={256}
             height={256}
@@ -108,10 +109,10 @@ export function ProductQRModal({
           </button>
           <button
             type="button"
-            onClick={handleCopyLink}
+            onClick={handleCopySku}
             className="inline-flex items-center justify-center min-h-[44px] rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-muted transition-colors"
           >
-            {copyDone ? "تم النسخ" : "نسخ الرابط"}
+            {copyDone ? "تم النسخ" : "نسخ الكود"}
           </button>
         </div>
       </div>

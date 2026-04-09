@@ -215,18 +215,51 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
           {/* الكمية المتوفرة (العدد) */}
           <div>
             <label className="mb-2 block text-sm font-medium">الكمية المتوفرة (العدد)</label>
-            <Input
-              type="number"
-              min={0}
-              value={formData.availableQuantity ?? 0}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  availableQuantity: Math.max(0, parseInt(e.target.value, 10) || 0),
-                })
-              }
-              placeholder="0"
-            />
+            <div className="flex items-stretch gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-[44px] w-12 shrink-0 px-0"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    availableQuantity: Math.max(0, (prev.availableQuantity ?? 0) - 1),
+                  }))
+                }
+                aria-label="إنقاص الكمية"
+              >
+                −
+              </Button>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={String(formData.availableQuantity ?? 0)}
+                onFocus={(e) => e.currentTarget.select()}
+                onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/[^\d]/g, "");
+                  const parsed = digits === "" ? 0 : parseInt(digits, 10);
+                  setFormData({ ...formData, availableQuantity: Math.max(0, parsed || 0) });
+                }}
+                placeholder="0"
+                className="text-center tabular-nums"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-[44px] w-12 shrink-0 px-0"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    availableQuantity: (prev.availableQuantity ?? 0) + 1,
+                  }))
+                }
+                aria-label="زيادة الكمية"
+              >
+                +
+              </Button>
+            </div>
           </div>
 
           {/* تصنيف الهدية */}

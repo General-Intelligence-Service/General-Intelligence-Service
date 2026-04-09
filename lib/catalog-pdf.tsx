@@ -15,7 +15,7 @@ export async function generateCatalogPDFBlob(
   });
   const logoUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}${siteConfig.logoPath}`
+      ? `${window.location.origin}${siteConfig.pdfLogoPath}`
       : undefined;
 
   const doc = (

@@ -240,7 +240,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </div>
                 {qrOpen && product && (
                   <ProductQRModal
-                    productUrl={typeof window !== "undefined" ? window.location.href : ""}
+                    sku={product.sku}
                     productName={product.name}
                     onClose={() => setQrOpen(false)}
                   />

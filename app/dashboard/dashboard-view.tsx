@@ -395,19 +395,19 @@ export function DashboardView() {
   };
 
   const extra = (
-    <>
-      {isFormOpen && (
-        <ProductForm
-          product={editingProduct}
-          onClose={() => {
-            setIsFormOpen(false);
-            setEditingProduct(null);
-          }}
-          onSubmit={handleFormSubmit}
-        />
-      )}
-      <Footer />
-    </>
+        <>
+          {isFormOpen && (
+            <ProductForm
+              product={editingProduct}
+              onClose={() => {
+                setIsFormOpen(false);
+                setEditingProduct(null);
+              }}
+              onSubmit={handleFormSubmit}
+            />
+          )}
+          <Footer />
+        </>
   );
   return React.createElement(DashboardViewReturn, {
     extra,
