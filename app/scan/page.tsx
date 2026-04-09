@@ -215,14 +215,52 @@ export default function ScanPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="text-sm font-medium">العدد:</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={action === "deduct" ? Math.max(1, resolved.current_quantity) : 9999}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
-                    className="w-20 min-h-[44px] text-center touch-manipulation"
-                  />
+                  <div className="flex items-stretch gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-[44px] w-12 shrink-0 px-0 touch-manipulation"
+                      onClick={() =>
+                        setQuantity((prev) => Math.max(1, Math.floor((prev || 1) - 1)))
+                      }
+                      aria-label="إنقاص العدد"
+                    >
+                      −
+                    </Button>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={String(quantity)}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/[^\d]/g, "");
+                        const parsed = digits === "" ? 1 : parseInt(digits, 10);
+                        const max =
+                          action === "deduct"
+                            ? Math.max(1, resolved.current_quantity)
+                            : 9999;
+                        setQuantity(Math.max(1, Math.min(max, Math.floor(parsed || 1))));
+                      }}
+                      className="w-24 min-h-[44px] text-center tabular-nums touch-manipulation"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-[44px] w-12 shrink-0 px-0 touch-manipulation"
+                      onClick={() => {
+                        const max =
+                          action === "deduct"
+                            ? Math.max(1, resolved.current_quantity)
+                            : 9999;
+                        setQuantity((prev) => Math.max(1, Math.min(max, Math.floor((prev || 1) + 1))));
+                      }}
+                      aria-label="زيادة العدد"
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex gap-2 pt-2">
                   <Button

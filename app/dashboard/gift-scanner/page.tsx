@@ -235,14 +235,54 @@ export default function GiftScannerPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="text-sm font-medium text-foreground">العدد:</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={action === "deduct" ? Math.max(1, resolved.current_quantity) : 9999}
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
-                      className="w-24 min-h-[44px] text-center"
-                    />
+                    <div className="flex items-stretch gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="min-h-[44px] w-12 shrink-0 px-0"
+                        onClick={() =>
+                          setQuantity((prev) => Math.max(1, Math.floor((prev || 1) - 1)))
+                        }
+                        aria-label="إنقاص العدد"
+                      >
+                        −
+                      </Button>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={String(quantity)}
+                        onFocus={(e) => e.currentTarget.select()}
+                        onWheel={(e) => (e.currentTarget as HTMLInputElement).blur()}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/[^\d]/g, "");
+                          const parsed = digits === "" ? 1 : parseInt(digits, 10);
+                          const max =
+                            action === "deduct"
+                              ? Math.max(1, resolved.current_quantity)
+                              : 9999;
+                          setQuantity(Math.max(1, Math.min(max, Math.floor(parsed || 1))));
+                        }}
+                        className="w-24 min-h-[44px] text-center tabular-nums"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="min-h-[44px] w-12 shrink-0 px-0"
+                        onClick={() => {
+                          const max =
+                            action === "deduct"
+                              ? Math.max(1, resolved.current_quantity)
+                              : 9999;
+                          setQuantity((prev) =>
+                            Math.max(1, Math.min(max, Math.floor((prev || 1) + 1)))
+                          );
+                        }}
+                        aria-label="زيادة العدد"
+                      >
+                        +
+                      </Button>
+                    </div>
                     {action === "deduct" && resolved.current_quantity > 0 && (
                       <span className="text-xs text-muted-foreground">(الحد الأقصى للخصم: {resolved.current_quantity})</span>
                     )}
