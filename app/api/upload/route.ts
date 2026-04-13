@@ -5,6 +5,8 @@ import path from "path";
 import { put } from "@vercel/blob";
 import { getSession } from "@/lib/auth-session";
 
+export const runtime = "nodejs";
+
 function buildSafeFileName(original: string): string {
   const timestamp = Date.now();
   const originalName = original.replace(/[^a-zA-Z0-9.\u0600-\u06FF]/g, "-");
@@ -53,6 +55,7 @@ export async function POST(request: NextRequest) {
       const blob = await put(`product-uploads/${fileName}`, file, {
         access: "public",
         addRandomSuffix: false,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
       });
       return NextResponse.json({
         success: true,
