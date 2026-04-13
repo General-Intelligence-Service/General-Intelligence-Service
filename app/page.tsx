@@ -21,6 +21,10 @@ import {
 } from "@/data/products";
 import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
+import {
+  loadPublicProductsFromLocalStorage,
+  PRODUCTS_STORAGE_KEY,
+} from "@/lib/products-local-storage";
 
 function applyArabicSearchCorrections(input: string): string {
   const s = (input ?? "").trim();
@@ -107,61 +111,45 @@ function HomeContent() {
     }
   }, []);
 
-  // تحميل المنتجات: من API (قاعدة البيانات) ثم localStorage ثم الافتراضي
+  // تحميل المنتجات: من API ثم localStorage العام (بدون دمج مع القائمة الثابتة — يمنع عودة المحذوف)
   useEffect(() => {
     setMounted(true);
-    const loadFromStorage = (): Product[] => {
-      if (typeof window === "undefined") return initialProducts;
-      const saved = localStorage.getItem("products");
-      if (!saved) return initialProducts;
-      try {
-        const parsed = JSON.parse(saved);
-        const merged = [...initialProducts];
-        parsed.forEach((p: Product) => {
-          const i = merged.findIndex((existing) => existing.slug === p.slug);
-          if (i >= 0) merged[i] = p;
-          else merged.push(p);
-        });
-        return merged;
-      } catch {
-        return initialProducts;
-      }
-    };
-
     const fetchProducts = async () => {
       try {
         const res = await fetch("/api/products");
         const json = await res.json();
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           setAllProducts(json.data);
-          if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
+          if (typeof window !== "undefined") {
+            localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(json.data));
+          }
           return;
         }
       } catch {
         //
       }
-      setAllProducts(loadFromStorage());
+      setAllProducts(loadPublicProductsFromLocalStorage());
     };
-    fetchProducts();
+
+    void fetchProducts();
 
     const AUTO_REFRESH_MS = 45 * 1000;
-    const refreshTimer = setInterval(fetchProducts, AUTO_REFRESH_MS);
+    const refreshTimer = setInterval(() => void fetchProducts(), AUTO_REFRESH_MS);
 
-    // الاستماع لتغييرات localStorage
     const handleStorageChange = () => {
-      setAllProducts(loadFromStorage());
+      setAllProducts(loadPublicProductsFromLocalStorage());
+    };
+
+    const handleCatalogNotify = () => {
+      void fetchProducts();
     };
 
     window.addEventListener("storage", handleStorageChange);
-    // التحقق من التحديثات كل ثانية (للتحديثات من نفس التبويب)
-    const interval = setInterval(() => {
-      const next = loadFromStorage();
-      setAllProducts((prev) => (JSON.stringify(next) !== JSON.stringify(prev) ? next : prev));
-    }, 1000);
+    window.addEventListener("gift-catalog-products-changed", handleCatalogNotify);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
+      window.removeEventListener("gift-catalog-products-changed", handleCatalogNotify);
       clearInterval(refreshTimer);
     };
   }, []);

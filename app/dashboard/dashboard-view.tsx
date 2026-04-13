@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, getGiftTierLabel, products as initialProducts } from "@/data/products";
+import { notifyProductsStorageChanged } from "@/lib/products-local-storage";
 import { generateProductSlug } from "@/lib/slug";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
 import { DashboardLayout } from "./dashboard-layout";
@@ -56,6 +57,7 @@ export function DashboardView() {
       if (json.success && Array.isArray(json.data)) {
         setProducts(json.data);
         if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(json.data));
+        notifyProductsStorageChanged();
       }
     } catch {
       //
@@ -235,6 +237,7 @@ export function DashboardView() {
             try {
               if (typeof window !== "undefined") {
                 localStorage.setItem("products", JSON.stringify(next));
+                notifyProductsStorageChanged();
               }
             } catch {
               //
@@ -309,7 +312,10 @@ export function DashboardView() {
         }
         if (!confirm(`سيتم استبدال ${products.length} هدية بـ ${data.length} هدية. متابعة؟`)) return;
         setProducts(data as Product[]);
-        if (typeof window !== "undefined") localStorage.setItem("products", JSON.stringify(data));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("products", JSON.stringify(data));
+          notifyProductsStorageChanged();
+        }
         alert("تمت الاستعادة بنجاح.");
       } catch {
         alert("تعذر قراءة الملف. تأكد أنه ملف JSON صالح.");
@@ -385,6 +391,7 @@ export function DashboardView() {
       const result = await response.json();
       if (result.success) {
         setProducts((prev) => prev.filter((p) => p.slug !== slug));
+        await refetchProducts(true);
       } else {
         alert(result.error || "فشل الحذف");
       }

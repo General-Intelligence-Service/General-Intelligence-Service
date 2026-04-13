@@ -11,6 +11,7 @@ import { useOrder } from "@/contexts/order-context";
 import { siteConfig } from "@/lib/config";
 import { saveOrderToHistory, getOrderDraft, saveOrderDraft, clearOrderDraft } from "@/types/order";
 import { products as initialProducts, type Product } from "@/data/products";
+import { loadPublicProductsFromLocalStorage } from "@/lib/products-local-storage";
 
 export function OrderCart() {
   const {
@@ -124,22 +125,10 @@ export function OrderCart() {
   const handleRestoreDraft = () => {
     const draft = getOrderDraft();
     if (!draft) return;
-    let productsList: Product[] = initialProducts;
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("products");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as Product[];
-          const merged = [...initialProducts];
-          parsed.forEach((p) => {
-            const i = merged.findIndex((e) => e.slug === p.slug);
-            if (i >= 0) merged[i] = p;
-            else merged.push(p);
-          });
-          productsList = merged;
-        } catch {}
-      }
-    }
+    const productsList =
+      typeof window !== "undefined"
+        ? loadPublicProductsFromLocalStorage()
+        : initialProducts.filter((p) => !p.archived);
     const items = draft.items
       .map(({ slug, quantity }) => {
         const product = productsList.find((p) => p.slug === slug);

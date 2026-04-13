@@ -5,23 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { products as initialProducts, type Product } from "@/data/products";
+import { loadPublicProductsFromLocalStorage } from "@/lib/products-local-storage";
 
 function loadProducts(): Product[] {
-  if (typeof window === "undefined") return initialProducts;
-  try {
-    const saved = localStorage.getItem("products");
-    if (!saved) return initialProducts;
-    const parsed = JSON.parse(saved) as Product[];
-    const merged = [...initialProducts];
-    parsed.forEach((p) => {
-      const i = merged.findIndex((e) => e.slug === p.slug);
-      if (i >= 0) merged[i] = p;
-      else merged.push(p);
-    });
-    return merged;
-  } catch {
-    return initialProducts;
+  if (typeof window === "undefined") {
+    return initialProducts.filter((p) => !p.archived);
   }
+  return loadPublicProductsFromLocalStorage();
 }
 
 export function NavbarSearch() {
@@ -34,6 +24,13 @@ export function NavbarSearch() {
 
   useEffect(() => {
     setProducts(loadProducts());
+    const onUpdate = () => setProducts(loadProducts());
+    window.addEventListener("gift-catalog-products-changed", onUpdate);
+    window.addEventListener("storage", onUpdate);
+    return () => {
+      window.removeEventListener("gift-catalog-products-changed", onUpdate);
+      window.removeEventListener("storage", onUpdate);
+    };
   }, []);
 
   const q = query.trim().toLowerCase();

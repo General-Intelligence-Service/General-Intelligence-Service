@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useOrder } from "@/contexts/order-context";
 import { products as initialProducts, type Product } from "@/data/products";
+import { loadPublicProductsFromLocalStorage } from "@/lib/products-local-storage";
 
 interface SharedOrderPayload {
   items: { slug: string; quantity: number }[];
@@ -26,24 +27,7 @@ function OrderContent() {
   const [productsList, setProductsList] = useState<Product[]>(initialProducts);
 
   useEffect(() => {
-    const loadProducts = (): Product[] => {
-      if (typeof window === "undefined") return initialProducts;
-      try {
-        const saved = localStorage.getItem("products");
-        if (!saved) return initialProducts;
-        const parsed = JSON.parse(saved) as Product[];
-        const merged = [...initialProducts];
-        parsed.forEach((p) => {
-          const i = merged.findIndex((e) => e.slug === p.slug);
-          if (i >= 0) merged[i] = p;
-          else merged.push(p);
-        });
-        return merged;
-      } catch {
-        return initialProducts;
-      }
-    };
-    setProductsList(loadProducts());
+    setProductsList(loadPublicProductsFromLocalStorage());
   }, []);
 
   useEffect(() => {

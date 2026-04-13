@@ -70,8 +70,6 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 10, fontWeight: 500, color: "#d4c5a8", textAlign: "center", marginTop: 4 },
   meta: { marginTop: 14, marginBottom: 10 },
   metaText: { fontSize: 10, color: COLORS.gray700, textAlign: "right" },
-  footerNote: { marginTop: 12, fontSize: 8.5, color: "#64748b", textAlign: "right" },
-  pageNum: { marginTop: 6, fontSize: 9, color: COLORS.gray700, textAlign: "center" },
   tableWrapper: {
     borderWidth: 1,
     borderColor: "#d9e2df",
@@ -180,15 +178,10 @@ export function CatalogPDFDocument({
     </View>
   );
 
-  const renderMeta = (pageIndex: number, totalPages: number) => (
+  const renderMeta = () => (
     <View style={styles.meta}>
       <Text style={styles.metaText}>تاريخ التصدير: {dateStr}</Text>
       <Text style={styles.metaText}>عدد الهدايا في هذا الكتالوج: {products.length}</Text>
-      {totalPages > 1 && (
-        <Text style={styles.metaText}>
-          صفحة {pageIndex + 1} من {totalPages}
-        </Text>
-      )}
     </View>
   );
 
@@ -209,7 +202,7 @@ export function CatalogPDFDocument({
       {pages.map((pageProducts, pageIndex) => (
         <Page key={pageIndex} size="A4" style={styles.page}>
           {renderHeader()}
-          {renderMeta(pageIndex, pages.length)}
+          {renderMeta()}
 
           <View style={styles.tableWrapper}>
             <View style={styles.tableHeaderRow}>
@@ -287,13 +280,6 @@ export function CatalogPDFDocument({
               );
             })}
           </View>
-
-          {showQr ? (
-            <Text style={styles.footerNote}>
-              مسح رمز QR يفتح صفحة الهدية على الموقع. إن لم يظهر الرمز، تأكد من ضبط عنوان الموقع
-              (NEXT_PUBLIC_SITE_URL) أو التحميل من المتصفح على النطاق الصحيح.
-            </Text>
-          ) : null}
         </Page>
       ))}
     </Document>

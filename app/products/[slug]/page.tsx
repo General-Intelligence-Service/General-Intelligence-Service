@@ -13,7 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/product-card";
-import { getProductBySlug, products as initialProducts, getGiftTierLabel, type Product } from "@/data/products";
+import { products as initialProducts, getGiftTierLabel, type Product } from "@/data/products";
+import {
+  loadPublicProductsFromLocalStorage,
+  PRODUCTS_STORAGE_KEY,
+} from "@/lib/products-local-storage";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { useOrder } from "@/contexts/order-context";
 import { ImageLightbox } from "@/components/image-lightbox";
@@ -67,61 +71,49 @@ export default function ProductPage({ params }: ProductPageProps) {
     }
   };
 
-  // تحميل المنتجات من localStorage بعد mount على العميل فقط
+  // تحميل القائمة من API ثم التخزين المحلي (بدون دمج مع data/products لتفادي عرض المحذوف)
   useEffect(() => {
-    setMounted(true);
-    const loadProducts = (): Product[] => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("products");
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            // دمج البيانات المحملة مع البيانات الأولية (للتأكد من عدم فقدان أي منتج)
-            const merged = [...initialProducts];
-            parsed.forEach((p: Product) => {
-              const existingIndex = merged.findIndex((existing) => existing.slug === p.slug);
-              if (existingIndex >= 0) {
-                merged[existingIndex] = p; // تحديث المنتج الموجود
-              } else {
-                merged.push(p); // إضافة منتج جديد
-              }
-            });
-            return merged;
-          } catch (error) {
-            console.error("Error parsing products from localStorage:", error);
-            return initialProducts;
-          }
-        }
-      }
-      return initialProducts;
+    let cancelled = false;
+    const searchSlug = decodeURIComponent(params.slug);
+
+    const applyList = (list: Product[]) => {
+      if (cancelled) return;
+      setAllProducts(list);
+      const found = list.find(
+        (p) => decodeURIComponent(p.slug) === searchSlug || p.slug === searchSlug
+      );
+      setProduct(found);
+      setMounted(true);
     };
 
-    const loaded = loadProducts();
-    setAllProducts(loaded);
-    
-    // البحث عن المنتج - البحث في جميع البيانات المحملة
-    // استخدام decodeURIComponent للتعامل مع URLs المشفرة
-    const searchSlug = decodeURIComponent(params.slug);
-    let foundProduct = loaded.find((p) => {
-      const productSlug = decodeURIComponent(p.slug);
-      return productSlug === searchSlug || p.slug === searchSlug;
-    });
-    
-    // إذا لم يُوجد، البحث في البيانات الأولية أيضاً
-    if (!foundProduct) {
-      foundProduct = getProductBySlug(searchSlug);
+    async function load() {
+      try {
+        const res = await fetch("/api/products");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const data = json.data as Product[];
+          if (typeof window !== "undefined") {
+            localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(data));
+          }
+          applyList(data);
+          return;
+        }
+      } catch {
+        //
+      }
+      applyList(loadPublicProductsFromLocalStorage());
     }
-    
-    // تسجيل للمساعدة في التشخيص
-    if (!foundProduct) {
-      console.log("Product not found. Looking for slug:", searchSlug);
-      console.log("Available products:", loaded.map((p) => ({ name: p.name, slug: p.slug })));
-      console.log("All slugs:", loaded.map((p) => p.slug));
-    } else {
-      console.log("Product found:", foundProduct.name, "with slug:", foundProduct.slug);
-    }
-    
-    setProduct(foundProduct);
+
+    void load();
+
+    const onRev = () => void load();
+    window.addEventListener("gift-catalog-products-changed", onRev);
+    window.addEventListener("storage", onRev);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("gift-catalog-products-changed", onRev);
+      window.removeEventListener("storage", onRev);
+    };
   }, [params.slug]);
 
   // عرض loading أثناء التحميل (فقط قبل mount)
