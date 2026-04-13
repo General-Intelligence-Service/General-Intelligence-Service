@@ -30,6 +30,12 @@ export async function ensureProductsTable(): Promise<void> {
     } catch {
       /* العمود موجود مسبقاً */
     }
+    await sql`
+      CREATE TABLE IF NOT EXISTS catalog_slug_suppressions (
+        slug VARCHAR(255) PRIMARY KEY,
+        suppressed_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `;
     initDone = true;
   } catch (e) {
     console.error("products-db init:", e);
@@ -53,12 +59,20 @@ function rowToProduct(r: Record<string, unknown>): Product {
   };
 }
 
+async function getSuppressedSlugSet(): Promise<Set<string>> {
+  await ensureProductsTable();
+  const { rows } = await sql`SELECT slug FROM catalog_slug_suppressions`;
+  return new Set(rows.map((r) => String((r as { slug: string }).slug)));
+}
+
 export async function seedProductsIfEmpty(): Promise<number> {
   await ensureProductsTable();
   const { rows } = await sql`SELECT COUNT(*)::int as c FROM products`;
   const count = Number(rows[0]?.c ?? 0);
   if (count > 0) return count;
+  const suppressed = await getSuppressedSlugSet();
   for (const p of initialProducts) {
+    if (suppressed.has(p.slug)) continue;
     await sql`
       INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, updated_at)
       VALUES (
@@ -87,7 +101,9 @@ export async function seedProductsIfEmpty(): Promise<number> {
  */
 export async function syncInitialProducts(): Promise<void> {
   await ensureProductsTable();
+  const suppressed = await getSuppressedSlugSet();
   for (const p of initialProducts) {
+    if (suppressed.has(p.slug)) continue;
     await sql`
       INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, updated_at)
       VALUES (
@@ -131,6 +147,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
 export async function createProduct(p: Product): Promise<Product> {
   await ensureProductsTable();
+  await sql`DELETE FROM catalog_slug_suppressions WHERE slug = ${p.slug}`;
   await sql`
     INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, updated_at)
     VALUES (
@@ -188,13 +205,20 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
   return rowToProduct(rows[0]);
 }
 
-/** حذف ناعم: المنتج يُحفظ في القاعدة ويُسجّل أن الكمية منتهية (لا يُحذف فعلياً) */
+/**
+ * حذف فعلي من القاعدة. يُسجَّل الـ slug في catalog_slug_suppressions حتى لا يُعاد إدراجه
+ * من data/products.ts عند syncInitialProducts.
+ */
 export async function deleteProduct(slug: string): Promise<boolean> {
   await ensureProductsTable();
-  const { rowCount } = await sql`
-    UPDATE products SET archived = true, available_quantity = 0, updated_at = NOW() WHERE slug = ${slug}
+  const s = slug.trim();
+  const { rowCount } = await sql`DELETE FROM products WHERE slug = ${s}`;
+  if ((rowCount ?? 0) === 0) return false;
+  await sql`
+    INSERT INTO catalog_slug_suppressions (slug) VALUES (${s})
+    ON CONFLICT (slug) DO NOTHING
   `;
-  return (rowCount ?? 0) > 0;
+  return true;
 }
 
 export function isProductsDbConfigured(): boolean {

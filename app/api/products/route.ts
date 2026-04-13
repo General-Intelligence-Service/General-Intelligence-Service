@@ -13,7 +13,7 @@ import {
 import { getSession } from "@/lib/auth-session";
 import { generateProductSlug } from "@/lib/slug";
 
-// GET - جلب المنتجات. include_archived=1 للداشبورد (يعرض المحفوظة/الكمية منتهية أيضاً)
+// GET - جلب المنتجات. include_archived=1 يتضمن المؤرشفة (archived) — الداشبورد الافتراضي بدونها
 export async function GET(request: NextRequest) {
   try {
     if (!isProductsDbConfigured()) {

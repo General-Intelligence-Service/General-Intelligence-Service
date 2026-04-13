@@ -50,7 +50,7 @@ export function DashboardView() {
 
   const refetchProducts = useCallback(async (quick = false) => {
     try {
-      const qs = new URLSearchParams({ include_archived: "1" });
+      const qs = new URLSearchParams();
       if (quick) qs.set("quick", "1");
       const res = await fetch(`/api/products?${qs.toString()}`, { credentials: "include" });
       const json = await res.json();
