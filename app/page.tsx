@@ -2,7 +2,6 @@
 
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
@@ -65,35 +64,6 @@ function HomeContent() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [catalogLoading, setCatalogLoading] = useState(false);
-  const [luxuryCatalogLoading, setLuxuryCatalogLoading] = useState(false);
-  const handleDownloadCatalog = async () => {
-    if (catalogLoading) return;
-    setCatalogLoading(true);
-    try {
-      const { downloadCatalogPDF } = await import("@/lib/catalog-pdf");
-      await downloadCatalogPDF(allProducts, siteConfig);
-    } catch (e) {
-      console.error(e);
-      alert("تعذر إنشاء كتالوج PDF");
-    } finally {
-      setCatalogLoading(false);
-    }
-  };
-
-  const handleDownloadLuxuryCatalog = async () => {
-    if (luxuryCatalogLoading) return;
-    setLuxuryCatalogLoading(true);
-    try {
-      const { downloadLuxuryCatalogPDF } = await import("@/lib/catalog-pdf");
-      await downloadLuxuryCatalogPDF(allProducts, siteConfig);
-    } catch (e) {
-      console.error(e);
-      alert("تعذر إنشاء كتالوج الهدايا الفاخرة");
-    } finally {
-      setLuxuryCatalogLoading(false);
-    }
-  };
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -241,12 +211,6 @@ function HomeContent() {
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 768px"
               />
             </motion.div>
-            <Link
-              href="#products"
-              className="inline-flex min-h-[48px] h-12 items-center justify-center rounded-md border border-brand-green-dark/50 bg-background px-8 text-base font-medium text-brand-green-dark shadow-sm transition-all hover:bg-brand-green-dark/10 hover:border-brand-green-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98]"
-            >
-              تصفح معرض الهدايا
-            </Link>
           </div>
         </section>
 
@@ -324,42 +288,6 @@ function HomeContent() {
 
             {/* Filters + ترتيب */}
             <div className="mb-8 space-y-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">تصدير الكتالوج</p>
-                <p className="mt-1 max-w-xl mx-auto text-xs text-muted-foreground">
-                  الكتالوج الكامل لجميع المعروضات؛ وكتالوج منفصل للهدايا الفاخرة يتضمن الكمية المتوفرة ورموز QR تفتح صفحة كل هدية على الموقع.
-                </p>
-              </div>
-              <div
-                className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center"
-                role="group"
-                aria-label="أزرار تحميل كتالوج PDF"
-              >
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="min-h-[44px]"
-                  onClick={handleDownloadCatalog}
-                  disabled={catalogLoading || luxuryCatalogLoading}
-                  aria-busy={catalogLoading}
-                >
-                  {catalogLoading ? "جاري إنشاء كتالوج PDF..." : "تحميل كتالوج PDF كامل"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  className="min-h-[44px] bg-brand-green-dark hover:bg-brand-green-darker"
-                  onClick={handleDownloadLuxuryCatalog}
-                  disabled={luxuryCatalogLoading || catalogLoading}
-                  aria-busy={luxuryCatalogLoading}
-                >
-                  {luxuryCatalogLoading
-                    ? "جاري إنشاء كتالوج الفاخرة..."
-                    : "تحميل كتالوج الهدايا الفاخرة (كمية + QR)"}
-                </Button>
-              </div>
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
                 <div className="flex flex-wrap gap-3">
