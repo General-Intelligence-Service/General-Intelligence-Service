@@ -92,3 +92,29 @@ export async function downloadLuxuryCatalogPDF(
   link.click();
   URL.revokeObjectURL(url);
 }
+
+/** كتالوج PDF لجميع الهدايا الممرَّرة (مثلاً قائمة الداشبورد) — كمية + QR لصفحات الموقع */
+export async function downloadFullCatalogWithQuantityAndQr(
+  products: Product[],
+  config: typeof siteConfig,
+  filename?: string
+): Promise<void> {
+  const origin = getSiteOriginForShare();
+  const blob = await generateCatalogPDFBlob(products, config, {
+    title: "كتالوج الهدايا",
+    subtitle: "الكمية المتوفرة ورموز QR لصفحات الموقع",
+    pdfOptions: {
+      showQuantity: true,
+      showQr: true,
+      baseUrl: origin,
+      rowsPerPage: 14,
+    },
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download =
+    filename || `كتالوج-الهدايا-كمية-qr-${new Date().toISOString().split("T")[0]}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
+}

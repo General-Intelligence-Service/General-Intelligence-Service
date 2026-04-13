@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Product, getGiftTierLabel } from "@/data/products";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
 import type { DashboardViewReturnProps } from "./dashboard-view-return";
 import { productPageUrl } from "@/lib/site-url";
+import { siteConfig } from "@/lib/config";
 
 export function DashboardViewBody(props: DashboardViewReturnProps) {
   const {
@@ -56,11 +57,30 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
   } = props;
 
   const [siteOrigin, setSiteOrigin] = React.useState("");
+  const [catalogPdfLoading, setCatalogPdfLoading] = React.useState(false);
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       setSiteOrigin(window.location.origin);
     }
   }, []);
+
+  const handleDownloadCatalogPdfQtyQr = async () => {
+    if (catalogPdfLoading) return;
+    if (products.length === 0) {
+      alert("لا توجد هدايا في القائمة.");
+      return;
+    }
+    setCatalogPdfLoading(true);
+    try {
+      const { downloadFullCatalogWithQuantityAndQr } = await import("@/lib/catalog-pdf");
+      await downloadFullCatalogWithQuantityAndQr(products, siteConfig);
+    } catch (e) {
+      console.error(e);
+      alert("تعذر إنشاء كتالوج PDF. تحقق من الاتصال أو حاول لاحقاً.");
+    } finally {
+      setCatalogPdfLoading(false);
+    }
+  };
 
   /** للتجريب: مسح نسخة بيانات الهدايا المحلية وإعادة تحميل الصفحة بالكامل (لا يمس جلسة الدخول) */
   const handleDashboardRestart = () => {
@@ -383,6 +403,21 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                   title="تحديث الأعداد من قاعدة البيانات"
                 >
                   <RefreshCw className="ml-2 h-4 w-4" /> تحديث القائمة
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  className="min-h-[44px] touch-manipulation bg-brand-green-dark hover:bg-brand-green-darker"
+                  onClick={() => {
+                    void handleDownloadCatalogPdfQtyQr();
+                  }}
+                  disabled={catalogPdfLoading || products.length === 0}
+                  aria-busy={catalogPdfLoading}
+                  title="PDF يتضمن الكمية المتوفرة ورموز QR تفتح صفحة كل هدية على الموقع"
+                >
+                  <Printer className="ml-2 h-4 w-4" />
+                  {catalogPdfLoading ? "جاري إنشاء PDF..." : "كتالوج PDF (الكمية + QR)"}
                 </Button>
                 <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleExportCSV}>
                   <Download className="ml-2 h-4 w-4" /> تصدير CSV
