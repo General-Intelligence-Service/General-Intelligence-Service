@@ -36,11 +36,14 @@ export async function generateCatalogPDFBlob(
     };
   }
 
+  const resolvedSubtitle =
+    opts?.subtitle !== undefined ? opts.subtitle : config.name;
+
   const doc = (
     <CatalogPDFDocument
       products={products}
       title={opts?.title || "كتالوج الهدايا"}
-      subtitle={opts?.subtitle || config.name}
+      subtitle={resolvedSubtitle}
       dateStr={dateStr}
       logoUrl={logoUrl}
       options={mergedPdfOptions}
@@ -65,7 +68,7 @@ export async function downloadCatalogPDF(
   URL.revokeObjectURL(url);
 }
 
-/** كتالوج PDF للهدايا ذات التصنيف «فاخرة» فقط — يتضمن الكمية ورموز QR لصفحات الموقع */
+/** كتالوج PDF للهدايا ذات التصنيف «فاخرة» فقط — أعمدة الكمية وQR */
 export async function downloadLuxuryCatalogPDF(
   products: Product[],
   config: typeof siteConfig,
@@ -75,7 +78,7 @@ export async function downloadLuxuryCatalogPDF(
   const origin = getSiteOriginForShare();
   const blob = await generateCatalogPDFBlob(luxury, config, {
     title: "كتالوج الهدايا الفاخرة",
-    subtitle: "الكمية المتوفرة ورموز QR لصفحات الموقع",
+    subtitle: "",
     pdfOptions: {
       showQuantity: true,
       showQr: true,
@@ -93,7 +96,7 @@ export async function downloadLuxuryCatalogPDF(
   URL.revokeObjectURL(url);
 }
 
-/** كتالوج PDF لجميع الهدايا الممرَّرة (مثلاً قائمة الداشبورد) — كمية + QR لصفحات الموقع */
+/** كتالوج PDF لجميع الهدايا الممرَّرة (مثلاً قائمة الداشبورد) — أعمدة الكمية وQR */
 export async function downloadFullCatalogWithQuantityAndQr(
   products: Product[],
   config: typeof siteConfig,
@@ -102,7 +105,7 @@ export async function downloadFullCatalogWithQuantityAndQr(
   const origin = getSiteOriginForShare();
   const blob = await generateCatalogPDFBlob(products, config, {
     title: "كتالوج الهدايا",
-    subtitle: "الكمية المتوفرة ورموز QR لصفحات الموقع",
+    subtitle: "",
     pdfOptions: {
       showQuantity: true,
       showQr: true,

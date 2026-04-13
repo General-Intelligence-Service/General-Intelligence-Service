@@ -172,7 +172,9 @@ export function CatalogPDFDocument({
         )}
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>{title}</Text>
-          <Text style={styles.headerSubtitle}>{subtitle || "قائمة الهدايا"}</Text>
+          {(subtitle ?? "").trim() !== "" ? (
+            <Text style={styles.headerSubtitle}>{subtitle}</Text>
+          ) : null}
         </View>
       </View>
     </View>
