@@ -3,26 +3,32 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { productPageUrl } from "@/lib/site-url";
 
 const QR_API = "https://api.qrserver.com/v1/create-qr-code";
 
 export function ProductQRModal({
   sku,
+  productSlug,
   productName,
   onClose,
 }: {
   sku: string;
+  /** يُبنى منه رابط صفحة المنتج لرمز QR */
+  productSlug: string;
   productName: string;
   onClose: () => void;
 }) {
   const [copyDone, setCopyDone] = useState(false);
   const [downloadDone, setDownloadDone] = useState(false);
-  const qrSrc = `${QR_API}/?size=256x256&data=${encodeURIComponent(sku)}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const pageUrl = productPageUrl(origin, productSlug);
+  const qrSrc = `${QR_API}/?size=256x256&data=${encodeURIComponent(pageUrl)}`;
 
-  const handleCopySku = async () => {
+  const handleCopyLink = async () => {
     try {
       if (typeof navigator?.clipboard?.writeText === "function") {
-        await navigator.clipboard.writeText(sku);
+        await navigator.clipboard.writeText(pageUrl);
         setCopyDone(true);
         setTimeout(() => setCopyDone(false), 2500);
       }
@@ -87,7 +93,12 @@ export function ProductQRModal({
 
         <h3 className="text-lg font-bold text-center mb-4 mt-2">رمز QR للهدية</h3>
         <p className="text-sm text-muted-foreground text-center mb-4 line-clamp-2">{productName}</p>
-        <p className="text-xs text-muted-foreground text-center mb-4">الكود: <span className="font-semibold text-foreground">{sku}</span></p>
+        <p className="text-xs text-muted-foreground text-center mb-2">
+          الكود: <span className="font-semibold text-foreground">{sku}</span>
+        </p>
+        <p className="text-[11px] text-muted-foreground text-center mb-4 break-all px-1" dir="ltr">
+          {pageUrl}
+        </p>
 
         <div className="flex justify-center mb-4">
           <Image
@@ -109,10 +120,10 @@ export function ProductQRModal({
           </button>
           <button
             type="button"
-            onClick={handleCopySku}
+            onClick={handleCopyLink}
             className="inline-flex items-center justify-center min-h-[44px] rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-muted transition-colors"
           >
-            {copyDone ? "تم النسخ" : "نسخ الكود"}
+            {copyDone ? "تم النسخ" : "نسخ رابط الصفحة"}
           </button>
         </div>
       </div>

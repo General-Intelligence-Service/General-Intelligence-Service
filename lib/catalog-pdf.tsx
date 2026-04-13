@@ -1,12 +1,22 @@
 import { pdf } from "@react-pdf/renderer";
-import { CatalogPDFDocument } from "@/components/pdf/catalog-pdf-document";
+import {
+  CatalogPDFDocument,
+  type CatalogPdfOptions,
+} from "@/components/pdf/catalog-pdf-document";
 import { siteConfig } from "@/lib/config";
+import { getSiteOriginForShare } from "@/lib/site-url";
 import type { Product } from "@/data/products";
+
+export type CatalogPdfGenerateOpts = {
+  title?: string;
+  subtitle?: string;
+  pdfOptions?: CatalogPdfOptions;
+};
 
 export async function generateCatalogPDFBlob(
   products: Product[],
   config: typeof siteConfig,
-  opts?: { title?: string; subtitle?: string }
+  opts?: CatalogPdfGenerateOpts
 ): Promise<Blob> {
   const dateStr = new Date().toLocaleDateString("ar-SA", {
     year: "numeric",
@@ -18,6 +28,14 @@ export async function generateCatalogPDFBlob(
       ? `${window.location.origin}${siteConfig.pdfLogoPath}`
       : undefined;
 
+  let mergedPdfOptions: CatalogPdfOptions | undefined = opts?.pdfOptions;
+  if (mergedPdfOptions?.showQr && !mergedPdfOptions.baseUrl) {
+    mergedPdfOptions = {
+      ...mergedPdfOptions,
+      baseUrl: getSiteOriginForShare(),
+    };
+  }
+
   const doc = (
     <CatalogPDFDocument
       products={products}
@@ -25,6 +43,7 @@ export async function generateCatalogPDFBlob(
       subtitle={opts?.subtitle || config.name}
       dateStr={dateStr}
       logoUrl={logoUrl}
+      options={mergedPdfOptions}
     />
   );
 
@@ -46,3 +65,30 @@ export async function downloadCatalogPDF(
   URL.revokeObjectURL(url);
 }
 
+/** كتالوج PDF للهدايا ذات التصنيف «فاخرة» فقط — يتضمن الكمية ورموز QR لصفحات الموقع */
+export async function downloadLuxuryCatalogPDF(
+  products: Product[],
+  config: typeof siteConfig,
+  filename?: string
+): Promise<void> {
+  const luxury = products.filter((p) => p.giftTier === "luxury");
+  const origin = getSiteOriginForShare();
+  const blob = await generateCatalogPDFBlob(luxury, config, {
+    title: "كتالوج الهدايا الفاخرة",
+    subtitle: "الكمية المتوفرة ورموز QR لصفحات الموقع",
+    pdfOptions: {
+      showQuantity: true,
+      showQr: true,
+      baseUrl: origin,
+      rowsPerPage: 14,
+    },
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download =
+    filename ||
+    `كتالوج-الهدايا-الفاخرة-${new Date().toISOString().split("T")[0]}.pdf`;
+  link.click();
+  URL.revokeObjectURL(url);
+}

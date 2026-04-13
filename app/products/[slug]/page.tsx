@@ -241,6 +241,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 {qrOpen && product && (
                   <ProductQRModal
                     sku={product.sku}
+                    productSlug={product.slug}
                     productName={product.name}
                     onClose={() => setQrOpen(false)}
                   />

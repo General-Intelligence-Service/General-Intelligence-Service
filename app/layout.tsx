@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html dir="rtl" lang="ar" className={cairo.variable}>
+    <html dir="rtl" lang="ar" className={`${cairo.variable} scroll-smooth`}>
       <body className={`${cairo.className} antialiased`}>
         <OrderLayoutClient>{children}</OrderLayoutClient>
         <SWRegister />

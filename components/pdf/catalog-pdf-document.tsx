@@ -9,7 +9,10 @@ import {
   StyleSheet,
   Font,
 } from "@react-pdf/renderer";
-import type { Product } from "@/data/products";
+import { getGiftTierLabel, type Product } from "@/data/products";
+import { productPageUrl } from "@/lib/site-url";
+
+const QR_API = "https://api.qrserver.com/v1/create-qr-code";
 
 // تسجيل خط Tajawal بجميع الأوزان (من public/fonts/tajawal)
 const fontBase =
@@ -67,6 +70,8 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 10, fontWeight: 500, color: "#d4c5a8", textAlign: "center", marginTop: 4 },
   meta: { marginTop: 14, marginBottom: 10 },
   metaText: { fontSize: 10, color: COLORS.gray700, textAlign: "right" },
+  footerNote: { marginTop: 12, fontSize: 8.5, color: "#64748b", textAlign: "right" },
+  pageNum: { marginTop: 6, fontSize: 9, color: COLORS.gray700, textAlign: "center" },
   tableWrapper: {
     borderWidth: 1,
     borderColor: "#d9e2df",
@@ -77,8 +82,8 @@ const styles = StyleSheet.create({
   tableHeaderRow: { flexDirection: "row-reverse", backgroundColor: "#0f5a4d" },
   th: {
     paddingVertical: 9,
-    paddingHorizontal: 8,
-    fontSize: 9.5,
+    paddingHorizontal: 6,
+    fontSize: 8.5,
     fontWeight: 800,
     color: COLORS.white,
     textAlign: "center",
@@ -89,21 +94,41 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     borderTopWidth: 1,
     borderTopColor: "#e5ece9",
-    minHeight: 38,
+    minHeight: 42,
     alignItems: "center",
   },
   trEven: { backgroundColor: COLORS.gray50 },
   td: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    fontSize: 9.5,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    fontSize: 8.5,
     color: "#374151",
     textAlign: "center",
     borderLeftWidth: 1,
     borderLeftColor: "#edf2f0",
   },
   tdName: { textAlign: "right", color: "#111827", fontWeight: 700 },
+  qrImg: { width: 36, height: 36, objectFit: "contain", alignSelf: "center" },
 });
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    out.push(arr.slice(i, i + size));
+  }
+  return out.length ? out : [[]];
+}
+
+export type CatalogPdfOptions = {
+  /** عمود الكمية المتوفرة */
+  showQuantity?: boolean;
+  /** عمود QR يفتح صفحة المنتج على الموقع */
+  showQr?: boolean;
+  /** أصل الموقع (مثلاً https://example.com) — مطلوب عند showQr */
+  baseUrl?: string;
+  /** عدد الصفوف لكل صفحة PDF */
+  rowsPerPage?: number;
+};
 
 export function CatalogPDFDocument({
   products,
@@ -111,58 +136,166 @@ export function CatalogPDFDocument({
   subtitle,
   dateStr,
   logoUrl,
+  options,
 }: {
   products: Product[];
   title: string;
   subtitle?: string;
   dateStr: string;
   logoUrl?: string;
+  options?: CatalogPdfOptions;
 }) {
-  const col = { idx: "7%", sku: "18%", tier: "18%", cat: "17%", name: "40%" };
+  const showQuantity = Boolean(options?.showQuantity);
+  const showQr = Boolean(options?.showQr);
+  const baseUrl = (options?.baseUrl ?? "").replace(/\/+$/, "");
+  const rowsPerPage = options?.rowsPerPage ?? (showQr ? 14 : 28);
+
+  const colSimple = { idx: "7%", sku: "18%", tier: "18%", cat: "17%", name: "40%" };
+  const colLuxury = {
+    idx: "5%",
+    qr: "11%",
+    qty: "9%",
+    sku: "13%",
+    tier: "13%",
+    cat: "14%",
+    name: "35%",
+  };
+
+  const pages = chunkArray(products, rowsPerPage);
+
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        {logoUrl ? (
+          // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image has no alt prop
+          <Image src={logoUrl} style={styles.logo} />
+        ) : (
+          <View style={styles.logo} />
+        )}
+        <View style={styles.headerText}>
+          <Text style={styles.headerTitle}>{title}</Text>
+          <Text style={styles.headerSubtitle}>{subtitle || "قائمة الهدايا"}</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderMeta = (pageIndex: number, totalPages: number) => (
+    <View style={styles.meta}>
+      <Text style={styles.metaText}>تاريخ التصدير: {dateStr}</Text>
+      <Text style={styles.metaText}>عدد الهدايا في هذا الكتالوج: {products.length}</Text>
+      {totalPages > 1 && (
+        <Text style={styles.metaText}>
+          صفحة {pageIndex + 1} من {totalPages}
+        </Text>
+      )}
+    </View>
+  );
+
+  const tierLabel = (p: Product) =>
+    p.giftTier ? getGiftTierLabel(p.giftTier) : "—";
+
+  const qtyLabel = (p: Product) =>
+    typeof p.availableQuantity === "number" ? String(p.availableQuantity) : "—";
+
+  const qrSrcFor = (slug: string) => {
+    if (!baseUrl) return "";
+    const url = productPageUrl(baseUrl, slug);
+    return `${QR_API}/?size=120x120&data=${encodeURIComponent(url)}`;
+  };
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            {logoUrl ? (
-              // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer Image has no alt prop
-              <Image src={logoUrl} style={styles.logo} />
-            ) : (
-              <View style={styles.logo} />
-            )}
-            <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>{title}</Text>
-              <Text style={styles.headerSubtitle}>{subtitle || "قائمة الهدايا"}</Text>
+      {pages.map((pageProducts, pageIndex) => (
+        <Page key={pageIndex} size="A4" style={styles.page}>
+          {renderHeader()}
+          {renderMeta(pageIndex, pages.length)}
+
+          <View style={styles.tableWrapper}>
+            <View style={styles.tableHeaderRow}>
+              {showQr && showQuantity ? (
+                <>
+                  <Text style={[styles.th, { width: colLuxury.idx }]}>#</Text>
+                  <Text style={[styles.th, { width: colLuxury.qr }]}>QR</Text>
+                  <Text style={[styles.th, { width: colLuxury.qty }]}>الكمية</Text>
+                  <Text style={[styles.th, { width: colLuxury.sku }]}>الكود</Text>
+                  <Text style={[styles.th, { width: colLuxury.tier }]}>التصنيف</Text>
+                  <Text style={[styles.th, { width: colLuxury.cat }]}>الفئة</Text>
+                  <Text style={[styles.th, { width: colLuxury.name, textAlign: "right" }]}>اسم الهدية</Text>
+                </>
+              ) : showQuantity ? (
+                <>
+                  <Text style={[styles.th, { width: "6%" }]}>#</Text>
+                  <Text style={[styles.th, { width: "12%" }]}>الكمية</Text>
+                  <Text style={[styles.th, { width: colSimple.sku }]}>الكود</Text>
+                  <Text style={[styles.th, { width: colSimple.tier }]}>التصنيف</Text>
+                  <Text style={[styles.th, { width: colSimple.cat }]}>الفئة</Text>
+                  <Text style={[styles.th, { width: "36%", textAlign: "right" }]}>اسم الهدية</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.th, { width: colSimple.idx }]}>#</Text>
+                  <Text style={[styles.th, { width: colSimple.sku }]}>الكود</Text>
+                  <Text style={[styles.th, { width: colSimple.tier }]}>التصنيف</Text>
+                  <Text style={[styles.th, { width: colSimple.cat }]}>الفئة</Text>
+                  <Text style={[styles.th, { width: colSimple.name, textAlign: "right" }]}>اسم الهدية</Text>
+                </>
+              )}
             </View>
+
+            {pageProducts.map((p, i) => {
+              const globalIndex = pageIndex * rowsPerPage + i;
+              const rowStyle = globalIndex % 2 === 1 ? [styles.tr, styles.trEven] : styles.tr;
+              return (
+                <View key={`${p.slug}-${globalIndex}`} style={rowStyle}>
+                  {showQr && showQuantity ? (
+                    <>
+                      <Text style={[styles.td, { width: colLuxury.idx }]}>{globalIndex + 1}</Text>
+                      <View style={[styles.td, { width: colLuxury.qr, paddingVertical: 4 }]}>
+                        {baseUrl ? (
+                          // eslint-disable-next-line jsx-a11y/alt-text
+                          <Image src={qrSrcFor(p.slug)} style={styles.qrImg} />
+                        ) : (
+                          <Text style={{ fontSize: 7 }}>—</Text>
+                        )}
+                      </View>
+                      <Text style={[styles.td, { width: colLuxury.qty }]}>{qtyLabel(p)}</Text>
+                      <Text style={[styles.td, { width: colLuxury.sku }]}>{p.sku || "—"}</Text>
+                      <Text style={[styles.td, { width: colLuxury.tier }]}>{tierLabel(p)}</Text>
+                      <Text style={[styles.td, { width: colLuxury.cat }]}>{p.category || "—"}</Text>
+                      <Text style={[styles.td, styles.tdName, { width: colLuxury.name }]}>{p.name}</Text>
+                    </>
+                  ) : showQuantity ? (
+                    <>
+                      <Text style={[styles.td, { width: "6%" }]}>{globalIndex + 1}</Text>
+                      <Text style={[styles.td, { width: "12%" }]}>{qtyLabel(p)}</Text>
+                      <Text style={[styles.td, { width: colSimple.sku }]}>{p.sku || "—"}</Text>
+                      <Text style={[styles.td, { width: colSimple.tier }]}>{tierLabel(p)}</Text>
+                      <Text style={[styles.td, { width: colSimple.cat }]}>{p.category || "—"}</Text>
+                      <Text style={[styles.td, styles.tdName, { width: "36%" }]}>{p.name}</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={[styles.td, { width: colSimple.idx }]}>{globalIndex + 1}</Text>
+                      <Text style={[styles.td, { width: colSimple.sku }]}>{p.sku || "—"}</Text>
+                      <Text style={[styles.td, { width: colSimple.tier }]}>{tierLabel(p)}</Text>
+                      <Text style={[styles.td, { width: colSimple.cat }]}>{p.category || "—"}</Text>
+                      <Text style={[styles.td, styles.tdName, { width: colSimple.name }]}>{p.name}</Text>
+                    </>
+                  )}
+                </View>
+              );
+            })}
           </View>
-        </View>
 
-        <View style={styles.meta}>
-          <Text style={styles.metaText}>تاريخ التصدير: {dateStr}</Text>
-          <Text style={styles.metaText}>عدد الهدايا: {products.length}</Text>
-        </View>
-
-        <View style={styles.tableWrapper}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={[styles.th, { width: col.idx }]}>#</Text>
-            <Text style={[styles.th, { width: col.sku }]}>الكود</Text>
-            <Text style={[styles.th, { width: col.tier }]}>التصنيف</Text>
-            <Text style={[styles.th, { width: col.cat }]}>الفئة</Text>
-            <Text style={[styles.th, { width: col.name, textAlign: "right" }]}>اسم الهدية</Text>
-          </View>
-
-          {products.map((p, i) => (
-            <View key={p.slug} style={i % 2 === 1 ? [styles.tr, styles.trEven] : styles.tr}>
-              <Text style={[styles.td, { width: col.idx }]}>{i + 1}</Text>
-              <Text style={[styles.td, { width: col.sku }]}>{p.sku || "—"}</Text>
-              <Text style={[styles.td, { width: col.tier }]}>{p.giftTier || "—"}</Text>
-              <Text style={[styles.td, { width: col.cat }]}>{p.category || "—"}</Text>
-              <Text style={[styles.td, styles.tdName, { width: col.name }]}>{p.name}</Text>
-            </View>
-          ))}
-        </View>
-      </Page>
+          {showQr ? (
+            <Text style={styles.footerNote}>
+              مسح رمز QR يفتح صفحة الهدية على الموقع. إن لم يظهر الرمز، تأكد من ضبط عنوان الموقع
+              (NEXT_PUBLIC_SITE_URL) أو التحميل من المتصفح على النطاق الصحيح.
+            </Text>
+          ) : null}
+        </Page>
+      ))}
     </Document>
   );
 }
-
