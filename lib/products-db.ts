@@ -21,12 +21,18 @@ export async function ensureProductsTable(): Promise<void> {
         category VARCHAR(128),
         price VARCHAR(64),
         archived BOOLEAN NOT NULL DEFAULT false,
+        hidden BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
       )
     `;
     try {
       await sql`ALTER TABLE products ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false`;
+    } catch {
+      /* العمود موجود مسبقاً */
+    }
+    try {
+      await sql`ALTER TABLE products ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT false`;
     } catch {
       /* العمود موجود مسبقاً */
     }
@@ -56,6 +62,7 @@ function rowToProduct(r: Record<string, unknown>): Product {
     category: r.category != null ? String(r.category) : undefined,
     price: r.price != null ? String(r.price) : undefined,
     archived: Boolean(r.archived),
+    hidden: Boolean((r as any).hidden),
   };
 }
 
@@ -124,11 +131,15 @@ export async function syncInitialProducts(): Promise<void> {
   }
 }
 
-export async function getAllProducts(includeArchived = false): Promise<Product[]> {
+export async function getAllProducts(includeArchived = false, includeHidden = false): Promise<Product[]> {
   await ensureProductsTable();
   const { rows } = includeArchived
-    ? await sql`SELECT * FROM products ORDER BY archived ASC, sku`
-    : await sql`SELECT * FROM products WHERE (archived IS NULL OR archived = false) ORDER BY sku`;
+    ? includeHidden
+      ? await sql`SELECT * FROM products ORDER BY hidden ASC, archived ASC, sku`
+      : await sql`SELECT * FROM products WHERE (hidden IS NULL OR hidden = false) ORDER BY archived ASC, sku`
+    : includeHidden
+      ? await sql`SELECT * FROM products WHERE (archived IS NULL OR archived = false) ORDER BY hidden ASC, sku`
+      : await sql`SELECT * FROM products WHERE (archived IS NULL OR archived = false) AND (hidden IS NULL OR hidden = false) ORDER BY sku`;
   return rows.map(rowToProduct);
 }
 
@@ -149,7 +160,7 @@ export async function createProduct(p: Product): Promise<Product> {
   await ensureProductsTable();
   await sql`DELETE FROM catalog_slug_suppressions WHERE slug = ${p.slug}`;
   await sql`
-    INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, updated_at)
+    INSERT INTO products (slug, sku, name, short_description, contents, gift_tier, images, available_quantity, category, price, archived, hidden, updated_at)
     VALUES (
       ${p.slug},
       ${p.sku},
@@ -161,6 +172,8 @@ export async function createProduct(p: Product): Promise<Product> {
       ${p.availableQuantity ?? 0},
       ${p.category ?? null},
       ${p.price ?? null},
+      ${p.archived ?? false},
+      ${p.hidden ?? false},
       NOW()
     )
   `;
@@ -184,6 +197,7 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
   const category = updates.category !== undefined ? updates.category : null;
   const price = updates.price !== undefined ? updates.price : null;
   const archived = updates.archived !== undefined ? updates.archived : null;
+  const hidden = updates.hidden !== undefined ? updates.hidden : null;
 
   const { rows } = await sql`
     UPDATE products AS p SET
@@ -197,6 +211,7 @@ export async function updateProduct(slug: string, updates: Partial<Product>): Pr
       category = COALESCE(${category}, p.category),
       price = COALESCE(${price}, p.price),
       archived = COALESCE(${archived}, p.archived),
+      hidden = COALESCE(${hidden}, p.hidden),
       updated_at = NOW()
     WHERE p.slug = ${slug}
     RETURNING *

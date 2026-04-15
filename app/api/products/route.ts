@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     }
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get("include_archived") === "1" || searchParams.get("include_archived") === "true";
+    const includeHidden = searchParams.get("include_hidden") === "1" || searchParams.get("include_hidden") === "true";
     /** quick=1: جلب سريع للداشبورد — يتخطى syncInitialProducts (حلقة إدراج لكل منتج أولي) */
     const quick = searchParams.get("quick") === "1" || searchParams.get("quick") === "true";
     await ensureProductsTable();
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (!quick) {
       await syncInitialProducts();
     }
-    const data = await getAllProducts(includeArchived);
+    const data = await getAllProducts(includeArchived, includeHidden);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error("GET /api/products:", error);
@@ -119,6 +120,7 @@ export async function PUT(request: NextRequest) {
       category: body.category,
       price: body.price,
       archived: body.archived,
+      hidden: body.hidden,
     };
     await ensureProductsTable();
     const updated = await updateProduct(slug, updatedData);

@@ -52,6 +52,8 @@ export function DashboardView() {
     try {
       const qs = new URLSearchParams();
       if (quick) qs.set("quick", "1");
+      qs.set("include_hidden", "1");
+      qs.set("include_archived", "1");
       const res = await fetch(`/api/products?${qs.toString()}`, { credentials: "include" });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -401,6 +403,31 @@ export function DashboardView() {
     }
   };
 
+  const handleToggleHidden = async (slug: string, hidden: boolean) => {
+    try {
+      const response = await fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ slug, hidden }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        await refetchProducts(true);
+        return;
+      }
+      if (response.status === 401) {
+        alert(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        router.replace("/login?next=/dashboard");
+        return;
+      }
+      alert(result.error || "تعذر تحديث الإخفاء");
+    } catch (e) {
+      console.error(e);
+      alert("تعذر تحديث الإخفاء");
+    }
+  };
+
   const extra = (
         <>
           {isFormOpen && (
@@ -454,6 +481,7 @@ export function DashboardView() {
     handleAddProduct,
     handleEditProduct,
     handleDeleteProduct,
+    handleToggleHidden,
     handleFormSubmit,
     handleExportCSV,
     handleBackup,

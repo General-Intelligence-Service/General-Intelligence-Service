@@ -14,6 +14,7 @@ export interface Product {
   images: string[];
   availableQuantity?: number; // الكمية المتوفرة
   archived?: boolean; // يُضبط عبر التحديث (PUT)؛ زر الحذف في الداشبورد يزيل الصف من القاعدة
+  hidden?: boolean; // إخفاء عن الموقع الرسمي (يبقى في الداشبورد)
 }
 
 /** slug آمن من اسم فئة الأرشيف */

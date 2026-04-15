@@ -8,7 +8,7 @@ export const PRODUCTS_STORAGE_KEY = "products";
  * المؤرشفة من لوحة التحكم (الحذف الناعم) ما دامت لا تزال في data/products.ts.
  */
 export function loadPublicProductsFromLocalStorage(): Product[] {
-  const fallback = () => initialProducts.filter((p) => !p.archived);
+  const fallback = () => initialProducts.filter((p) => !p.archived && !p.hidden);
   if (typeof window === "undefined") return fallback();
   try {
     const saved = localStorage.getItem(PRODUCTS_STORAGE_KEY);
@@ -20,7 +20,8 @@ export function loadPublicProductsFromLocalStorage(): Product[] {
         p != null &&
         typeof p === "object" &&
         typeof (p as Product).slug === "string" &&
-        !(p as Product).archived
+        !(p as Product).archived &&
+        !(p as Product).hidden
     );
   } catch {
     return fallback();

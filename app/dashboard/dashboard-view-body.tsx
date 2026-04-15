@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature, Settings2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature, Settings2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
     handleAddProduct,
     handleEditProduct,
     handleDeleteProduct,
+      handleToggleHidden,
     handleExportCSV,
     handleBackup,
     handleRestore,
@@ -530,6 +531,11 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">كود: {product.sku}</Badge>
                           <Badge variant="outline">العدد: {product.availableQuantity ?? 0}</Badge>
+                          {product.hidden && (
+                            <Badge variant="secondary" className="bg-slate-200 text-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+                              مخفي عن الموقع
+                            </Badge>
+                          )}
                           {!product.archived && (product.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD && (
                             <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:border-amber-700 dark:text-amber-200">يحتاج إعادة تخزين</Badge>
                           )}
@@ -576,6 +582,26 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                      <Button
+                        variant="outline"
+                        className="min-h-[44px] flex-1 touch-manipulation"
+                        onClick={() => {
+                          if (typeof handleToggleHidden === "function") {
+                            void handleToggleHidden(product.slug, !product.hidden);
+                          }
+                        }}
+                        title={product.hidden ? "إظهار الهدية على الموقع الرسمي" : "إخفاء الهدية عن الموقع الرسمي"}
+                      >
+                        {product.hidden ? (
+                          <>
+                            <Eye className="ml-2 h-4 w-4 shrink-0" /> إظهار
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="ml-2 h-4 w-4 shrink-0" /> إخفاء
+                          </>
+                        )}
+                      </Button>
                       <Button variant="outline" className="min-h-[44px] flex-1 touch-manipulation" onClick={() => handleEditProduct(product)}>
                         <Edit className="ml-2 h-4 w-4 shrink-0" /> تعديل
                       </Button>
