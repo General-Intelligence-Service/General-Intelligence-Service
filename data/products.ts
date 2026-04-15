@@ -15,6 +15,8 @@ export interface Product {
   availableQuantity?: number; // الكمية المتوفرة
   archived?: boolean; // يُضبط عبر التحديث (PUT)؛ زر الحذف في الداشبورد يزيل الصف من القاعدة
   hidden?: boolean; // إخفاء عن الموقع الرسمي (يبقى في الداشبورد)
+  createdAt?: string; // من قاعدة البيانات (اختياري)
+  updatedAt?: string; // من قاعدة البيانات (اختياري)
 }
 
 /** slug آمن من اسم فئة الأرشيف */

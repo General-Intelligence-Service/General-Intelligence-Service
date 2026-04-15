@@ -63,6 +63,8 @@ function rowToProduct(r: Record<string, unknown>): Product {
     price: r.price != null ? String(r.price) : undefined,
     archived: Boolean(r.archived),
     hidden: Boolean((r as any).hidden),
+    createdAt: r.created_at != null ? String((r as any).created_at) : undefined,
+    updatedAt: r.updated_at != null ? String((r as any).updated_at) : undefined,
   };
 }
 

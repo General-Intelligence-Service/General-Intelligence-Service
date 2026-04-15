@@ -15,6 +15,7 @@ import { Product, getGiftTierLabel, products as initialProducts } from "@/data/p
 import { notifyProductsStorageChanged } from "@/lib/products-local-storage";
 import { generateProductSlug } from "@/lib/slug";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
+import { getSiteOriginForShare, productPageUrl } from "@/lib/site-url";
 import { DashboardLayout } from "./dashboard-layout";
 import { DashboardViewReturn } from "./dashboard-view-return";
 import type { InputChangeEvent } from "./dashboard-types";
@@ -285,6 +286,78 @@ export function DashboardView() {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportGiftsExcel = async () => {
+    if (products.length === 0) {
+      alert("لا توجد هدايا في القائمة.");
+      return;
+    }
+    try {
+      const { utils, writeFile } = await import("xlsx");
+      const origin = getSiteOriginForShare();
+      const seen = new Set<string>();
+      const rows = products
+        .filter((p) => {
+          if (!p?.slug) return false;
+          if (seen.has(p.slug)) return false;
+          seen.add(p.slug);
+          return true;
+        })
+        .map((p) => {
+          const link = origin ? productPageUrl(origin, p.slug) : "";
+          const qrValue = link || p.sku || "";
+          const qrLink = qrValue
+            ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrValue)}`
+            : "";
+          return {
+            "كود المنتج": p.sku ?? "",
+            "اسم المنتج": p.name ?? "",
+            "التصنيف": p.category ?? "",
+            "الكمية الحالية": p.availableQuantity ?? "",
+            "رابط المنتج": link,
+            "قيمة QR": qrValue,
+            "رابط QR": qrLink,
+            "الوصف": p.shortDescription ?? "",
+            "تاريخ الإنشاء": (p as any).createdAt ?? "",
+          };
+        });
+
+      const ws = utils.json_to_sheet(rows, {
+        header: [
+          "كود المنتج",
+          "اسم المنتج",
+          "التصنيف",
+          "الكمية الحالية",
+          "رابط المنتج",
+          "قيمة QR",
+          "رابط QR",
+          "الوصف",
+          "تاريخ الإنشاء",
+        ],
+        skipHeader: false,
+      });
+
+      ws["!cols"] = [
+        { wch: 12 },
+        { wch: 30 },
+        { wch: 18 },
+        { wch: 14 },
+        { wch: 44 },
+        { wch: 38 },
+        { wch: 44 },
+        { wch: 60 },
+        { wch: 20 },
+      ];
+
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "الهدايا");
+      const filename = `تصدير-بيانات-الهدايا-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      writeFile(wb, filename);
+    } catch (e) {
+      console.error(e);
+      alert("تعذر إنشاء ملف Excel. جرّب CSV كحل بديل.");
+    }
+  };
+
   const handleBackup = () => {
     const json = JSON.stringify(products, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -484,6 +557,7 @@ export function DashboardView() {
     handleToggleHidden,
     handleFormSubmit,
     handleExportCSV,
+    handleExportGiftsExcel,
     handleBackup,
     handleRestore,
     handleDownloadReport,
