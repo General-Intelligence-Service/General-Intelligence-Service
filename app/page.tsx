@@ -55,6 +55,23 @@ function applyArabicSearchCorrections(input: string): string {
   return out;
 }
 
+function skuSortKey(sku: string | undefined): number {
+  const s = (sku ?? "").trim();
+  const m = s.match(/(\d+)/);
+  if (!m) return Number.MAX_SAFE_INTEGER;
+  const n = parseInt(m[1], 10);
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+}
+
+function compareProductsForCatalog(a: Product, b: Product): number {
+  const ak = skuSortKey(a.sku);
+  const bk = skuSortKey(b.sku);
+  if (ak !== bk) return ak - bk;
+  const as = (a.sku ?? "").localeCompare(b.sku ?? "", "en");
+  if (as !== 0) return as;
+  return a.name.localeCompare(b.name, "ar");
+}
+
 function HomeContent() {
   const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
@@ -168,8 +185,14 @@ function HomeContent() {
     searchQuery.trim().length > 0 || selectedGiftTier !== null;
 
   const { archiveGridProducts, catalogGridProducts } = useMemo(() => {
-    const archive = filteredProducts.filter(isArchiveCatalogProduct);
-    const catalog = filteredProducts.filter((p) => !isArchiveCatalogProduct(p));
+    const archive = filteredProducts
+      .filter(isArchiveCatalogProduct)
+      .slice()
+      .sort(compareProductsForCatalog);
+    const catalog = filteredProducts
+      .filter((p) => !isArchiveCatalogProduct(p))
+      .slice()
+      .sort(compareProductsForCatalog);
     return { archiveGridProducts: archive, catalogGridProducts: catalog };
   }, [filteredProducts]);
 
