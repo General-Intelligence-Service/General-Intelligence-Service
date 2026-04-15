@@ -140,6 +140,12 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                     إعداد هدايا اليوم
                   </Button>
                 </Link>
+                <Link href="/dashboard/warehouse">
+                  <Button variant="outline" size="lg" className="min-h-[44px] w-full justify-start">
+                    <ClipboardSignature className="ml-2 h-5 w-5 shrink-0" />
+                    حركة المستودع اليومية
+                  </Button>
+                </Link>
                 <Link href="/dashboard/movements">
                   <Button variant="outline" size="lg" className="min-h-[44px] w-full justify-start">
                     <ClipboardSignature className="ml-2 h-5 w-5 shrink-0" />

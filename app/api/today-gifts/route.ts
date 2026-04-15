@@ -6,7 +6,6 @@ import {
   setTodayGiftItems,
   type TodayGiftItem,
 } from "@/lib/today-gifts-db";
-import { applyTodayMovementsAndSave } from "@/lib/gift-movements-db";
 
 function isoDayOrToday(v: string | null): string {
   const day = (v ?? "").trim();
@@ -53,9 +52,8 @@ export async function PUT(request: NextRequest) {
         ? (body.slugs as unknown[]).map((s) => ({ slug: String(s), outQty: 0, inQty: 0 }))
         : [];
     await setTodayGiftItems(day, items);
-    const applied = await applyTodayMovementsAndSave(day, items, session.email);
     const slugs = items.map((i) => String(i.slug));
-    return NextResponse.json({ success: true, day, slugs, items, appliedCount: applied.appliedCount });
+    return NextResponse.json({ success: true, day, slugs, items });
   } catch (e) {
     console.error("PUT /api/today-gifts:", e);
     return NextResponse.json({ success: false, error: "فشل في حفظ هدايا اليوم" }, { status: 500 });

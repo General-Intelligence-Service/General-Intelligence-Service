@@ -19,8 +19,21 @@ export async function ensureGiftMovementsTables(): Promise<void> {
       PRIMARY KEY (day, slug)
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS warehouse_entries (
+      day DATE NOT NULL,
+      slug VARCHAR(255) NOT NULL,
+      out_qty INTEGER NOT NULL DEFAULT 0,
+      in_qty INTEGER NOT NULL DEFAULT 0,
+      updated_by VARCHAR(255),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (day, slug)
+    )
+  `;
   await sql`CREATE INDEX IF NOT EXISTS gift_movements_day_idx ON gift_movements (day)`;
   await sql`CREATE INDEX IF NOT EXISTS gift_movements_sku_idx ON gift_movements (sku)`;
+  await sql`CREATE INDEX IF NOT EXISTS warehouse_entries_day_idx ON warehouse_entries (day)`;
   initDone = true;
 }
 
@@ -47,12 +60,12 @@ export function normalizeTodayGiftItems(items: TodayGiftItem[]): TodayGiftItem[]
 }
 
 /**
- * يطبق فروقات اليوم (in/out) على المخزون مرة واحدة بشكل idempotent:
- * - نحفظ الإجمالي لليوم في gift_movements (upsert)
- * - عند إعادة الحفظ، نحسب الفرق بين القيم القديمة والجديدة ونطبّقه فقط
- * - نحدّث products.available_quantity و inventory.quantity بحيث تبقى متزامنة مع ماسح QR
+ * حركة مستودع يومية (يدوية) بشكل idempotent:
+ * - نخزن الإدخال اليومي المطلق في warehouse_entries
+ * - نحسب الفرق عن آخر حفظ (delta) ونضيفه إلى gift_movements (تجميعي لكل المصادر)
+ * - نطبّق أثر الفرق على المخزون (products + inventory)
  */
-export async function applyTodayMovementsAndSave(
+export async function applyWarehouseEntriesAndUpdateStock(
   dayIso: string,
   items: TodayGiftItem[],
   updatedByEmail?: string
@@ -67,10 +80,10 @@ export async function applyTodayMovementsAndSave(
     let appliedCount = 0;
 
     for (const it of normalized) {
-      // read previous totals for that day+slug
+      // read previous warehouse entry for that day+slug
       const { rows: prevRows } = await sql`
         SELECT out_qty, in_qty
-        FROM gift_movements
+        FROM warehouse_entries
         WHERE day = ${day}::date AND slug = ${it.slug}
         LIMIT 1
       `;
@@ -81,7 +94,7 @@ export async function applyTodayMovementsAndSave(
       const deltaIn = it.inQty - (Number.isFinite(prevIn) ? prevIn : 0);
       const delta = deltaIn - deltaOut;
 
-      // Update movement totals (upsert)
+      // Get SKU (for inventory sync)
       const { rows: skuRows } = await sql`
         SELECT sku
         FROM products
@@ -91,18 +104,29 @@ export async function applyTodayMovementsAndSave(
       const sku = skuRows.length ? String(skuRows[0].sku ?? "") : null;
 
       await sql`
-        INSERT INTO gift_movements (day, slug, sku, out_qty, in_qty, updated_by, updated_at)
-        VALUES (${day}::date, ${it.slug}, ${sku}, ${it.outQty}, ${it.inQty}, ${updatedByEmail ?? null}, NOW())
+        INSERT INTO warehouse_entries (day, slug, out_qty, in_qty, updated_by, updated_at)
+        VALUES (${day}::date, ${it.slug}, ${it.outQty}, ${it.inQty}, ${updatedByEmail ?? null}, NOW())
         ON CONFLICT (day, slug) DO UPDATE
           SET out_qty = EXCLUDED.out_qty,
               in_qty = EXCLUDED.in_qty,
-              sku = COALESCE(EXCLUDED.sku, gift_movements.sku),
               updated_by = EXCLUDED.updated_by,
               updated_at = NOW()
       `;
 
       // If no delta, skip stock update.
       if (delta === 0) continue;
+
+      // Add deltas to aggregated daily movement totals
+      await sql`
+        INSERT INTO gift_movements (day, slug, sku, out_qty, in_qty, updated_by, updated_at)
+        VALUES (${day}::date, ${it.slug}, ${sku}, ${Math.max(0, deltaOut)}, ${Math.max(0, deltaIn)}, ${updatedByEmail ?? null}, NOW())
+        ON CONFLICT (day, slug) DO UPDATE
+          SET out_qty = GREATEST(0, gift_movements.out_qty + ${deltaOut}),
+              in_qty = GREATEST(0, gift_movements.in_qty + ${deltaIn}),
+              sku = COALESCE(EXCLUDED.sku, gift_movements.sku),
+              updated_by = EXCLUDED.updated_by,
+              updated_at = NOW()
+      `;
 
       // Apply stock update (non-negative)
       const { rowCount } = await sql`
