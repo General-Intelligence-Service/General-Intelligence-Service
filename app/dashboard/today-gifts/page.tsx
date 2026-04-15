@@ -15,7 +15,7 @@ import type { Product } from "@/data/products";
 type TodayGiftItem = { slug: string; outQty: number; inQty: number };
 
 type TodayGiftsResponse =
-  | { success: true; day: string; slugs: string[]; items?: TodayGiftItem[] }
+  | { success: true; day: string; slugs: string[]; items?: TodayGiftItem[]; appliedCount?: number }
   | { success: false; error?: string };
 
 function isoToday(): string {
@@ -172,7 +172,12 @@ export default function TodayGiftsDashboardPage() {
       });
       const json = (await res.json()) as TodayGiftsResponse;
       if (res.ok && json.success) {
-        toast.success("تم حفظ هدايا اليوم بنجاح.");
+        const applied = typeof json.appliedCount === "number" ? json.appliedCount : undefined;
+        toast.success(
+          applied != null
+            ? `تم الحفظ وتعديل المخزون (${applied} هدية).`
+            : "تم حفظ هدايا اليوم بنجاح."
+        );
       } else if (res.status === 401) {
         toast.error("انتهت الجلسة. سجّل الدخول مرة أخرى.");
         router.replace("/login?next=/dashboard/today-gifts");

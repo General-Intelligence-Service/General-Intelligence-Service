@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -124,6 +124,12 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
             <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
               <ListChecks className="ml-2 h-5 w-5 shrink-0" />
               <span className="truncate">هدايا اليوم</span>
+            </Button>
+          </Link>
+          <Link href="/dashboard/movements" className="min-w-0">
+            <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
+              <ClipboardSignature className="ml-2 h-5 w-5 shrink-0" />
+              <span className="truncate">سجل الحركة</span>
             </Button>
           </Link>
           <Link href="/dashboard/qr-codes" className="min-w-0">
