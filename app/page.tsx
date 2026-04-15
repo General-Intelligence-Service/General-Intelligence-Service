@@ -197,7 +197,7 @@ function HomeContent() {
   }, [filteredProducts]);
 
   const renderProductGrid = (list: Product[], keyPrefix: string) => (
-    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3 lg:gap-6">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
       {list.map((product, index) => (
         <ProductCard
           key={`${keyPrefix}-${product.slug}`}
