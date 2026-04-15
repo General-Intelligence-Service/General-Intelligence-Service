@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, GripVertical, Plus, Save, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,15 +172,15 @@ export default function TodayGiftsDashboardPage() {
       });
       const json = (await res.json()) as TodayGiftsResponse;
       if (res.ok && json.success) {
-        alert("تم حفظ هدايا اليوم بنجاح.");
+        toast.success("تم حفظ هدايا اليوم بنجاح.");
       } else if (res.status === 401) {
-        alert("انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        toast.error("انتهت الجلسة. سجّل الدخول مرة أخرى.");
         router.replace("/login?next=/dashboard/today-gifts");
       } else {
-        alert(json.success ? "تعذر الحفظ" : json.error || "تعذر الحفظ");
+        toast.error(json.success ? "تعذر الحفظ" : json.error || "تعذر الحفظ");
       }
     } catch {
-      alert("حدث خطأ أثناء الحفظ.");
+      toast.error("حدث خطأ أثناء الحفظ.");
     } finally {
       setSaving(false);
     }

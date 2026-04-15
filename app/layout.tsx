@@ -4,6 +4,7 @@ import "./globals.css";
 import { defaultMetadata } from "./metadata";
 import { OrderLayoutClient } from "@/components/order-layout-client";
 import { SWRegister } from "@/components/sw-register";
+import { ToasterClient } from "@/components/toaster-client";
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html dir="rtl" lang="ar" className={`${cairo.variable} scroll-smooth`}>
       <body className={`${cairo.className} antialiased`}>
         <OrderLayoutClient>{children}</OrderLayoutClient>
+        <ToasterClient />
         <SWRegister />
       </body>
     </html>
