@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/ord
 import type { DashboardViewReturnProps } from "./dashboard-view-return";
 import { productPageUrl } from "@/lib/site-url";
 import { siteConfig } from "@/lib/config";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function DashboardViewBody(props: DashboardViewReturnProps) {
   const {
@@ -120,18 +121,34 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
               <span className="truncate">مسح الهدايا</span>
             </Button>
           </Link>
-          <Link href="/dashboard/today-gifts" className="min-w-0">
-            <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
-              <ListChecks className="ml-2 h-5 w-5 shrink-0" />
-              <span className="truncate">هدايا اليوم</span>
-            </Button>
-          </Link>
-          <Link href="/dashboard/movements" className="min-w-0">
-            <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
-              <ClipboardSignature className="ml-2 h-5 w-5 shrink-0" />
-              <span className="truncate">سجل الحركة</span>
-            </Button>
-          </Link>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto col-span-2 sm:col-span-1">
+                <Settings2 className="ml-2 h-5 w-5 shrink-0" />
+                <span className="truncate">إدارة اليوم</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>إدارة اليوم</DialogTitle>
+                <DialogDescription>اختر الصفحة التي تريد فتحها.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-3">
+                <Link href="/dashboard/today-gifts">
+                  <Button variant="outline" size="lg" className="min-h-[44px] w-full justify-start">
+                    <ListChecks className="ml-2 h-5 w-5 shrink-0" />
+                    إعداد هدايا اليوم
+                  </Button>
+                </Link>
+                <Link href="/dashboard/movements">
+                  <Button variant="outline" size="lg" className="min-h-[44px] w-full justify-start">
+                    <ClipboardSignature className="ml-2 h-5 w-5 shrink-0" />
+                    سجل الحركة (شهري)
+                  </Button>
+                </Link>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Link href="/dashboard/qr-codes" className="min-w-0">
             <Button variant="outline" size="lg" className="min-h-[44px] w-full touch-manipulation sm:w-auto">
               <DownloadCloud className="ml-2 h-5 w-5 shrink-0" />
