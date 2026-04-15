@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "@/data/products";
 
+type TodayGiftItem = { slug: string; outQty: number; inQty: number };
+
 type TodayGiftsResponse =
-  | { success: true; day: string; slugs: string[] }
+  | { success: true; day: string; slugs: string[]; items?: TodayGiftItem[] }
   | { success: false; error?: string };
 
 function isoToday(): string {
@@ -34,7 +36,7 @@ export default function TodayGiftsDashboardPage() {
   const [saving, setSaving] = useState(false);
 
   const [query, setQuery] = useState("");
-  const [pickedSlugs, setPickedSlugs] = useState<string[]>([]);
+  const [pickedItems, setPickedItems] = useState<TodayGiftItem[]>([]);
 
   const dragFromIndexRef = useRef<number | null>(null);
 
@@ -70,13 +72,22 @@ export default function TodayGiftsDashboardPage() {
         const res = await fetch(`/api/today-gifts?day=${encodeURIComponent(d)}`);
         const json = (await res.json()) as TodayGiftsResponse;
         if (json && json.success) {
-          setPickedSlugs(Array.isArray(json.slugs) ? json.slugs : []);
+          const items = Array.isArray(json.items) && json.items.length > 0
+            ? json.items
+            : Array.isArray(json.slugs)
+              ? json.slugs.map((s) => ({ slug: String(s), outQty: 0, inQty: 0 }))
+              : [];
+          setPickedItems(items.map((it) => ({
+            slug: String(it.slug ?? "").trim(),
+            outQty: Math.max(0, Math.floor(Number(it.outQty ?? 0) || 0)),
+            inQty: Math.max(0, Math.floor(Number(it.inQty ?? 0) || 0)),
+          })).filter((it) => it.slug));
         } else {
           // إذا ما في DB أو خطأ: نخليها فارغة ونعرض رسالة عند الحفظ
-          setPickedSlugs([]);
+          setPickedItems([]);
         }
       } catch {
-        setPickedSlugs([]);
+        setPickedItems([]);
       } finally {
         setLoadingPicks(false);
       }
@@ -91,7 +102,7 @@ export default function TodayGiftsDashboardPage() {
     }
   }, [authOk, fetchProducts, fetchPicks, day]);
 
-  const pickedSet = useMemo(() => new Set(pickedSlugs), [pickedSlugs]);
+  const pickedSet = useMemo(() => new Set(pickedItems.map((i) => i.slug)), [pickedItems]);
 
   const bySlug = useMemo(() => {
     const map = new Map<string, Product>();
@@ -111,22 +122,20 @@ export default function TodayGiftsDashboardPage() {
     return out;
   }, [products, searchLower]);
 
-  const pickedProducts = useMemo(() => {
-    return pickedSlugs
-      .map((slug) => bySlug.get(slug))
-      .filter((p): p is Product => Boolean(p));
-  }, [pickedSlugs, bySlug]);
+  const pickedSlugs = useMemo(() => pickedItems.map((i) => i.slug), [pickedItems]);
 
   const addPick = (slug: string) => {
-    setPickedSlugs((prev) => (prev.includes(slug) ? prev : [...prev, slug]));
+    setPickedItems((prev) =>
+      prev.some((x) => x.slug === slug) ? prev : [...prev, { slug, outQty: 0, inQty: 0 }]
+    );
   };
 
   const removePick = (slug: string) => {
-    setPickedSlugs((prev) => prev.filter((s) => s !== slug));
+    setPickedItems((prev) => prev.filter((s) => s.slug !== slug));
   };
 
   const movePick = (from: number, to: number) => {
-    setPickedSlugs((prev) => {
+    setPickedItems((prev) => {
       if (from < 0 || to < 0 || from >= prev.length || to >= prev.length) return prev;
       if (from === to) return prev;
       const next = prev.slice();
@@ -134,6 +143,11 @@ export default function TodayGiftsDashboardPage() {
       next.splice(to, 0, item);
       return next;
     });
+  };
+
+  const setQty = (slug: string, field: "outQty" | "inQty", value: number) => {
+    const v = Math.max(0, Math.min(999999, Math.floor(Number(value) || 0)));
+    setPickedItems((prev) => prev.map((it) => (it.slug === slug ? { ...it, [field]: v } : it)));
   };
 
   const onDragStart = (index: number) => {
@@ -153,7 +167,7 @@ export default function TodayGiftsDashboardPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ day, slugs: pickedSlugs }),
+        body: JSON.stringify({ day, items: pickedItems }),
       });
       const json = (await res.json()) as TodayGiftsResponse;
       if (res.ok && json.success) {
@@ -232,11 +246,12 @@ export default function TodayGiftsDashboardPage() {
             <CardContent>
               {loadingPicks ? (
                 <p className="text-muted-foreground">جاري تحميل قائمة اليوم...</p>
-              ) : pickedSlugs.length === 0 ? (
+              ) : pickedItems.length === 0 ? (
                 <p className="text-muted-foreground">لا توجد هدايا محددة لهذا اليوم بعد.</p>
               ) : (
                 <ul className="space-y-2">
-                  {pickedSlugs.map((slug, idx) => {
+                  {pickedItems.map((item, idx) => {
+                    const slug = item.slug;
                     const p = bySlug.get(slug);
                     return (
                       <li
@@ -261,6 +276,36 @@ export default function TodayGiftsDashboardPage() {
                               {p?.sku && <Badge variant="outline">كود: {p.sku}</Badge>}
                               <Badge variant="outline">Slug: {slug}</Badge>
                             </div>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                                خارجة:
+                                <Input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={String(item.outQty ?? 0)}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  onChange={(e) =>
+                                    setQty(slug, "outQty", parseInt(e.target.value.replace(/[^\d]/g, "") || "0", 10))
+                                  }
+                                  className="w-28 min-h-[44px] text-center tabular-nums"
+                                />
+                              </label>
+                              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                                داخلة:
+                                <Input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  value={String(item.inQty ?? 0)}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  onChange={(e) =>
+                                    setQty(slug, "inQty", parseInt(e.target.value.replace(/[^\d]/g, "") || "0", 10))
+                                  }
+                                  className="w-28 min-h-[44px] text-center tabular-nums"
+                                />
+                              </label>
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -280,8 +325,8 @@ export default function TodayGiftsDashboardPage() {
                             variant="outline"
                             size="sm"
                             className="min-h-[44px]"
-                            onClick={() => movePick(idx, Math.min(pickedSlugs.length - 1, idx + 1))}
-                            disabled={idx === pickedSlugs.length - 1}
+                            onClick={() => movePick(idx, Math.min(pickedItems.length - 1, idx + 1))}
+                            disabled={idx === pickedItems.length - 1}
                             title="تحريك للأسفل"
                           >
                             ↓
