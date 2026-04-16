@@ -501,6 +501,33 @@ export function DashboardView() {
     }
   };
 
+  const handleSetAllCategoriesToHeritage = async () => {
+    if (!confirm("سيتم تعيين التصنيف لكل الهدايا إلى: تراثي.\nهل تريد المتابعة؟")) return;
+    try {
+      const res = await fetch("/api/products/bulk-category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ category: "تراثي" }),
+      });
+      const json = (await res.json()) as { success?: boolean; error?: string; updatedCount?: number };
+      if (res.ok && json.success) {
+        await refetchProducts(true);
+        alert(`تم تحديث التصنيف إلى "تراثي" لعدد ${json.updatedCount ?? 0} هدية.`);
+        return;
+      }
+      if (res.status === 401) {
+        alert("انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        router.replace("/login?next=/dashboard");
+        return;
+      }
+      alert(json.error || "تعذر تحديث التصنيف.");
+    } catch (e) {
+      console.error(e);
+      alert("تعذر تحديث التصنيف.");
+    }
+  };
+
   const extra = (
         <>
           {isFormOpen && (
@@ -558,6 +585,7 @@ export function DashboardView() {
     handleFormSubmit,
     handleExportCSV,
     handleExportGiftsExcel,
+    handleSetAllCategoriesToHeritage,
     handleBackup,
     handleRestore,
     handleDownloadReport,

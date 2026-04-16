@@ -158,6 +158,25 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return rows.length > 0 ? rowToProduct(rows[0]) : null;
 }
 
+function parseSkuNumber(sku: string): number {
+  const match = sku.trim().toUpperCase().match(/^G(\d+)$/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+function formatSku(num: number): string {
+  return `G${String(Math.max(1, num)).padStart(2, "0")}`;
+}
+
+export async function getNextAvailableSku(): Promise<string> {
+  await ensureProductsTable();
+  const { rows } = await sql`SELECT sku FROM products`;
+  const maxNumber = rows.reduce((max, row) => {
+    const current = parseSkuNumber(String((row as { sku?: string }).sku ?? ""));
+    return current > max ? current : max;
+  }, 0);
+  return formatSku(maxNumber + 1);
+}
+
 export async function createProduct(p: Product): Promise<Product> {
   await ensureProductsTable();
   await sql`DELETE FROM catalog_slug_suppressions WHERE slug = ${p.slug}`;

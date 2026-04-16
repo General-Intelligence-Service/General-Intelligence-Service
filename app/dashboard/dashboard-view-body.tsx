@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature, Settings2, Eye, EyeOff, Sheet } from "lucide-react";
+import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle, RotateCcw, Printer, ListChecks, ClipboardSignature, Settings2, Eye, EyeOff, Sheet, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
       handleToggleHidden,
     handleExportCSV,
     handleExportGiftsExcel,
+    handleSetAllCategoriesToHeritage,
     handleBackup,
     handleRestore,
     handleDownloadReport,
@@ -471,6 +472,19 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                   title="تصدير ملف Excel منظم للهدايا"
                 >
                   <Sheet className="ml-2 h-4 w-4" /> تصدير بيانات الهدايا
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[44px] touch-manipulation"
+                  onClick={() => {
+                    if (typeof handleSetAllCategoriesToHeritage === "function") {
+                      void (handleSetAllCategoriesToHeritage as () => Promise<void>)();
+                    }
+                  }}
+                  title="توحيد تصنيف كل الهدايا إلى تراثي"
+                >
+                  <Tags className="ml-2 h-4 w-4" /> توحيد التصنيف (تراثي)
                 </Button>
                 <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleBackup}>
                   <Download className="ml-2 h-4 w-4" /> تحميل نسخة احتياطية

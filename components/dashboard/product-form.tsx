@@ -37,6 +37,30 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
 
   const giftTiers = getAllGiftTiers();
 
+  const loadNextSku = async () => {
+    try {
+      const response = await fetch("/api/products?include_archived=1&include_hidden=1&quick=1", {
+        credentials: "include",
+      });
+      const result = await response.json();
+      if (result.success && Array.isArray(result.data)) {
+        const maxNumber = result.data.reduce((max: number, item: Partial<Product>) => {
+          const sku = typeof item.sku === "string" ? item.sku : "";
+          const match = sku.trim().toUpperCase().match(/^G(\d+)$/);
+          const current = match ? parseInt(match[1], 10) : 0;
+          return current > max ? current : max;
+        }, 0);
+        const nextSku = `G${String(maxNumber + 1).padStart(2, "0")}`;
+        setFormData((prev) => ({ ...prev, sku: nextSku }));
+        return;
+      }
+    } catch {
+      //
+    }
+
+    setFormData((prev) => ({ ...prev, sku: generateNextSKU() }));
+  };
+
   useEffect(() => {
     if (product) {
       // تعديل منتج موجود - يُحفظ slug للمرجعية (الحفظ الفعلي يستخدم slug من الداشبورد)
@@ -57,13 +81,14 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
       // منتج جديد - توليد SKU تلقائياً
       setFormData({
         name: "",
-        sku: generateNextSKU(),
+        sku: "",
         shortDescription: "",
         contents: [],
         giftTier: "standard",
         images: [],
         availableQuantity: 0,
       });
+      void loadNextSku();
     }
   }, [product]);
 

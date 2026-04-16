@@ -9,6 +9,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getNextAvailableSku,
 } from "@/lib/products-db";
 import { getSession } from "@/lib/auth-session";
 import { generateProductSlug } from "@/lib/slug";
@@ -57,9 +58,10 @@ export async function POST(request: NextRequest) {
       );
     }
     const body = await request.json();
-    const newProduct: Product = {
+    const requestedSku = typeof body.sku === "string" ? body.sku.trim() : "";
+    let newProduct: Product = {
       slug: (body.slug && String(body.slug).trim()) || generateProductSlug(body.name ?? ""),
-      sku: body.sku,
+      sku: requestedSku || (await getNextAvailableSku()),
       name: body.name,
       shortDescription: body.shortDescription ?? "",
       contents: Array.isArray(body.contents) ? body.contents : [],
@@ -70,12 +72,28 @@ export async function POST(request: NextRequest) {
       price: body.price,
     };
     await ensureProductsTable();
-    await createProduct(newProduct);
-    return NextResponse.json({
-      success: true,
-      message: "تم إضافة الهدية بنجاح",
-      data: newProduct,
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await createProduct(newProduct);
+        return NextResponse.json({
+          success: true,
+          message: "تم إضافة الهدية بنجاح",
+          data: newProduct,
+        });
+      } catch (error) {
+        const dbError = error as { code?: string; constraint?: string };
+        const isSkuConflict =
+          dbError?.code === "23505" && dbError?.constraint === "products_sku_key";
+        if (isSkuConflict && attempt < 2) {
+          newProduct = {
+            ...newProduct,
+            sku: await getNextAvailableSku(),
+          };
+          continue;
+        }
+        throw error;
+      }
+    }
   } catch (error) {
     console.error("POST /api/products:", error);
     return NextResponse.json(
