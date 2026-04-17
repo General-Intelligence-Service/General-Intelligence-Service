@@ -1,4 +1,7 @@
+"use client";
+
 import { pdf } from "@react-pdf/renderer";
+import { notifyError } from "@/lib/notify";
 import { OrderPDFDocument } from "@/components/pdf/order-pdf-document";
 import { siteConfig } from "@/lib/config";
 import type { Product } from "@/data/products";
@@ -55,6 +58,6 @@ export async function generatePDF(
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error generating PDF:", error);
-    alert("حدث خطأ أثناء إنشاء ملف PDF");
+    notifyError("حدث خطأ أثناء إنشاء ملف PDF");
   }
 }

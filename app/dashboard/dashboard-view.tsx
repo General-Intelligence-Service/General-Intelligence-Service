@@ -18,9 +18,12 @@ import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/ord
 import { DashboardLayout } from "./dashboard-layout";
 import { DashboardViewReturn } from "./dashboard-view-return";
 import type { InputChangeEvent } from "./dashboard-types";
+import { useConfirm } from "@/components/confirm-dialog-provider";
+import { notifyError, notifySuccess, notifyInfo } from "@/lib/notify";
 
 export function DashboardView() {
   const router = useRouter();
+  const confirm = useConfirm();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -143,7 +146,7 @@ export function DashboardView() {
 
   const handleDownloadReport = async () => {
     if (ordersForPeriod.length === 0) {
-      alert("لا توجد طلبات في الفترة المحددة.");
+      notifyInfo("لا توجد طلبات في الفترة المحددة.");
       return;
     }
     setReportLoading(true);
@@ -158,7 +161,7 @@ export function DashboardView() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ أثناء إنشاء التقرير.");
+      notifyError("حدث خطأ أثناء إنشاء التقرير.");
     } finally {
       setReportLoading(false);
     }
@@ -189,7 +192,7 @@ export function DashboardView() {
       if (isEdit) {
         slug = (editingProduct?.slug || product.slug || "").trim();
         if (!slug) {
-          alert("تعذر تحديد الهدية. أغلق النافذة وأعد فتح التعديل.");
+          notifyError("تعذر تحديد الهدية. أغلق النافذة وأعد فتح التعديل.");
           return;
         }
       } else {
@@ -227,7 +230,7 @@ export function DashboardView() {
       try {
         result = text ? (JSON.parse(text) as typeof result) : {};
       } catch {
-        alert(`رد غير صالح من الخادم (${response.status}). تحقق من الاتصال أو سجّل الدخول مجدداً.`);
+        notifyError(`رد غير صالح من الخادم (${response.status}). تحقق من الاتصال أو سجّل الدخول مجدداً.`);
         return;
       }
       if (result.success) {
@@ -255,20 +258,20 @@ export function DashboardView() {
         return;
       }
       if (response.status === 401) {
-        alert(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
         router.replace("/login?next=/dashboard");
         return;
       }
-      alert(result.error || `تعذر الحفظ (${response.status})`);
+      notifyError(result.error || `تعذر الحفظ (${response.status})`);
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ أثناء الحفظ");
+      notifyError("حدث خطأ أثناء الحفظ");
     }
   };
 
   const handleExportGiftsExcel = async () => {
     if (products.length === 0) {
-      alert("لا توجد هدايا في القائمة.");
+      notifyInfo("لا توجد هدايا في القائمة.");
       return;
     }
     try {
@@ -313,7 +316,7 @@ export function DashboardView() {
       writeFile(wb, filename);
     } catch (e) {
       console.error(e);
-      alert("تعذر إنشاء ملف Excel. جرّب CSV كحل بديل.");
+      notifyError("تعذر إنشاء ملف Excel.");
     }
   };
 
@@ -325,7 +328,7 @@ export function DashboardView() {
 
     const lower = file.name.toLowerCase();
     if (!lower.endsWith(".xlsx") && !lower.endsWith(".xls")) {
-      alert("يرجى اختيار ملف Excel (.xlsx أو .xls).");
+      notifyError("يرجى اختيار ملف Excel (.xlsx أو .xls).");
       return;
     }
 
@@ -355,20 +358,20 @@ export function DashboardView() {
       const wb = read(buf, { type: "array" });
       const sheetName = wb.SheetNames[0];
       if (!sheetName) {
-        alert("الملف لا يحتوي على أي ورقة عمل.");
+        notifyError("الملف لا يحتوي على أي ورقة عمل.");
         return;
       }
       const rows = utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[sheetName], {
         defval: "",
       });
       if (rows.length === 0) {
-        alert("لا توجد صفوف بيانات في الملف.");
+        notifyError("لا توجد صفوف بيانات في الملف.");
         return;
       }
 
       const sampleKeys = Object.keys(rows[0]).map(normalizeKey);
       if (!sampleKeys.includes("كود المنتج") || !sampleKeys.includes("الكمية الحالية")) {
-        alert(
+        notifyError(
           "صيغة الملف غير متطابقة مع تصدير الهدايا.\nالمطلوب وجود الأعمدة: كود المنتج، اسم المنتج، التصنيف، الكمية الحالية."
         );
         return;
@@ -385,7 +388,7 @@ export function DashboardView() {
       }
 
       if (skuToQty.size === 0) {
-        alert("لم يُعثر على صفوف صالحة (كود منتج + كمية رقمية) في الملف.");
+        notifyError("لم يُعثر على صفوف صالحة (كود منتج + كمية رقمية) في الملف.");
         return;
       }
 
@@ -407,7 +410,7 @@ export function DashboardView() {
       }
 
       if (planned.length === 0) {
-        alert(
+        notifyInfo(
           unknownSkus > 0
             ? `لا توجد تغييرات للكميات. (أكواد غير موجودة في الموقع: ${unknownSkus})`
             : "الكميات في الملف مطابقة لما في الموقع، أو لا توجد أكواد مطابقة."
@@ -419,7 +422,13 @@ export function DashboardView() {
         `سيتم تحديث كمية ${planned.length} منتج حسب الملف.\n` +
         (unknownSkus > 0 ? `سيتم تجاهل ${unknownSkus} كود غير موجود في الموقع.\n` : "") +
         "هل تريد المتابعة؟";
-      if (!confirm(confirmMsg)) return;
+      const ok = await confirm({
+        title: "استيراد Excel",
+        message: confirmMsg,
+        confirmLabel: "متابعة",
+        cancelLabel: "إلغاء",
+      });
+      if (!ok) return;
 
       const applyLocalPlanned = (list: Planned[]) => {
         setProducts((prev) => {
@@ -460,7 +469,7 @@ export function DashboardView() {
           //
         }
         if (res.status === 401) {
-          alert(json.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+          notifyError(json.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
           router.replace("/login?next=/dashboard");
           return;
         }
@@ -475,12 +484,12 @@ export function DashboardView() {
       if (dbUnavailable) {
         if (successCount === 0) {
           applyLocalPlanned(planned);
-          alert(
+          notifySuccess(
             `تم تطبيق تحديث الكميات محلياً لـ ${planned.length} منتج (الخادم بدون قاعدة بيانات أو غير متاح للتحديث).`
           );
         } else {
           await refetchProducts(false);
-          alert(
+          notifyError(
             `تم تحديث ${successCount} من ${planned.length} ثم تعذر إكمال الطلب على الخادم. حدّث الصفحة أو أعد المحاولة.`
           );
         }
@@ -491,15 +500,15 @@ export function DashboardView() {
       const tail =
         unknownSkus > 0 ? `\nأكواد غير معروفة وتم تجاهلها: ${unknownSkus}` : "";
       if (failedNames.length > 0) {
-        alert(
+        notifyError(
           `تم تحديث ${successCount} منتج.\nتعذر تحديث: ${failedNames.slice(0, 6).join("، ")}${failedNames.length > 6 ? "…" : ""}${tail}`
         );
       } else {
-        alert(`تم تحديث كميات ${successCount} منتج بنجاح.${tail}`);
+        notifySuccess(`تم تحديث كميات ${successCount} منتج بنجاح.${tail}`);
       }
     } catch (err) {
       console.error(err);
-      alert("تعذر قراءة ملف Excel أو تطبيق التحديث.");
+      notifyError("تعذر قراءة ملف Excel أو تطبيق التحديث.");
     } finally {
       setGiftsExcelImporting(false);
     }
@@ -521,27 +530,36 @@ export function DashboardView() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result as string);
-        if (!Array.isArray(data) || data.length === 0) {
-          alert("الملف يجب أن يحتوي على مصفوفة هدايا.");
-          return;
+      void (async () => {
+        try {
+          const data = JSON.parse(reader.result as string);
+          if (!Array.isArray(data) || data.length === 0) {
+            notifyError("الملف يجب أن يحتوي على مصفوفة هدايا.");
+            return;
+          }
+          const valid = data.every((p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p);
+          if (!valid) {
+            notifyError("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من الهدايا.");
+            return;
+          }
+          const restoreOk = await confirm({
+            title: "استعادة نسخة احتياطية",
+            message: `سيتم استبدال ${products.length} هدية بـ ${data.length} هدية من الملف.\nهل تريد المتابعة؟`,
+            confirmLabel: "استعادة",
+            cancelLabel: "إلغاء",
+            danger: true,
+          });
+          if (!restoreOk) return;
+          setProducts(data as Product[]);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("products", JSON.stringify(data));
+            notifyProductsStorageChanged();
+          }
+          notifySuccess("تمت الاستعادة بنجاح.");
+        } catch {
+          notifyError("تعذر قراءة الملف. تأكد أنه ملف JSON صالح.");
         }
-        const valid = data.every((p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p);
-        if (!valid) {
-          alert("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من الهدايا.");
-          return;
-        }
-        if (!confirm(`سيتم استبدال ${products.length} هدية بـ ${data.length} هدية. متابعة؟`)) return;
-        setProducts(data as Product[]);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("products", JSON.stringify(data));
-          notifyProductsStorageChanged();
-        }
-        alert("تمت الاستعادة بنجاح.");
-      } catch {
-        alert("تعذر قراءة الملف. تأكد أنه ملف JSON صالح.");
-      }
+      })();
     };
     reader.readAsText(file);
     e.target.value = "";
@@ -604,7 +622,14 @@ export function DashboardView() {
   };
 
   const handleDeleteProduct = async (slug: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذه الهدية؟")) return;
+    const delOk = await confirm({
+      title: "حذف هدية",
+      message: "هل أنت متأكد من حذف هذه الهدية؟ لا يمكن التراجع عن هذا الإجراء.",
+      confirmLabel: "حذف",
+      cancelLabel: "إلغاء",
+      danger: true,
+    });
+    if (!delOk) return;
     try {
       const response = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`, {
         method: "DELETE",
@@ -615,11 +640,11 @@ export function DashboardView() {
         setProducts((prev) => prev.filter((p) => p.slug !== slug));
         await refetchProducts(true);
       } else {
-        alert(result.error || "فشل الحذف");
+        notifyError(result.error || "فشل الحذف");
       }
     } catch (e) {
       console.error(e);
-      alert("فشل الحذف");
+      notifyError("فشل الحذف");
     }
   };
 
@@ -637,14 +662,14 @@ export function DashboardView() {
         return;
       }
       if (response.status === 401) {
-        alert(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
         router.replace("/login?next=/dashboard");
         return;
       }
-      alert(result.error || "تعذر تحديث الإخفاء");
+      notifyError(result.error || "تعذر تحديث الإخفاء");
     } catch (e) {
       console.error(e);
-      alert("تعذر تحديث الإخفاء");
+      notifyError("تعذر تحديث الإخفاء");
     }
   };
 

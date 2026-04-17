@@ -23,6 +23,7 @@ import { useOrder } from "@/contexts/order-context";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { ProductQRModal } from "@/components/product-qr-modal";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
+import { notifyError } from "@/lib/notify";
 
 interface ProductPageProps {
   params: {
@@ -66,7 +67,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         setShareDone(true);
         setTimeout(() => setShareDone(false), 2000);
       } catch {
-        alert("تعذر نسخ الرابط");
+        notifyError("تعذر نسخ الرابط");
       }
     }
   };

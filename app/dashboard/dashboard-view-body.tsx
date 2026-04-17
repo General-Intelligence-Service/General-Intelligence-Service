@@ -13,7 +13,11 @@ import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/ord
 import type { DashboardViewReturnProps } from "./dashboard-view-return";
 import { productPageUrl } from "@/lib/site-url";
 import { siteConfig } from "@/lib/config";
+import { useConfirm } from "@/components/confirm-dialog-provider";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/notify";
+
 export function DashboardViewBody(props: DashboardViewReturnProps) {
+  const confirm = useConfirm();
   const {
     products,
     searchQuery,
@@ -69,7 +73,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
   const handleDownloadCatalogPdfQtyQr = async () => {
     if (catalogPdfLoading) return;
     if (products.length === 0) {
-      alert("لا توجد هدايا في القائمة.");
+      notifyInfo("لا توجد هدايا في القائمة.");
       return;
     }
     setCatalogPdfLoading(true);
@@ -78,21 +82,22 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
       await downloadFullCatalogWithQuantityAndQr(products, siteConfig);
     } catch (e) {
       console.error(e);
-      alert("تعذر إنشاء كتالوج PDF. تحقق من الاتصال أو حاول لاحقاً.");
+      notifyError("تعذر إنشاء كتالوج PDF. تحقق من الاتصال أو حاول لاحقاً.");
     } finally {
       setCatalogPdfLoading(false);
     }
   };
 
   /** للتجريب: مسح نسخة بيانات الهدايا المحلية وإعادة تحميل الصفحة بالكامل (لا يمس جلسة الدخول) */
-  const handleDashboardRestart = () => {
-    if (
-      !confirm(
-        "إعادة تشغيل اللوحة؟\n\nسيتم مسح نسخة بيانات الهدايا المخبأة في المتصفح وإعادة تحميل الصفحة لجلب بيانات جديدة من الخادم.\n(طلباتك المحلية في الطلبات لا تُحذف.)"
-      )
-    ) {
-      return;
-    }
+  const handleDashboardRestart = async () => {
+    const ok = await confirm({
+      title: "إعادة تشغيل اللوحة",
+      message:
+        "سيتم مسح نسخة بيانات الهدايا المخبأة في المتصفح وإعادة تحميل الصفحة لجلب بيانات جديدة من الخادم.\n(طلباتك المحلية في الطلبات لا تُحذف.)",
+      confirmLabel: "متابعة",
+      cancelLabel: "إلغاء",
+    });
+    if (!ok) return;
     try {
       localStorage.removeItem("products");
     } catch {
@@ -137,7 +142,7 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
             variant="outline"
             size="lg"
             className="min-h-[44px] w-full touch-manipulation sm:w-auto col-span-2 sm:col-span-1 border-dashed"
-            onClick={handleDashboardRestart}
+            onClick={() => void handleDashboardRestart()}
             title="مسح كاش بيانات الهدايا وإعادة تحميل الصفحة — مفيد أثناء التجريب"
           >
             <RotateCcw className="ml-2 h-5 w-5 shrink-0" />
@@ -265,16 +270,33 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                   <input type="file" accept=".json,application/json" className="sr-only" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    const inputEl = e.target;
                     const reader = new FileReader();
                     reader.onload = () => {
-                      try {
-                        const parsed = JSON.parse(reader.result as string) as OrderRecord[];
-                        if (!Array.isArray(parsed)) { alert("الملف يجب أن يحتوي مصفوفة طلبات."); return; }
-                        if (!confirm(`سيتم استبدال ${orders.length} طلبية حالية بـ ${parsed.length} طلبية من الملف. متابعة؟`)) return;
-                        saveStoredOrders(parsed);
-                        refreshOrders();
-                      } catch { alert("ملف غير صالح."); }
-                      e.target.value = "";
+                      void (async () => {
+                        try {
+                          const parsed = JSON.parse(reader.result as string) as OrderRecord[];
+                          if (!Array.isArray(parsed)) {
+                            notifyError("الملف يجب أن يحتوي مصفوفة طلبات.");
+                            return;
+                          }
+                          const ok = await confirm({
+                            title: "استعادة الطلبات",
+                            message: `سيتم استبدال ${orders.length} طلبية حالية بـ ${parsed.length} طلبية من الملف.\nهل تريد المتابعة؟`,
+                            confirmLabel: "استعادة",
+                            cancelLabel: "إلغاء",
+                            danger: true,
+                          });
+                          if (!ok) return;
+                          saveStoredOrders(parsed);
+                          refreshOrders();
+                          notifySuccess("تم استعادة الطلبات بنجاح.");
+                        } catch {
+                          notifyError("ملف غير صالح.");
+                        } finally {
+                          inputEl.value = "";
+                        }
+                      })();
                     };
                     reader.readAsText(file);
                   }} />

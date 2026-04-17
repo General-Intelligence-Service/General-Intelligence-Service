@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Product, type GiftTier, getGiftTierLabel, getAllGiftTiers, generateNextSKU } from "@/data/products";
+import { notifyError } from "@/lib/notify";
 
 interface ProductFormProps {
   product: Product | null;
@@ -34,6 +35,8 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
   });
   const [contentInput, setContentInput] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [imageLinkOpen, setImageLinkOpen] = useState(false);
+  const [imageLinkDraft, setImageLinkDraft] = useState("");
 
   const giftTiers = getAllGiftTiers();
 
@@ -124,7 +127,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
 
     // التحقق من نوع الملف
     if (!file.type.startsWith("image/")) {
-      alert("يرجى اختيار ملف صورة");
+      notifyError("يرجى اختيار ملف صورة");
       return;
     }
 
@@ -147,11 +150,11 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
           images: [...(formData.images || []), result.url],
         });
       } else {
-        alert(result.error || "فشل في رفع الصورة");
+        notifyError(result.error || "فشل في رفع الصورة");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("حدث خطأ أثناء رفع الصورة");
+      notifyError("حدث خطأ أثناء رفع الصورة");
     } finally {
       setUploading(false);
       // إعادة تعيين input
@@ -159,14 +162,23 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
     }
   };
 
-  const addImageUrl = () => {
-    const imageInput = prompt("أدخل رابط الصورة:");
-    if (imageInput?.trim()) {
-      setFormData({
-        ...formData,
-        images: [...(formData.images || []), imageInput.trim()],
-      });
+  const openImageLinkDialog = () => {
+    setImageLinkDraft("");
+    setImageLinkOpen(true);
+  };
+
+  const confirmImageLink = () => {
+    const t = imageLinkDraft.trim();
+    if (!t) {
+      notifyError("يرجى إدخال رابط الصورة.");
+      return;
     }
+    setFormData({
+      ...formData,
+      images: [...(formData.images || []), t],
+    });
+    setImageLinkOpen(false);
+    setImageLinkDraft("");
   };
 
   const removeImage = (index: number) => {
@@ -176,6 +188,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
   };
 
   return (
+    <>
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
@@ -361,7 +374,7 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
               </label>
               <Button
                 type="button"
-                onClick={addImageUrl}
+                onClick={openImageLinkDialog}
                 variant="outline"
                 disabled={uploading}
               >
@@ -415,6 +428,36 @@ export function ProductForm({ product, onClose, onSubmit }: ProductFormProps) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={imageLinkOpen} onOpenChange={setImageLinkOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>إضافة رابط صورة</DialogTitle>
+        </DialogHeader>
+        <Input
+          value={imageLinkDraft}
+          onChange={(e) => setImageLinkDraft(e.target.value)}
+          placeholder="https://..."
+          dir="ltr"
+          className="text-left font-mono text-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              confirmImageLink();
+            }
+          }}
+        />
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setImageLinkOpen(false)}>
+            إلغاء
+          </Button>
+          <Button type="button" onClick={confirmImageLink}>
+            إضافة
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
