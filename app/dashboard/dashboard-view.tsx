@@ -293,7 +293,6 @@ export function DashboardView() {
     }
     try {
       const { utils, writeFile } = await import("xlsx");
-      const origin = getSiteOriginForShare();
       const seen = new Set<string>();
       const rows = products
         .filter((p) => {
@@ -303,21 +302,11 @@ export function DashboardView() {
           return true;
         })
         .map((p) => {
-          const link = origin ? productPageUrl(origin, p.slug) : "";
-          const qrValue = link || p.sku || "";
-          const qrLink = qrValue
-            ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrValue)}`
-            : "";
           return {
             "كود المنتج": p.sku ?? "",
             "اسم المنتج": p.name ?? "",
             "التصنيف": p.category ?? "",
             "الكمية الحالية": p.availableQuantity ?? "",
-            "رابط المنتج": link,
-            "قيمة QR": qrValue,
-            "رابط QR": qrLink,
-            "الوصف": p.shortDescription ?? "",
-            "تاريخ الإنشاء": (p as any).createdAt ?? "",
           };
         });
 
@@ -327,11 +316,6 @@ export function DashboardView() {
           "اسم المنتج",
           "التصنيف",
           "الكمية الحالية",
-          "رابط المنتج",
-          "قيمة QR",
-          "رابط QR",
-          "الوصف",
-          "تاريخ الإنشاء",
         ],
         skipHeader: false,
       });
@@ -341,11 +325,6 @@ export function DashboardView() {
         { wch: 30 },
         { wch: 18 },
         { wch: 14 },
-        { wch: 44 },
-        { wch: 38 },
-        { wch: 44 },
-        { wch: 60 },
-        { wch: 20 },
       ];
 
       const wb = utils.book_new();
