@@ -11,11 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ProductForm } from "@/components/dashboard/product-form";
-import { Product, getGiftTierLabel, products as initialProducts } from "@/data/products";
+import { Product, products as initialProducts } from "@/data/products";
 import { notifyProductsStorageChanged } from "@/lib/products-local-storage";
 import { generateProductSlug } from "@/lib/slug";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
-import { getSiteOriginForShare, productPageUrl } from "@/lib/site-url";
 import { DashboardLayout } from "./dashboard-layout";
 import { DashboardViewReturn } from "./dashboard-view-return";
 import type { InputChangeEvent } from "./dashboard-types";
@@ -42,6 +41,7 @@ export function DashboardView() {
   });
   const [reportYear, setReportYear] = useState<string>(() => String(new Date().getFullYear()));
   const [reportLoading, setReportLoading] = useState(false);
+  const [giftsExcelImporting, setGiftsExcelImporting] = useState(false);
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
 
   const LOW_STOCK_THRESHOLD = 3;
@@ -317,6 +317,194 @@ export function DashboardView() {
     }
   };
 
+  const handleImportGiftsExcel = async (e: InputChangeEvent) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    const lower = file.name.toLowerCase();
+    if (!lower.endsWith(".xlsx") && !lower.endsWith(".xls")) {
+      alert("يرجى اختيار ملف Excel (.xlsx أو .xls).");
+      return;
+    }
+
+    const normalizeKey = (k: string) => k.replace(/[\u200e\u200f]/g, "").trim();
+
+    const cell = (row: Record<string, unknown>, want: string): unknown => {
+      const nk = normalizeKey(want);
+      for (const [k, v] of Object.entries(row)) {
+        if (normalizeKey(k) === nk) return v;
+      }
+      return undefined;
+    };
+
+    const parseQty = (raw: unknown): number | null => {
+      if (raw === undefined || raw === null) return null;
+      const s = String(raw).trim().replace(/\s/g, "").replace(/,/g, "");
+      if (s === "") return null;
+      const n = Number(s);
+      if (!Number.isFinite(n) || n < 0) return null;
+      return Math.floor(n);
+    };
+
+    setGiftsExcelImporting(true);
+    try {
+      const { read, utils } = await import("xlsx");
+      const buf = await file.arrayBuffer();
+      const wb = read(buf, { type: "array" });
+      const sheetName = wb.SheetNames[0];
+      if (!sheetName) {
+        alert("الملف لا يحتوي على أي ورقة عمل.");
+        return;
+      }
+      const rows = utils.sheet_to_json<Record<string, unknown>>(wb.Sheets[sheetName], {
+        defval: "",
+      });
+      if (rows.length === 0) {
+        alert("لا توجد صفوف بيانات في الملف.");
+        return;
+      }
+
+      const sampleKeys = Object.keys(rows[0]).map(normalizeKey);
+      if (!sampleKeys.includes("كود المنتج") || !sampleKeys.includes("الكمية الحالية")) {
+        alert(
+          "صيغة الملف غير متطابقة مع تصدير الهدايا.\nالمطلوب وجود الأعمدة: كود المنتج، اسم المنتج، التصنيف، الكمية الحالية."
+        );
+        return;
+      }
+
+      const skuToQty = new Map<string, number>();
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i] as Record<string, unknown>;
+        const skuRaw = String(cell(row, "كود المنتج") ?? "").trim();
+        if (!skuRaw) continue;
+        const q = parseQty(cell(row, "الكمية الحالية"));
+        if (q === null) continue;
+        skuToQty.set(skuRaw, q);
+      }
+
+      if (skuToQty.size === 0) {
+        alert("لم يُعثر على صفوف صالحة (كود منتج + كمية رقمية) في الملف.");
+        return;
+      }
+
+      const findBySku = (sku: string) =>
+        products.find((p) => (p.sku ?? "").trim().toLowerCase() === sku.toLowerCase());
+
+      type Planned = { slug: string; sku: string; name: string; qty: number };
+      const planned: Planned[] = [];
+      let unknownSkus = 0;
+
+      for (const [sku, qty] of skuToQty) {
+        const p = findBySku(sku);
+        if (!p) {
+          unknownSkus++;
+          continue;
+        }
+        if ((p.availableQuantity ?? 0) === qty) continue;
+        planned.push({ slug: p.slug, sku, name: p.name, qty });
+      }
+
+      if (planned.length === 0) {
+        alert(
+          unknownSkus > 0
+            ? `لا توجد تغييرات للكميات. (أكواد غير موجودة في الموقع: ${unknownSkus})`
+            : "الكميات في الملف مطابقة لما في الموقع، أو لا توجد أكواد مطابقة."
+        );
+        return;
+      }
+
+      const confirmMsg =
+        `سيتم تحديث كمية ${planned.length} منتج حسب الملف.\n` +
+        (unknownSkus > 0 ? `سيتم تجاهل ${unknownSkus} كود غير موجود في الموقع.\n` : "") +
+        "هل تريد المتابعة؟";
+      if (!confirm(confirmMsg)) return;
+
+      const applyLocalPlanned = (list: Planned[]) => {
+        setProducts((prev) => {
+          const bySlug = new Map(list.map((x) => [x.slug, x.qty]));
+          const next = prev.map((pr) => {
+            const q = bySlug.get(pr.slug);
+            if (q === undefined) return pr;
+            return { ...pr, availableQuantity: q };
+          });
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("products", JSON.stringify(next));
+              notifyProductsStorageChanged();
+            } catch {
+              //
+            }
+          }
+          return next;
+        });
+      };
+
+      let successCount = 0;
+      let dbUnavailable = false;
+      const failedNames: string[] = [];
+
+      for (const item of planned) {
+        const res = await fetch("/api/products", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ slug: item.slug, availableQuantity: item.qty }),
+        });
+        const text = await res.text();
+        let json: { success?: boolean; error?: string } = {};
+        try {
+          json = text ? (JSON.parse(text) as typeof json) : {};
+        } catch {
+          //
+        }
+        if (res.status === 401) {
+          alert(json.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+          router.replace("/login?next=/dashboard");
+          return;
+        }
+        if (res.status === 503) {
+          dbUnavailable = true;
+          break;
+        }
+        if (res.ok && json.success) successCount++;
+        else failedNames.push(item.name);
+      }
+
+      if (dbUnavailable) {
+        if (successCount === 0) {
+          applyLocalPlanned(planned);
+          alert(
+            `تم تطبيق تحديث الكميات محلياً لـ ${planned.length} منتج (الخادم بدون قاعدة بيانات أو غير متاح للتحديث).`
+          );
+        } else {
+          await refetchProducts(false);
+          alert(
+            `تم تحديث ${successCount} من ${planned.length} ثم تعذر إكمال الطلب على الخادم. حدّث الصفحة أو أعد المحاولة.`
+          );
+        }
+        return;
+      }
+
+      await refetchProducts(false);
+      const tail =
+        unknownSkus > 0 ? `\nأكواد غير معروفة وتم تجاهلها: ${unknownSkus}` : "";
+      if (failedNames.length > 0) {
+        alert(
+          `تم تحديث ${successCount} منتج.\nتعذر تحديث: ${failedNames.slice(0, 6).join("، ")}${failedNames.length > 6 ? "…" : ""}${tail}`
+        );
+      } else {
+        alert(`تم تحديث كميات ${successCount} منتج بنجاح.${tail}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("تعذر قراءة ملف Excel أو تطبيق التحديث.");
+    } finally {
+      setGiftsExcelImporting(false);
+    }
+  };
+
   const handleBackup = () => {
     const json = JSON.stringify(products, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -516,6 +704,8 @@ export function DashboardView() {
     handleToggleHidden,
     handleFormSubmit,
     handleExportGiftsExcel,
+    handleImportGiftsExcel,
+    giftsExcelImporting,
     handleBackup,
     handleRestore,
     handleDownloadReport,

@@ -48,6 +48,8 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
     handleDeleteProduct,
       handleToggleHidden,
     handleExportGiftsExcel,
+    handleImportGiftsExcel,
+    giftsExcelImporting,
     handleBackup,
     handleRestore,
     handleDownloadReport,
@@ -432,6 +434,24 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                 >
                   <Sheet className="ml-2 h-4 w-4" /> تصدير بيانات الهدايا
                 </Button>
+                <label
+                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground min-h-[44px] px-4 cursor-pointer touch-manipulation ${giftsExcelImporting ? "pointer-events-none opacity-60" : ""}`}
+                  title="استيراد ملف Excel بنفس أعمدة التصدير — يُحدَّث حقل الكمية فقط حسب «الكمية الحالية» ومطابقة «كود المنتج»"
+                >
+                  <Upload className="ml-2 h-4 w-4" />
+                  {giftsExcelImporting ? "جاري الاستيراد..." : "استيراد Excel (الكميات)"}
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    className="hidden"
+                    disabled={giftsExcelImporting}
+                    onChange={(ev) => {
+                      if (typeof handleImportGiftsExcel === "function") {
+                        void Promise.resolve(handleImportGiftsExcel(ev));
+                      }
+                    }}
+                  />
+                </label>
                 <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleBackup}>
                   <Download className="ml-2 h-4 w-4" /> تحميل نسخة احتياطية
                 </Button>

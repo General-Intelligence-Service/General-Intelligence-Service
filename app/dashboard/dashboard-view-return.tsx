@@ -46,6 +46,9 @@ export type DashboardViewReturnProps = {
   refreshOrders: () => void;
   refetchProducts: (quick?: boolean) => Promise<void>;
   handleLogout: () => Promise<void>;
+  /** استيراد Excel لتحديث الكميات (نفس أعمدة التصدير) */
+  giftsExcelImporting?: boolean;
+  handleImportGiftsExcel?: (e: React.ChangeEvent<HTMLInputElement>) => void | Promise<void>;
   [key: string]: unknown;
 };
 
