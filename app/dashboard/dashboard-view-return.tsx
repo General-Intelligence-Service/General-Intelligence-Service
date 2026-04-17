@@ -40,7 +40,6 @@ export type DashboardViewReturnProps = {
   handleAddProduct: () => void;
   handleEditProduct: (p: Product) => void;
   handleDeleteProduct: (slug: string) => Promise<void>;
-  handleExportCSV: () => void;
   handleBackup: () => void;
   handleRestore: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleDownloadReport: () => Promise<void>;

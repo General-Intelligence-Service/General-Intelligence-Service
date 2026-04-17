@@ -266,26 +266,6 @@ export function DashboardView() {
     }
   };
 
-  const handleExportCSV = () => {
-    const escape = (t: string) => (t.includes(",") || t.includes("\n") || t.includes('"') ? `"${t.replace(/"/g, '""')}"` : t);
-    const header = ["الاسم", "الكود", "التصنيف", "الكمية", "الوصف"];
-    const rows = products.map((p) => [
-      p.name,
-      p.sku,
-      p.category || "",
-      String(p.availableQuantity ?? 0),
-      (p.shortDescription || "").replace(/\s+/g, " "),
-    ].map(escape));
-    const csv = "\uFEFF" + [header.map(escape).join(","), ...rows.map((r) => r.join(","))].join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `هدايا-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   const handleExportGiftsExcel = async () => {
     if (products.length === 0) {
       alert("لا توجد هدايا في القائمة.");
@@ -535,7 +515,6 @@ export function DashboardView() {
     handleDeleteProduct,
     handleToggleHidden,
     handleFormSubmit,
-    handleExportCSV,
     handleExportGiftsExcel,
     handleBackup,
     handleRestore,

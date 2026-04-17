@@ -47,7 +47,6 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
     handleEditProduct,
     handleDeleteProduct,
       handleToggleHidden,
-    handleExportCSV,
     handleExportGiftsExcel,
     handleBackup,
     handleRestore,
@@ -419,9 +418,6 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                 >
                   <Printer className="ml-2 h-4 w-4" />
                   {catalogPdfLoading ? "جاري إنشاء PDF..." : "كتالوج PDF (الكمية + QR)"}
-                </Button>
-                <Button variant="outline" size="sm" className="min-h-[44px] touch-manipulation" onClick={handleExportCSV}>
-                  <Download className="ml-2 h-4 w-4" /> تصدير CSV
                 </Button>
                 <Button
                   variant="outline"
