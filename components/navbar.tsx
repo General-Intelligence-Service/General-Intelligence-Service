@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, MonitorPlay } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -41,6 +41,13 @@ export function Navbar() {
             الهدايا
           </Link>
           <Link
+            href="/present"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green-dark"
+          >
+            <MonitorPlay className="h-4 w-4 shrink-0" aria-hidden />
+            عرض تقديمي
+          </Link>
+          <Link
             href="/login"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -70,6 +77,14 @@ export function Navbar() {
                 className="text-lg font-medium transition-colors hover:text-brand-green-dark"
               >
                 الهدايا
+              </Link>
+              <Link
+                href="/present"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 text-lg font-medium text-muted-foreground transition-colors hover:text-brand-green-dark"
+              >
+                <MonitorPlay className="h-5 w-5 shrink-0" aria-hidden />
+                عرض تقديمي
               </Link>
               <Link
                 href="/login"

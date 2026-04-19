@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { OrderProvider } from "@/contexts/order-context";
 import { OrderCart } from "@/components/order-cart";
 import { AnnouncementBar } from "@/components/announcement-bar";
@@ -12,6 +13,11 @@ export function OrderLayoutClient({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  if (pathname === "/present") {
+    return <>{children}</>;
+  }
+
   return (
     <OrderProvider>
       <AnnouncementBar />
