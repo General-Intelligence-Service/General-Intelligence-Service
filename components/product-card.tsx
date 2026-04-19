@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { catalogStagger, catalogTransition } from "@/lib/catalog-motion";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,10 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      transition={{
+        ...catalogTransition,
+        delay: index * catalogStagger,
+      }}
       className="h-full"
     >
       <Card className="group h-full overflow-hidden rounded-lg shadow-sm transition-all duration-200 sm:rounded-xl sm:shadow-md sm:hover:shadow-lg sm:hover:shadow-primary/10 sm:hover:-translate-y-2">

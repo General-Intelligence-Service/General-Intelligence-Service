@@ -17,7 +17,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="no-print sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="no-print lux-chrome-header sticky top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-background/50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex min-w-0 max-w-[55%] items-center gap-2 sm:gap-3 md:max-w-none">
           <div className="relative h-9 w-40 shrink-0 sm:h-10 sm:w-48 md:h-11 md:w-56">

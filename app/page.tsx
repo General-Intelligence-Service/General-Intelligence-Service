@@ -3,7 +3,11 @@
 import { Suspense, useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  catalogFilterTransition,
+  catalogTransition,
+} from "@/lib/catalog-motion";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
@@ -184,6 +188,8 @@ function HomeContent() {
   const hasActiveFilters =
     searchQuery.trim().length > 0 || selectedGiftTier !== null;
 
+  const catalogFilterKey = `${selectedGiftTier ?? "all"}__${searchLower}`;
+
   const { archiveGridProducts, catalogGridProducts } = useMemo(() => {
     const archive = filteredProducts
       .filter(isArchiveCatalogProduct)
@@ -221,7 +227,7 @@ function HomeContent() {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
+              transition={{ ...catalogTransition, duration: 0.72 }}
               className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl"
             >
               <Image
@@ -244,7 +250,7 @@ function HomeContent() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+              transition={catalogTransition}
               className="mb-8 text-center"
             >
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
@@ -313,7 +319,11 @@ function HomeContent() {
             <div className="mb-8 space-y-4">
               <div>
                 <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
-                <div className="flex flex-wrap gap-3">
+                <motion.div
+                  layout
+                  transition={catalogFilterTransition}
+                  className="flex flex-wrap gap-3"
+                >
                   <Badge
                     variant={selectedGiftTier === null ? "default" : "outline"}
                     className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
@@ -333,40 +343,59 @@ function HomeContent() {
                       {getGiftTierLabel(tier)}
                     </Badge>
                   ))}
-                </div>
+                </motion.div>
               </div>
             </div>
 
             {/* شبكة المنتجات: عناصر الأرشيف أولاً ثم باقي الكتالوج */}
-            {filteredProducts.length > 0 ? (
-              <div className="space-y-6 sm:space-y-12">
-                {archiveGridProducts.length > 0 && (
-                  <div>{renderProductGrid(archiveGridProducts, "arch")}</div>
-                )}
-                {catalogGridProducts.length > 0 && (
-                  <div>{renderProductGrid(catalogGridProducts, "cat")}</div>
-                )}
-              </div>
-            ) : (
-              <div className="py-12 text-center space-y-4">
-                <p className="text-lg text-muted-foreground">
-                  لم يتم العثور على هدايا تطابق البحث أو التصفية
-                </p>
-                {hasActiveFilters && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[44px]"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedGiftTier(null);
-                    }}
-                  >
-                    مسح البحث والتصفية
-                  </Button>
-                )}
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {filteredProducts.length > 0 ? (
+                <motion.div
+                  key={catalogFilterKey}
+                  role="region"
+                  aria-live="polite"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={catalogFilterTransition}
+                  className="space-y-6 sm:space-y-12"
+                >
+                  {archiveGridProducts.length > 0 && (
+                    <div>{renderProductGrid(archiveGridProducts, "arch")}</div>
+                  )}
+                  {catalogGridProducts.length > 0 && (
+                    <div>{renderProductGrid(catalogGridProducts, "cat")}</div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={`empty-${catalogFilterKey}`}
+                  role="status"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={catalogFilterTransition}
+                  className="py-12 text-center space-y-4"
+                >
+                  <p className="text-lg text-muted-foreground">
+                    لم يتم العثور على هدايا تطابق البحث أو التصفية
+                  </p>
+                  {hasActiveFilters && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-h-[44px]"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedGiftTier(null);
+                      }}
+                    >
+                      مسح البحث والتصفية
+                    </Button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
