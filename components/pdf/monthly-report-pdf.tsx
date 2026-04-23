@@ -1,6 +1,6 @@
 "use client";
 
-import { Document, Page, View, Text, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, View, Text, Image, StyleSheet, Font } from "@react-pdf/renderer";
 import type { OrderRecord } from "@/types/order";
 
 const fontBase =
@@ -35,6 +35,13 @@ const styles = StyleSheet.create({
     marginHorizontal: -28,
     marginTop: -28,
     padding: 20,
+    alignItems: "center",
+  },
+  headerLogo: {
+    width: 260,
+    height: 56,
+    objectFit: "contain",
+    marginBottom: 10,
   },
   headerTitle: {
     fontSize: 18,
@@ -121,16 +128,27 @@ interface MonthlyReportPDFProps {
   monthLabel: string;
   /** نوع التقرير للعرض في الهيدر (شهري / ربع سنوي / سنوي) */
   reportSubtitle?: string;
+  /** رابط الشعار الكامل (من المتصفح) لتحميله في PDF */
+  logoUrl?: string;
 }
 
-export function MonthlyReportPDF({ orders, monthLabel, reportSubtitle = "تقرير الطلبات الشهري" }: MonthlyReportPDFProps) {
+export function MonthlyReportPDF({
+  orders,
+  monthLabel,
+  reportSubtitle = "تقرير الطلبات الشهري",
+  logoUrl,
+}: MonthlyReportPDFProps) {
   const totalPieces = orders.reduce((s, o) => s + (o.totalPieces ?? 0), 0);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>فرع الإعلام - قسم الهدايا الرسمية</Text>
+          {logoUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt prop
+            <Image src={logoUrl} style={styles.headerLogo} />
+          ) : null}
+          <Text style={styles.headerTitle}>جهاز المخابرات العامة - قسم الهدايا الرسمية</Text>
           <Text style={styles.headerSub}>{reportSubtitle}</Text>
         </View>
         <Text style={styles.title}>{monthLabel}</Text>

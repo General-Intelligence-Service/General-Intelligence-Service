@@ -25,7 +25,7 @@ export async function generateCatalogPDFBlob(
   });
   const logoUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}${siteConfig.pdfLogoPath}`
+      ? `${window.location.origin}${siteConfig.pdfLogoPath}?v=${siteConfig.logoAssetVersion}`
       : undefined;
 
   let mergedPdfOptions: CatalogPdfOptions | undefined = opts?.pdfOptions;

@@ -18,7 +18,7 @@
  *     ضع ملف الأيقونة في public/ (مثال: public/new-logo-icon.ico) ويفضّل
  *     أيضاً نسخها إلى app/icon.ico ليستخدمها Next كـ favicon.
  *
- *  هـ) ملفات PDF تقرأ pdfLogoPath (افتراضيًا /logo_pdf.png).
+ *  هـ) ملفات PDF تقرأ pdfLogoPath (افتراضيًا /logo_pdf.png — انسخ هنا شعار PDF مثل LOGO-PDF.png).
  * ═══════════════════════════════════════════════════════════════════════════
  */
 const defaultLogoPath = "/new-logo.png";
@@ -59,25 +59,29 @@ function resolvePdfLogoPath(): string {
 }
 
 export const siteConfig = {
-  name: "كتالوج الهدايا الفاخرة",
-  description: "معرض للهدايا الفاخرة والتراثية",
+  name: "كتالوج الهدايا",
+  description: "معرض للهدايا الرسمية",
   logoPath: resolveLogoPath(),
+  /**
+   * نسخة بسيطة لكسر كاش المتصفح/Service Worker عند استبدال ملف الشعار بنفس الاسم.
+   * غيّر الرقم فقط عند تحديث ملفات الشعار تحت public/.
+   */
+  logoAssetVersion: 12,
   /** شعار خاص بملفات الـPDF */
   pdfLogoPath: resolvePdfLogoPath(),
   /** أيقونة مربعة/درع — تبويب المتصفح وmanifest التطبيق (ليس الشعار الأفقي) */
   iconPath: resolveIconPath(),
   /** نص يظهر عند تعطيل الصور أو قارئ الشاشة */
-  logoAlt:
-    "شعار إدارة التأهيل والتدريب — Training and Qualification Directorate",
-  phone: "+963991307978",
-  telegram: "Mojahd_N",
-  telegramUrl: "https://t.me/Mojahd_N",
-  instagram: "https://instagram.com/yourhandle",
-  email: "info@example.com",
+  logoAlt: "شعار جهاز الاستخبارات العامة — General Intelligence Service",
+  phone: "",
+  telegram: "",
+  telegramUrl: "",
+  instagram: "",
+  email: "gift.gis.011@gmail.com",
   /** رسالة الشريط العلوي (اتركها فارغة لإخفاء الشريط) */
-  announcement: "مواعيد استلام الطلبات: الأحد - الخميس من 8 صباحاً حتى 2 عصراً. نرحب بكم.",
+  announcement: "",
   /** آخر موعد للطلب لاستلام في تاريخ محدد (يُعرض في الواجهة). اتركه فارغاً لعدم الإظهار. */
-  deliveryDeadlineText: "يرجى العلم أن استلام الطلب يتم بعد خمسة أيام من تاريخ إرسال الطلب.",
+  deliveryDeadlineText: "",
   /** عدد الأيام بعد اليوم لحساب تاريخ الاستلام الديناميكي (مثلاً 5 = استلام بعد 5 أيام). */
   deliveryDaysOffset: 5,
 };

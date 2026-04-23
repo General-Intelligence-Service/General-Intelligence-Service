@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { products as initialProducts, type Product } from "@/data/products";
 import { loadPublicProductsFromLocalStorage } from "@/lib/products-local-storage";
+import { saveCatalogViewSnapshot } from "@/lib/catalog-view-session";
 
 function loadProducts(): Product[] {
   if (typeof window === "undefined") {
@@ -91,7 +92,9 @@ export function NavbarSearch() {
               <Link
                 href={`/products/${encodeURIComponent(p.slug)}`}
                 className="block px-3 py-2.5 text-right text-sm hover:bg-muted"
+                scroll={false}
                 onClick={() => {
+                  saveCatalogViewSnapshot();
                   setQuery("");
                   setOpen(false);
                 }}

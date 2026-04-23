@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
 import { consumeOneTimeShareToken } from "@/lib/product-share-db";
 import { getProductBySlug } from "@/lib/products-db";
-import { getGiftTierLabel } from "@/data/products";
+import { getGiftTierLabel, getProductDisplayImage, isExternalOrArchiveImageSrc } from "@/data/products";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 
@@ -89,7 +89,7 @@ export default async function ShareOneTimePage({
     );
   }
 
-  const img = product.images?.[0];
+  const img = getProductDisplayImage(product);
   const wa = generateWhatsAppLink(product.name, product.sku);
 
   return (
@@ -101,23 +101,19 @@ export default async function ShareOneTimePage({
             عرض خاص بك — تم تفعيل هذا الرابط للمرة الأولى الآن ولن يعمل مرة أخرى.
           </p>
           <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-            {img ? (
-              <div className="relative aspect-square w-full bg-white dark:bg-muted">
-                <Image
-                  src={img}
-                  alt={product.name}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 672px"
-                  placeholder="blur"
-                  blurDataURL={BLUR_DATA_URL}
-                  unoptimized={
-                    img.includes("/archive-images/") || img.startsWith("http")
-                  }
-                  priority
-                />
-              </div>
-            ) : null}
+            <div className="relative aspect-square w-full bg-white dark:bg-muted">
+              <Image
+                src={img}
+                alt={product.name}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 672px"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                unoptimized={isExternalOrArchiveImageSrc(img)}
+                priority
+              />
+            </div>
             <div className="space-y-4 p-6">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
@@ -157,7 +153,7 @@ export default async function ShareOneTimePage({
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center rounded-md bg-brand-green-dark px-4 py-3 text-base font-medium text-white hover:bg-brand-green-darker"
               >
-                استفسر عن الهدية (واتساب)
+                استفسر عن الهدية (تيليجرام)
               </a>
             </div>
           </div>

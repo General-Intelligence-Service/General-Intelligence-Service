@@ -6,8 +6,9 @@ import Link from "next/link";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { type Product, getGiftTierLabel } from "@/data/products";
+import { type Product, getGiftTierLabel, getProductDisplayImage } from "@/data/products";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
+import { saveCatalogViewSnapshot } from "@/lib/catalog-view-session";
 
 export function ProductListItem({
   product,
@@ -32,24 +33,31 @@ export function ProductListItem({
   return (
     <div className="rounded-xl border bg-background p-3 sm:p-4 transition-all duration-200 hover:shadow-lg hover:shadow-primary/10">
       <div className="flex items-start gap-3 sm:gap-4">
-        <Link href={`/products/${product.slug}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white dark:bg-muted sm:h-24 sm:w-24">
-          {product.images?.[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              sizes="96px"
-              className="object-contain"
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-            />
-          ) : null}
+        <Link
+          href={`/products/${product.slug}`}
+          className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white dark:bg-muted sm:h-24 sm:w-24"
+          scroll={false}
+          onClick={() => saveCatalogViewSnapshot()}
+        >
+          <Image
+            src={getProductDisplayImage(product)}
+            alt={product.name}
+            fill
+            sizes="96px"
+            className="object-contain"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+          />
         </Link>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={`/products/${product.slug}`}>
+              <Link
+                href={`/products/${product.slug}`}
+                scroll={false}
+                onClick={() => saveCatalogViewSnapshot()}
+              >
                 <h3 className="truncate text-lg font-semibold transition-colors duration-200 hover:text-brand-green-dark">
                   {product.name}
                 </h3>

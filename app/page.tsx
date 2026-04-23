@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -28,6 +28,10 @@ import {
   loadPublicProductsFromLocalStorage,
   PRODUCTS_STORAGE_KEY,
 } from "@/lib/products-local-storage";
+import {
+  clearCatalogViewSnapshot,
+  consumeCatalogViewSnapshot,
+} from "@/lib/catalog-view-session";
 
 function applyArabicSearchCorrections(input: string): string {
   const s = (input ?? "").trim();
@@ -77,6 +81,7 @@ function compareProductsForCatalog(a: Product, b: Product): number {
 }
 
 function HomeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
@@ -85,6 +90,27 @@ function HomeContent() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const logoSrc = `${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
+  const logoWidth = 2400;
+  const logoHeight = 650;
+
+  // عند الرجوع من صفحة منتج: استعد URL الكتالوج + موضع التمرير (بدل “قفزة” للواجهة الافتراضية)
+  useEffect(() => {
+    const snap = consumeCatalogViewSnapshot();
+    if (!snap) return;
+
+    const here = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (snap.href && snap.href !== here) {
+      router.replace(snap.href, { scroll: false });
+    }
+
+    const y = Number.isFinite(snap.scrollY) ? snap.scrollY : 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: y, left: 0, behavior: "auto" });
+    });
+
+    clearCatalogViewSnapshot();
+  }, [router]);
 
   useEffect(() => {
     const q = searchParams.get("q");
@@ -109,7 +135,7 @@ function HomeContent() {
       try {
         const res = await fetch("/api/products");
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setAllProducts(json.data);
           if (typeof window !== "undefined") {
             localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(json.data));
@@ -185,8 +211,17 @@ function HomeContent() {
 
   const filteredProducts = filteredProductsRaw;
 
+  const quickViewList = useMemo(() => {
+    if (!quickViewProduct) return [];
+    const base = filteredProducts;
+    const exists = base.some((p) => p.slug === quickViewProduct.slug);
+    const merged = exists ? base : [...base, quickViewProduct];
+    return merged.slice().sort(compareProductsForCatalog);
+  }, [filteredProducts, quickViewProduct]);
+
   const hasActiveFilters =
     searchQuery.trim().length > 0 || selectedGiftTier !== null;
+  const catalogIsEmpty = allProducts.length === 0;
 
   const catalogFilterKey = `${selectedGiftTier ?? "all"}__${searchLower}`;
 
@@ -228,16 +263,16 @@ function HomeContent() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...catalogTransition, duration: 0.72 }}
-              className="w-full max-w-lg sm:max-w-2xl md:max-w-3xl"
+              className="mx-auto w-fit"
             >
               <Image
-                src={siteConfig.logoPath}
+                src={logoSrc}
                 alt={siteConfig.logoAlt}
-                width={900}
-                height={320}
-                className="w-full h-auto object-contain"
+                width={logoWidth}
+                height={logoHeight}
+                className="h-auto w-full max-w-[560px] object-contain sm:max-w-[620px] md:max-w-[680px]"
                 priority
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 768px"
+                sizes="(max-width: 640px) 92vw, (max-width: 1024px) 82vw, 680px"
               />
             </motion.div>
           </div>
@@ -378,7 +413,9 @@ function HomeContent() {
                   className="py-12 text-center space-y-4"
                 >
                   <p className="text-lg text-muted-foreground">
-                    لم يتم العثور على هدايا تطابق البحث أو التصفية
+                    {catalogIsEmpty && !hasActiveFilters
+                      ? "لا توجد هدايا في الكتالوج حالياً."
+                      : "لم يتم العثور على هدايا تطابق البحث أو التصفية"}
                   </p>
                   {hasActiveFilters && (
                     <Button
@@ -404,6 +441,8 @@ function HomeContent() {
       {quickViewProduct && (
         <QuickViewModal
           product={quickViewProduct}
+          products={quickViewList}
+          onNavigate={(p) => setQuickViewProduct(p)}
           onClose={() => setQuickViewProduct(null)}
           onAddToOrder={addToOrder}
         />

@@ -7,6 +7,7 @@ import { AnnouncementBar } from "@/components/announcement-bar";
 import { WelcomeTip } from "@/components/welcome-tip";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { DraftReminder } from "@/components/draft-reminder";
+import { SiteEntrance } from "@/components/site-entrance";
 
 export function OrderLayoutClient({
   children,
@@ -15,17 +16,19 @@ export function OrderLayoutClient({
 }) {
   const pathname = usePathname();
   if (pathname === "/present") {
-    return <>{children}</>;
+    return <SiteEntrance>{children}</SiteEntrance>;
   }
 
   return (
-    <OrderProvider>
-      <AnnouncementBar />
-      <OrderCart />
-      <DraftReminder />
-      <WelcomeTip />
-      <ScrollToTop />
-      {children}
-    </OrderProvider>
+    <SiteEntrance>
+      <OrderProvider>
+        <AnnouncementBar />
+        <OrderCart />
+        <DraftReminder />
+        <WelcomeTip />
+        <ScrollToTop />
+        {children}
+      </OrderProvider>
+    </SiteEntrance>
   );
 }

@@ -9,9 +9,15 @@ import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Product, getGiftTierLabel } from "@/data/products";
+import {
+  Product,
+  getGiftTierLabel,
+  getProductDisplayImage,
+  isExternalOrArchiveImageSrc,
+} from "@/data/products";
 import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
+import { saveCatalogViewSnapshot } from "@/lib/catalog-view-session";
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +29,7 @@ interface ProductCardProps {
 export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [showAdded, setShowAdded] = useState(false);
+  const displayImage = getProductDisplayImage(product);
 
   const handleAdd = () => {
     if (onAddToOrder && quantity >= 1) {
@@ -45,41 +52,45 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
       className="h-full"
     >
       <Card className="group h-full overflow-hidden rounded-lg shadow-sm transition-all duration-200 sm:rounded-xl sm:shadow-md sm:hover:shadow-lg sm:hover:shadow-primary/10 sm:hover:-translate-y-2">
-        <Link href={`/products/${product.slug}`}>
+        <Link
+          href={`/products/${product.slug}`}
+          scroll={false}
+          onClick={() => saveCatalogViewSnapshot()}
+        >
           <CardHeader className="p-0">
             {/* جوال: صورة أقل ارتفاعاً؛ سطح المكتب: مربع */}
             <div className="relative aspect-[5/4] w-full overflow-hidden bg-white dark:bg-muted sm:aspect-square">
-              {product.images && product.images.length > 0 && product.images[0] ? (
-                <Image
-                  src={product.images[0]}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-contain transition-transform duration-300 sm:group-hover:scale-105"
-                  loading="lazy"
-                  unoptimized={product.images[0].includes("/archive-images/")}
-                  placeholder="blur"
-                  blurDataURL={BLUR_DATA_URL}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      parent.innerHTML = '<div class="flex h-full w-full items-center justify-center bg-muted text-muted-foreground"><span>لا توجد صورة</span></div>';
-                    }
-                  }}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
-                  <span className="text-xs sm:text-sm">لا توجد صورة</span>
-                </div>
-              )}
+              <Image
+                src={displayImage}
+                alt={product.name}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-contain transition-transform duration-300 sm:group-hover:scale-105"
+                loading="lazy"
+                unoptimized={isExternalOrArchiveImageSrc(displayImage)}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML =
+                      '<div class="flex h-full w-full items-center justify-center bg-muted text-muted-foreground"><span>لا توجد صورة</span></div>';
+                  }
+                }}
+              />
             </div>
           </CardHeader>
         </Link>
         <CardContent className="p-2 sm:p-4">
           <div className="mb-1.5 flex items-start justify-between gap-1.5 sm:mb-2 sm:gap-2">
-            <Link href={`/products/${product.slug}`} className="min-w-0 flex-1">
+            <Link
+              href={`/products/${product.slug}`}
+              className="min-w-0 flex-1"
+              scroll={false}
+              onClick={() => saveCatalogViewSnapshot()}
+            >
               <h3 className="text-sm font-semibold leading-snug transition-colors duration-200 hover:text-brand-green-dark sm:text-xl sm:leading-tight">
                 {product.name}
               </h3>

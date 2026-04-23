@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="E9'JF)">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8eeeb"/>
+      <stop offset="100%" style="stop-color:#d4ddd8"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <rect x="120" y="200" width="560" height="400" rx="24" fill="#f4f7f5" stroke="#0b443a" stroke-width="4" opacity="0.35"/>
+  <circle cx="400" cy="360" r="56" fill="none" stroke="#0b443a" stroke-width="5" opacity="0.45"/>
+  <path d="M340 460 L400 400 L460 460" fill="none" stroke="#0b443a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
+  <text x="400" y="560" text-anchor="middle" font-family="system-ui,Segoe UI,sans-serif" font-size="36" fill="#0b443a" opacity="0.55" font-weight="600">E9'JF)  DJ3* 5H1) EF*,</text>
+</svg>

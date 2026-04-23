@@ -17,6 +17,8 @@ import {
   products as initialProducts,
   isArchiveCatalogProduct,
   getGiftTierLabel,
+  getProductDisplayImage,
+  isExternalOrArchiveImageSrc,
   type Product,
 } from "@/data/products";
 import { siteConfig } from "@/lib/config";
@@ -78,7 +80,7 @@ export default function PresentPage() {
       try {
         const res = await fetch("/api/products");
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           setSlides(orderPresentationSlides(json.data));
           return;
         }
@@ -186,7 +188,7 @@ export default function PresentPage() {
     []
   );
 
-  const firstImage = current?.images?.[0];
+  const firstImage = current ? getProductDisplayImage(current) : undefined;
 
   return (
     <div
@@ -269,7 +271,7 @@ export default function PresentPage() {
                           className="object-contain p-2 sm:p-4"
                           sizes="(max-width: 768px) 100vw, 1024px"
                           priority
-                          unoptimized={firstImage.includes("/archive-images/")}
+                          unoptimized={isExternalOrArchiveImageSrc(firstImage)}
                         />
                       ) : (
                         <span className="text-white/50">لا توجد صورة</span>

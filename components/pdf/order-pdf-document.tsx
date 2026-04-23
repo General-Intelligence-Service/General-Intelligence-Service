@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   logo: {
-    width: 120,
-    height: 44,
+    width: 220,
+    height: 52,
     objectFit: "contain",
   },
   headerText: {
@@ -258,8 +258,8 @@ export function OrderPDFDocument({
   const logoSource =
     logoUrl ||
     (typeof window !== "undefined"
-      ? `${window.location.origin}${siteConfig.pdfLogoPath}`
-      : siteConfig.pdfLogoPath);
+      ? `${window.location.origin}${siteConfig.pdfLogoPath}?v=${siteConfig.logoAssetVersion}`
+      : `${siteConfig.pdfLogoPath}?v=${siteConfig.logoAssetVersion}`);
 
   return (
     <Document>
@@ -270,7 +270,7 @@ export function OrderPDFDocument({
             {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt prop */}
             <Image src={logoSource} style={styles.logo} />
             <View style={styles.headerText}>
-              <Text style={styles.headerTitle}>فرع الإعلام</Text>
+              <Text style={styles.headerTitle}>جهاز المخابرات العامة</Text>
               <Text style={styles.headerSubtitle}>قسم الهدايا الرسمية</Text>
             </View>
           </View>

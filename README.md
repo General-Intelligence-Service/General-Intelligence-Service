@@ -10,7 +10,7 @@
 - ✅ بطاقات منتجات أنيقة مع صور محسّنة
 - ✅ فلاتر وبحث فوري
 - ✅ صفحة تفاصيل لكل منتج
-- ✅ تكامل مع واتساب برسائل جاهزة
+- ✅ زر تواصل برسالة جاهزة (تيليجرام)
 - ✅ Animations سلسة باستخدام Framer Motion
 - ✅ SEO محسّن (Meta tags, Sitemap, Robots.txt)
 - ✅ Performance عالي (Lighthouse 90+)
@@ -69,7 +69,7 @@ http://localhost:3000
 │   └── products.ts       # بيانات المنتجات
 ├── lib/                  # مكتبات مساعدة
 │   ├── utils.ts          # دوال مساعدة
-│   ├── whatsapp.ts       # تكامل واتساب
+│   ├── whatsapp.ts       # رابط تواصل (تيليجرام)
 │   └── config.ts         # إعدادات الموقع
 └── public/               # الملفات الثابتة
     └── images/           # صور المنتجات
@@ -152,15 +152,12 @@ public/images/
 
 ## ⚙️ التخصيص
 
-### تغيير رقم الواتساب
+### تغيير رابط التواصل (تيليجرام)
 
-افتح `lib/whatsapp.ts` وعدّل:
+افتح `lib/config.ts` وعدّل:
 
-```typescript
-export const WHATSAPP_PHONE = "966501234567"; // غيّر الرقم هنا
-```
-
-**ملاحظة:** استخدم الرقم بدون رموز (مثال: `966501234567` بدلاً من `+966501234567`)
+- `telegram`: اسم المستخدم (بدون @)
+- `telegramUrl`: الرابط الكامل (اختياري)
 
 ### تغيير روابط السوشيال ميديا
 
@@ -168,12 +165,12 @@ export const WHATSAPP_PHONE = "966501234567"; // غيّر الرقم هنا
 
 ```typescript
 export const siteConfig = {
-  name: "كتالوج الهدايا الفاخرة",
+  name: "كتالوج الهدايا",
   description: "...",
-  phone: "+966501234567",
-  whatsapp: "966501234567",
-  instagram: "https://instagram.com/yourhandle", // غيّر هنا
-  email: "info@example.com",                      // غيّر هنا
+  telegram: "username",
+  telegramUrl: "https://t.me/username",
+  instagram: "",
+  email: "",
 };
 ```
 
@@ -298,11 +295,9 @@ const baseUrl = "https://yourdomain.com"; // رابط موقعك على Vercel
 - المسار يبدأ بـ `/images/` (مثال: `/images/product.jpg`)
 - اسم الملف مطابق تماماً (حساس لحالة الأحرف)
 
-### المشكلة: واتساب لا يعمل
+### المشكلة: زر التواصل لا يعمل
 
-**الحل:** تأكد من:
-- رقم الواتساب بدون رموز (`966501234567`)
-- الرقم يبدأ برمز الدولة (مثال: `966` للسعودية)
+**الحل:** تأكد من ضبط `telegram` داخل `lib/config.ts` (اسم مستخدم صحيح بدون @)
 
 ### المشكلة: الخطوط لا تظهر
 
@@ -320,5 +315,5 @@ const baseUrl = "https://yourdomain.com"; // رابط موقعك على Vercel
 
 ---
 
-**صُنع بـ ❤️ باستخدام Next.js**
+**صُنع باستخدام Next.js**
 

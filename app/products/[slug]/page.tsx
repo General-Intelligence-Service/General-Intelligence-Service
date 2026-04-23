@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductCard } from "@/components/product-card";
-import { products as initialProducts, getGiftTierLabel, type Product } from "@/data/products";
+import {
+  products as initialProducts,
+  getGiftTierLabel,
+  PLACEHOLDER_PRODUCT_IMAGE,
+  type Product,
+} from "@/data/products";
 import {
   loadPublicProductsFromLocalStorage,
   PRODUCTS_STORAGE_KEY,
@@ -91,7 +96,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       try {
         const res = await fetch("/api/products");
         const json = await res.json();
-        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.success && Array.isArray(json.data)) {
           const data = json.data as Product[];
           if (typeof window !== "undefined") {
             localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(data));
@@ -116,6 +121,11 @@ export default function ProductPage({ params }: ProductPageProps) {
       window.removeEventListener("storage", onRev);
     };
   }, [params.slug]);
+
+  const galleryImages = useMemo(() => {
+    if (!product?.images?.length) return [PLACEHOLDER_PRODUCT_IMAGE];
+    return product.images;
+  }, [product]);
 
   // عرض loading أثناء التحميل (فقط قبل mount)
   if (!mounted) {
@@ -184,49 +194,40 @@ export default function ProductPage({ params }: ProductPageProps) {
               >
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {[0, 1, 2, 3].map((slotIndex) => {
-                    const imgSrc = product.images?.length
-                      ? product.images[Math.min(slotIndex, product.images.length - 1)]
-                      : null;
-                    const imageIndex = Math.min(slotIndex, (product.images?.length ?? 1) - 1);
+                    const imgSrc = galleryImages[Math.min(slotIndex, galleryImages.length - 1)];
+                    const imageIndex = Math.min(slotIndex, galleryImages.length - 1);
                     return (
                       <button
                         key={slotIndex}
                         type="button"
                         onClick={() => {
-                          if (product.images?.length) {
-                            setLightboxIndex(imageIndex);
-                            setLightboxOpen(true);
-                          }
+                          setLightboxIndex(imageIndex);
+                          setLightboxOpen(true);
                         }}
                         className="relative aspect-square w-full overflow-hidden rounded-lg bg-white dark:bg-muted shadow-md cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-primary transition-shadow duration-200 hover:shadow-lg"
                       >
-                        {imgSrc ? (
-                          <Image
-                            src={imgSrc}
-                            alt={`${product.name} - ${slotIndex + 1}`}
-                            fill
-                            sizes="(max-width: 1024px) 50vw, 25vw"
-                            className="object-contain transition-opacity duration-300"
-                            loading={slotIndex < 2 ? "eager" : "lazy"}
-                            placeholder="blur"
-                            blurDataURL={BLUR_DATA_URL}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                              const parent = target.parentElement;
-                              if (parent && !parent.querySelector(".fallback-text")) {
-                                const fallback = document.createElement("div");
-                                fallback.className = "fallback-text flex h-full w-full items-center justify-center text-muted-foreground text-sm";
-                                fallback.textContent = "لا توجد صورة";
-                                parent.appendChild(fallback);
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-muted-foreground text-sm">
-                            لا توجد صورة
-                          </div>
-                        )}
+                        <Image
+                          src={imgSrc}
+                          alt={`${product.name} - ${slotIndex + 1}`}
+                          fill
+                          sizes="(max-width: 1024px) 50vw, 25vw"
+                          className="object-contain transition-opacity duration-300"
+                          loading={slotIndex < 2 ? "eager" : "lazy"}
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const parent = target.parentElement;
+                            if (parent && !parent.querySelector(".fallback-text")) {
+                              const fallback = document.createElement("div");
+                              fallback.className =
+                                "fallback-text flex h-full w-full items-center justify-center text-muted-foreground text-sm";
+                              fallback.textContent = "لا توجد صورة";
+                              parent.appendChild(fallback);
+                            }
+                          }}
+                        />
                       </button>
                     );
                   })}
@@ -239,13 +240,15 @@ export default function ProductPage({ params }: ProductPageProps) {
                     onClose={() => setQrOpen(false)}
                   />
                 )}
-                {lightboxOpen && product.images?.length ? (
+                {lightboxOpen ? (
                   <ImageLightbox
-                    images={product.images}
+                    images={galleryImages}
                     currentIndex={lightboxIndex}
                     onClose={() => setLightboxOpen(false)}
                     onPrev={() => setLightboxIndex((i) => Math.max(0, i - 1))}
-                    onNext={() => setLightboxIndex((i) => Math.min(product.images!.length - 1, i + 1))}
+                    onNext={() =>
+                      setLightboxIndex((i) => Math.min(galleryImages.length - 1, i + 1))
+                    }
                     productName={product.name}
                   />
                 ) : null}

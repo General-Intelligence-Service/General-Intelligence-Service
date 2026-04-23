@@ -4,7 +4,8 @@ import crypto from "crypto";
 const COOKIE_NAME = "admin_session";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 أيام
 
-const DEFAULT_SECRET = "gift-catalog-admin-session-secret-2024";
+// Dev-only fallback. In production you MUST provide AUTH_SECRET.
+const DEFAULT_SECRET = "dev-only-auth-secret-change-me";
 
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET ?? DEFAULT_SECRET;
@@ -69,18 +70,12 @@ export async function deleteSessionCookie(): Promise<void> {
 }
 
 export function getAllowedEmails(): string[] {
-  const defaultEmails = [
-    "media.team.damascus.2@gmail.com",
-    "k42746859@gmail.com",
-    "abdulkarimsaad165@gmail.com",
-  ];
   const env = process.env.ALLOWED_ADMIN_EMAILS ?? "";
   const fromEnv = env
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  if (fromEnv.length > 0) return fromEnv;
-  return defaultEmails;
+  return fromEnv;
 }
 
 export function isAllowedEmail(email: string): boolean {
@@ -88,16 +83,9 @@ export function isAllowedEmail(email: string): boolean {
   return list.length > 0 && list.includes(email.trim().toLowerCase());
 }
 
-/** قيم افتراضية مضمونة للدخول (تعمل حتى بدون إعداد ADMIN_CREDENTIALS في Vercel) */
-const BUILTIN_PASSWORDS: Record<string, string> = {
-  "media.team.damascus.2@gmail.com": "damascus",
-  "k42746859@gmail.com": "17691504K",
-  "abdulkarimsaad165@gmail.com": "W2w2w2w2w20994547116",
-};
-
 function parseAdminCredentials(): Record<string, string> {
   const raw = (process.env.ADMIN_CREDENTIALS ?? "").trim();
-  const out: Record<string, string> = { ...BUILTIN_PASSWORDS };
+  const out: Record<string, string> = {};
   if (!raw) return out;
   // Support comma/newline/semicolon separated pairs (Vercel UI sometimes uses new lines)
   const pairs = raw
@@ -121,6 +109,7 @@ export function checkAdminPassword(email: string, password: string): boolean {
   if (map[e] !== undefined) {
     return pass === map[e];
   }
-  const expected = process.env.ADMIN_PASSWORD ?? "damascus";
+  const expected = (process.env.ADMIN_PASSWORD ?? "").trim();
+  if (!expected) return false;
   return pass === expected;
 }

@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  logo: { width: 112, height: 40, objectFit: "contain" },
+  logo: { width: 200, height: 48, objectFit: "contain" },
   headerText: { flex: 1, marginHorizontal: 12, alignItems: "center" },
   headerTitle: { fontSize: 18, fontWeight: 800, color: COLORS.white, textAlign: "center" },
   headerSubtitle: { fontSize: 10, fontWeight: 500, color: "#d4c5a8", textAlign: "center", marginTop: 4 },

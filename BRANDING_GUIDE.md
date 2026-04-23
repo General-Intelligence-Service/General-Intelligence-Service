@@ -20,7 +20,7 @@
 
 1. **ضع الشعار في المجلد:**
    ```
-   public/logo.png
+   public/new-logo.png
    ```
 
 2. **مواصفات الشعار الموصى بها:**
@@ -35,17 +35,17 @@
 ## 📝 ملاحظات
 
 - الشعار موجود في `components/navbar.tsx`
-- إذا لم تجد الشعار، سيظهر placeholder
-- يمكنك تغيير حجم الشعار من خلال تعديل `h-12 w-12` في Navbar
+- مسار الشعار يدار من `lib/config.ts` عبر `siteConfig.logoPath`
+- شعار ملفات PDF يدار من `siteConfig.pdfLogoPath`
 
 ## 🔧 التخصيص
 
 ### تغيير حجم الشعار:
 في `components/navbar.tsx`، غيّر:
 ```tsx
-<div className="relative h-12 w-12 shrink-0">
+<div className="relative h-9 w-40 shrink-0">
 ```
-إلى الحجم المطلوب (مثال: `h-16 w-16` للشعار الأكبر)
+إلى الحجم المطلوب.
 
 ### تغيير موقع الشعار:
 الشعار موجود في Navbar ويمكن نقله أو تعديل موضعه حسب الحاجة.

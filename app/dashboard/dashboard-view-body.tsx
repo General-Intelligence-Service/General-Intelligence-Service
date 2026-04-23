@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Product, getGiftTierLabel } from "@/data/products";
+import {
+  Product,
+  getGiftTierLabel,
+  getProductDisplayImage,
+  isExternalOrArchiveImageSrc,
+} from "@/data/products";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
 import type { DashboardViewReturnProps } from "./dashboard-view-return";
 import { productPageUrl } from "@/lib/site-url";
@@ -519,28 +524,20 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredProducts.map((product) => {
               const isLowStock = !product.archived && (product.availableQuantity ?? 0) <= LOW_STOCK_THRESHOLD;
+              const thumb = getProductDisplayImage(product);
               return (
                 <Card key={product.slug} className={`overflow-hidden break-inside-avoid ${isLowStock ? "border-amber-400 dark:border-amber-600 ring-1 ring-amber-200 dark:ring-amber-800" : ""}`}>
                   <CardHeader>
                     <div className="flex items-start gap-3">
                       <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-lg border border-border bg-white dark:bg-muted sm:h-20 sm:w-20">
-                        {product.images?.[0] ? (
-                          <Image
-                            src={product.images[0]}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="80px"
-                            unoptimized={
-                              product.images[0].includes("/archive-images/") ||
-                              product.images[0].startsWith("http")
-                            }
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center p-1 text-center text-[10px] leading-tight text-muted-foreground">
-                            بدون صورة
-                          </div>
-                        )}
+                        <Image
+                          src={thumb}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                          unoptimized={isExternalOrArchiveImageSrc(thumb)}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <CardTitle className="mb-2 text-xl">{product.name}</CardTitle>
