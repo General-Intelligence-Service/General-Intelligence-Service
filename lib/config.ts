@@ -24,7 +24,7 @@
 const defaultLogoPath = "/new-logo.png";
 const defaultLogoDarkPath = "/LOGO-PDF.png";
 const defaultPdfLogoPath = "/logo_pdf.png";
-const defaultIconPath = "/new-logo-icon.ico";
+const defaultIconPath = "/LOGO-Miniature.png";
 
 function resolveLogoPath(): string {
   const fromEnv =
