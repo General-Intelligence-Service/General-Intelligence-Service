@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/lib/config";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +39,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="hidden items-center gap-4 md:flex">
           <Link
             href="/#products"
             className="flex flex-col w-fit h-[29px] text-base font-medium transition-colors hover:text-brand-green-dark"
@@ -58,6 +59,7 @@ export function Navbar() {
           >
             تسجيل الدخول
           </Link>
+          <ThemeToggle />
         </div>
 
         {/* Mobile Navigation */}
@@ -76,6 +78,10 @@ export function Navbar() {
               <SheetTitle>{siteConfig.name}</SheetTitle>
             </SheetHeader>
             <div className="mt-8 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">المظهر</span>
+                <ThemeToggle />
+              </div>
               <Link
                 href="/#products"
                 onClick={() => setIsOpen(false)}

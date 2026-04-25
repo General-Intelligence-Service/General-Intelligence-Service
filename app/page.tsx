@@ -257,24 +257,132 @@ function HomeContent() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-background via-brand-green-light/5 to-brand-gold-light/10 py-4 pb-8">
-          <div className="flex flex-col items-center justify-center gap-4 px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...catalogTransition, duration: 0.72 }}
-              className="mx-auto w-fit"
-            >
-              <Image
-                src={logoSrc}
-                alt={siteConfig.logoAlt}
-                width={logoWidth}
-                height={logoHeight}
-                className="h-auto w-full max-w-[560px] object-contain sm:max-w-[620px] md:max-w-[680px]"
-                priority
-                sizes="(max-width: 640px) 92vw, (max-width: 1024px) 82vw, 680px"
-              />
-            </motion.div>
+        <section className="relative overflow-hidden py-10 sm:py-14">
+          <div className="absolute inset-0 bg-creative-aurora" aria-hidden />
+          <div
+            className="absolute inset-0 opacity-60 [mask-image:radial-gradient(60%_55%_at_50%_35%,black,transparent)]"
+            aria-hidden
+          >
+            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,hsl(var(--foreground)/0.08)_1px,transparent_0)] [background-size:18px_18px]" />
+          </div>
+
+          <div className="container relative mx-auto px-4 sm:px-6">
+            <div className="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-10">
+              <motion.div
+                initial={{ opacity: 0, y: 26 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...catalogTransition, duration: 0.72 }}
+                className="text-center lg:text-right"
+              >
+                <div className="mx-auto w-fit lg:mx-0">
+                  <Image
+                    src={logoSrc}
+                    alt={siteConfig.logoAlt}
+                    width={logoWidth}
+                    height={logoHeight}
+                    className="h-auto w-full max-w-[520px] object-contain sm:max-w-[580px]"
+                    priority
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 70vw, 580px"
+                  />
+                </div>
+
+                <h1 className="mt-6 text-balance text-3xl font-bold leading-[1.25] sm:text-4xl md:text-5xl">
+                  كتالوج هدايا بطابع عصري، جاهز للاختيار في ثوانٍ
+                </h1>
+                <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
+                  ابحث، صفّي، واطّلع على التفاصيل بسرعة. ثم أضف الهدية لطلبك
+                  بضغطة واحدة.
+                </p>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
+                  <Button
+                    className="min-h-[48px] rounded-xl px-6 text-base shadow-sm"
+                    onClick={() => {
+                      document
+                        .getElementById("products")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  >
+                    ابدأ التصفح
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="min-h-[48px] rounded-xl px-6 text-base bg-background/60 backdrop-blur"
+                    onClick={() => router.push("/present")}
+                  >
+                    عرض تقديمي
+                  </Button>
+                </div>
+
+                <div className="mt-6 flex flex-wrap justify-center gap-2 lg:justify-start">
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">
+                    بحث ذكي بالعربية
+                  </Badge>
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">
+                    واجهة RTL محسّنة
+                  </Badge>
+                  <Badge variant="secondary" className="px-3 py-1 text-sm">
+                    معاينة سريعة للمنتجات
+                  </Badge>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ ...catalogTransition, duration: 0.7, delay: 0.05 }}
+                className="relative"
+              >
+                <div className="relative overflow-hidden rounded-3xl border bg-card/60 p-6 shadow-[0_20px_60px_-40px_hsl(var(--foreground)/0.35)] backdrop-blur">
+                  <div className="pointer-events-none absolute inset-0 opacity-90 [mask-image:radial-gradient(55%_70%_at_50%_10%,black,transparent)]">
+                    <div className="h-full w-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />
+                  </div>
+
+                  <div className="relative space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">مختصر سريع</p>
+                      <Badge className="rounded-full">جديد</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl border bg-background/50 p-4">
+                        <p className="text-sm text-muted-foreground">الفئات</p>
+                        <p className="mt-1 text-xl font-bold">{giftTiers.length}</p>
+                      </div>
+                      <div className="rounded-2xl border bg-background/50 p-4">
+                        <p className="text-sm text-muted-foreground">الهدايا</p>
+                        <p className="mt-1 text-xl font-bold">{allProducts.length}</p>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border bg-background/50 p-4">
+                      <p className="text-sm text-muted-foreground">نصيحة</p>
+                      <p className="mt-1 text-sm">
+                        اكتب اسم الهدية أو كود SKU للحصول على نتائج فورية.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Highlights */}
+        <section className="py-8 sm:py-10">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
+                <p className="text-sm text-muted-foreground">تجربة سريعة</p>
+                <p className="mt-1 text-base font-semibold">فلترة وبحث فوري</p>
+              </div>
+              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
+                <p className="text-sm text-muted-foreground">عرض جذاب</p>
+                <p className="mt-1 text-base font-semibold">تصميم إبداعي متجاوب</p>
+              </div>
+              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
+                <p className="text-sm text-muted-foreground">جاهز للمشاركة</p>
+                <p className="mt-1 text-base font-semibold">عرض تقديمي للكتالوج</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -305,7 +413,7 @@ function HomeContent() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                className="w-full rounded-lg border border-input bg-background px-4 py-3 pr-10 text-right focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-xl border border-input bg-background/70 px-4 py-3 pr-10 text-right backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {correctedSearchQuery && (
                 <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-right">
@@ -335,7 +443,7 @@ function HomeContent() {
                     <li key={p.slug}>
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-right text-sm hover:bg-muted"
+                        className="w-full px-4 py-2 text-right text-sm hover:bg-muted/70"
                         onClick={() => {
                           setSearchQuery(p.name);
                           setSearchFocused(false);
