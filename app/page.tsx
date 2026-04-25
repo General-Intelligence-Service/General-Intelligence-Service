@@ -286,9 +286,7 @@ function HomeContent() {
                   />
                 </div>
 
-                <h1 className="mt-6 text-balance text-3xl font-bold leading-[1.25] sm:text-4xl md:text-5xl">
-                  كتالوج هدايا بطابع عصري، جاهز للاختيار في ثوانٍ
-                </h1>
+                {/* (Removed per request) */}
                 <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
                   ابحث، صفّي، واطّلع على التفاصيل بسرعة. ثم أضف الهدية لطلبك
                   بضغطة واحدة.
