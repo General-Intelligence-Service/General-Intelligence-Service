@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, MonitorPlay } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +17,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const logoSrc = `${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const logoSrc = useMemo(() => {
+    const path = mounted && resolvedTheme === "dark" ? siteConfig.logoDarkPath : siteConfig.logoPath;
+    return `${path}?v=${siteConfig.logoAssetVersion}`;
+  }, [mounted, resolvedTheme]);
   const logoWidth = 2400;
   const logoHeight = 650;
 

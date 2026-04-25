@@ -22,6 +22,7 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 const defaultLogoPath = "/new-logo.png";
+const defaultLogoDarkPath = "/LOGO-PDF.png";
 const defaultPdfLogoPath = "/logo_pdf.png";
 const defaultIconPath = "/new-logo-icon.ico";
 
@@ -34,6 +35,17 @@ function resolveLogoPath(): string {
     return fromEnv.startsWith("/") ? fromEnv : `/${fromEnv}`;
   }
   return defaultLogoPath;
+}
+
+function resolveLogoDarkPath(): string {
+  const fromEnv =
+    typeof process !== "undefined"
+      ? process.env.NEXT_PUBLIC_SITE_LOGO_DARK_PATH?.trim()
+      : undefined;
+  if (fromEnv) {
+    return fromEnv.startsWith("/") ? fromEnv : `/${fromEnv}`;
+  }
+  return defaultLogoDarkPath;
 }
 
 function resolveIconPath(): string {
@@ -62,6 +74,7 @@ export const siteConfig = {
   name: "كتالوج الهدايا",
   description: "معرض للهدايا الرسمية",
   logoPath: resolveLogoPath(),
+  logoDarkPath: resolveLogoDarkPath(),
   /**
    * نسخة بسيطة لكسر كاش المتصفح/Service Worker عند استبدال ملف الشعار بنفس الاسم.
    * غيّر الرقم فقط عند تحديث ملفات الشعار تحت public/.

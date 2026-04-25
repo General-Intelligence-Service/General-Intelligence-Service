@@ -4,6 +4,7 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import {
   catalogFilterTransition,
   catalogTransition,
@@ -84,13 +85,17 @@ function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
+  const { resolvedTheme } = useTheme();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const logoSrc = `${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
+  const logoSrc = useMemo(() => {
+    const path = mounted && resolvedTheme === "dark" ? siteConfig.logoDarkPath : siteConfig.logoPath;
+    return `${path}?v=${siteConfig.logoAssetVersion}`;
+  }, [mounted, resolvedTheme]);
   const logoWidth = 2400;
   const logoHeight = 650;
 
