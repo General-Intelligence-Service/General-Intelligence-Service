@@ -79,7 +79,7 @@ export const siteConfig = {
    * نسخة بسيطة لكسر كاش المتصفح/Service Worker عند استبدال ملف الشعار بنفس الاسم.
    * غيّر الرقم فقط عند تحديث ملفات الشعار تحت public/.
    */
-  logoAssetVersion: 12,
+  logoAssetVersion: 13,
   /** شعار خاص بملفات الـPDF */
   pdfLogoPath: resolvePdfLogoPath(),
   /** أيقونة مربعة/درع — تبويب المتصفح وmanifest التطبيق (ليس الشعار الأفقي) */

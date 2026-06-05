@@ -27,5 +27,19 @@ export const defaultMetadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: [
+      {
+        url: `${siteConfig.iconPath}?v=${siteConfig.logoAssetVersion}`,
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: `${siteConfig.iconPath}?v=${siteConfig.logoAssetVersion}`,
+        type: "image/png",
+      },
+    ],
+  },
 };
 

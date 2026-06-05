@@ -17,9 +17,9 @@ export async function GET() {
     lang: "ar",
     icons: [
       {
-        src: siteConfig.iconPath,
-        sizes: "any",
-        type: "image/x-icon",
+        src: `${siteConfig.iconPath}?v=${siteConfig.logoAssetVersion}`,
+        sizes: "512x512",
+        type: "image/png",
         purpose: "any",
       },
     ],
