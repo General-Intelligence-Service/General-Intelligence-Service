@@ -9,6 +9,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-tajawal)", "Tahoma", "Arial", "sans-serif"],
+        tajawal: ["var(--font-tajawal)", "Tahoma", "Arial", "sans-serif"],
+      },
       colors: {
         accent: {
           DEFAULT: "#baa97c", // ذهبي/بيج من الشعار
