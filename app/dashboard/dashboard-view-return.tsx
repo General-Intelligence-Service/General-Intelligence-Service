@@ -40,15 +40,19 @@ export type DashboardViewReturnProps = {
   handleAddProduct: () => void;
   handleEditProduct: (p: Product) => void;
   handleDeleteProduct: (slug: string) => Promise<void>;
+  handleToggleHidden?: (slug: string, hidden: boolean) => Promise<void>;
+  handleQuickQuantity?: (slug: string, nextQty: number) => Promise<void>;
   handleBackup: () => void;
   handleRestore: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  parseRestoreFile?: (file: File) => Promise<Product[] | null>;
+  applyRestoreProducts?: (data: Product[]) => void;
   handleDownloadReport: () => Promise<void>;
   refreshOrders: () => void;
   refetchProducts: (quick?: boolean) => Promise<void>;
   handleLogout: () => Promise<void>;
-  /** استيراد Excel لتحديث الكميات (نفس أعمدة التصدير) */
   giftsExcelImporting?: boolean;
   handleImportGiftsExcel?: (e: React.ChangeEvent<HTMLInputElement>) => void | Promise<void>;
+  handleExportGiftsExcel?: () => void | Promise<void>;
   [key: string]: unknown;
 };
 

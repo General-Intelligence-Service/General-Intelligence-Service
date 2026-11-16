@@ -2,20 +2,12 @@
 /** @jsxImportSource react */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Edit, Trash2, Search, LogOut, Download, Upload, BarChart3, ClipboardList, FileText, QrCode, DownloadCloud, RefreshCw, AlertTriangle } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, products as initialProducts } from "@/data/products";
 import { notifyProductsStorageChanged } from "@/lib/products-local-storage";
 import { generateProductSlug } from "@/lib/slug";
-import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
-import { DashboardLayout } from "./dashboard-layout";
+import { getStoredOrders, type OrderRecord } from "@/types/order";
 import { DashboardViewReturn } from "./dashboard-view-return";
 import type { InputChangeEvent } from "./dashboard-types";
 import { useConfirm } from "@/components/confirm-dialog-provider";
@@ -23,6 +15,7 @@ import { notifyError, notifySuccess, notifyInfo } from "@/lib/notify";
 
 export function DashboardView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const confirm = useConfirm();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,6 +72,24 @@ export function DashboardView() {
       setOrders(getStoredOrders());
     }
   }, [refetchProducts]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "orders") setDashboardTab("orders");
+    else if (tab === "products" || searchParams.get("focus") === "backup") setDashboardTab("products");
+  }, [searchParams]);
+
+  const setDashboardTabAndUrl = useCallback(
+    (tab: "products" | "orders") => {
+      setDashboardTab(tab);
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "orders") params.set("tab", "orders");
+      else params.delete("tab");
+      const qs = params.toString();
+      router.replace(qs ? `/dashboard?${qs}` : "/dashboard", { scroll: false });
+    },
+    [router, searchParams]
+  );
 
   const PRODUCTS_AUTO_REFRESH_MS = 45 * 1000;
   useEffect(() => {
@@ -395,7 +406,7 @@ export function DashboardView() {
       const findBySku = (sku: string) =>
         products.find((p) => (p.sku ?? "").trim().toLowerCase() === sku.toLowerCase());
 
-      type Planned = { slug: string; sku: string; name: string; qty: number };
+      type Planned = { slug: string; sku: string; name: string; qty: number; prev: number };
       const planned: Planned[] = [];
       let unknownSkus = 0;
 
@@ -405,8 +416,9 @@ export function DashboardView() {
           unknownSkus++;
           continue;
         }
-        if ((p.availableQuantity ?? 0) === qty) continue;
-        planned.push({ slug: p.slug, sku, name: p.name, qty });
+        const prev = p.availableQuantity ?? 0;
+        if (prev === qty) continue;
+        planned.push({ slug: p.slug, sku, name: p.name, qty, prev });
       }
 
       if (planned.length === 0) {
@@ -418,14 +430,19 @@ export function DashboardView() {
         return;
       }
 
+      const previewLines = planned
+        .slice(0, 20)
+        .map((p) => `• ${p.name}: ${p.prev} ← ${p.qty}`)
+        .join("\n");
+      const more = planned.length > 20 ? `\n… و${planned.length - 20} تغييرات أخرى` : "";
       const confirmMsg =
-        `سيتم تحديث كمية ${planned.length} منتج حسب الملف.\n` +
-        (unknownSkus > 0 ? `سيتم تجاهل ${unknownSkus} كود غير موجود في الموقع.\n` : "") +
-        "هل تريد المتابعة؟";
+        `معاينة التغييرات (${planned.length}):\n${previewLines}${more}\n\n` +
+        (unknownSkus > 0 ? `سيتم تجاهل ${unknownSkus} كود غير موجود.\n` : "") +
+        "هل تريد حفظ هذه التغييرات؟";
       const ok = await confirm({
-        title: "استيراد Excel",
+        title: "استيراد Excel — معاينة",
         message: confirmMsg,
-        confirmLabel: "متابعة",
+        confirmLabel: "حفظ التغييرات",
         cancelLabel: "إلغاء",
       });
       if (!ok) return;
@@ -525,44 +542,68 @@ export function DashboardView() {
     URL.revokeObjectURL(url);
   };
 
-  const handleRestore = (e: InputChangeEvent) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      void (async () => {
+  /** يُستدعى بعد تأكيد الواجهة (كتابة كلمة «استعادة») */
+  const applyRestoreProducts = (data: Product[]) => {
+    setProducts(data);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("products", JSON.stringify(data));
+      notifyProductsStorageChanged();
+    }
+    notifySuccess("تمت الاستعادة بنجاح.");
+  };
+
+  const parseRestoreFile = (file: File): Promise<Product[] | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
         try {
           const data = JSON.parse(reader.result as string);
           if (!Array.isArray(data) || data.length === 0) {
             notifyError("الملف يجب أن يحتوي على مصفوفة هدايا.");
+            resolve(null);
             return;
           }
-          const valid = data.every((p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p);
+          const valid = data.every(
+            (p: unknown) => p && typeof p === "object" && "slug" in p && "name" in p && "sku" in p
+          );
           if (!valid) {
             notifyError("صيغة الملف غير صحيحة. تأكد أنه نسخة احتياطية من الهدايا.");
+            resolve(null);
             return;
           }
-          const restoreOk = await confirm({
-            title: "استعادة نسخة احتياطية",
-            message: `سيتم استبدال ${products.length} هدية بـ ${data.length} هدية من الملف.\nهل تريد المتابعة؟`,
-            confirmLabel: "استعادة",
-            cancelLabel: "إلغاء",
-            danger: true,
-          });
-          if (!restoreOk) return;
-          setProducts(data as Product[]);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("products", JSON.stringify(data));
-            notifyProductsStorageChanged();
-          }
-          notifySuccess("تمت الاستعادة بنجاح.");
+          resolve(data as Product[]);
         } catch {
           notifyError("تعذر قراءة الملف. تأكد أنه ملف JSON صالح.");
+          resolve(null);
         }
-      })();
-    };
-    reader.readAsText(file);
+      };
+      reader.onerror = () => {
+        notifyError("تعذر قراءة الملف.");
+        resolve(null);
+      };
+      reader.readAsText(file);
+    });
+  };
+
+  /** توافق قديم: لا يُستخدم مباشرة من الواجهة الجديدة */
+  const handleRestore = (e: InputChangeEvent) => {
+    const file = e.target.files?.[0];
     e.target.value = "";
+    if (!file) return;
+    void parseRestoreFile(file).then((data) => {
+      if (!data) return;
+      void (async () => {
+        const restoreOk = await confirm({
+          title: "استعادة نسخة احتياطية",
+          message: `سيتم استبدال جميع بيانات الهدايا الحالية بمحتوى الملف (${data.length} هدية).\nهل تريد المتابعة؟`,
+          confirmLabel: "استعادة",
+          cancelLabel: "إلغاء",
+          danger: true,
+        });
+        if (!restoreOk) return;
+        applyRestoreProducts(data);
+      })();
+    });
   };
 
   const filteredProducts = products.filter(
@@ -622,9 +663,11 @@ export function DashboardView() {
   };
 
   const handleDeleteProduct = async (slug: string) => {
+    const product = products.find((p) => p.slug === slug);
+    const name = product?.name ?? slug;
     const delOk = await confirm({
       title: "حذف هدية",
-      message: "هل أنت متأكد من حذف هذه الهدية؟ لا يمكن التراجع عن هذا الإجراء.",
+      message: `هل أنت متأكد من حذف الهدية «${name}»؟ لا يمكن التراجع عن هذا الإجراء.`,
       confirmLabel: "حذف",
       cancelLabel: "إلغاء",
       danger: true,
@@ -639,12 +682,60 @@ export function DashboardView() {
       if (result.success) {
         setProducts((prev) => prev.filter((p) => p.slug !== slug));
         await refetchProducts(true);
+        notifySuccess(`تم حذف «${name}».`);
       } else {
         notifyError(result.error || "فشل الحذف");
       }
     } catch (e) {
       console.error(e);
       notifyError("فشل الحذف");
+    }
+  };
+
+  const handleQuickQuantity = async (slug: string, nextQty: number) => {
+    const qty = Math.max(0, Math.floor(nextQty));
+    const prev = products.find((p) => p.slug === slug);
+    if (!prev) return;
+    if ((prev.availableQuantity ?? 0) === qty) return;
+
+    setProducts((list) =>
+      list.map((p) => (p.slug === slug ? { ...p, availableQuantity: qty } : p))
+    );
+
+    try {
+      const response = await fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ slug, availableQuantity: qty }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        notifySuccess("تم الحفظ");
+        if (result.data) {
+          setProducts((list) => list.map((p) => (p.slug === slug ? result.data : p)));
+        }
+        return;
+      }
+      setProducts((list) =>
+        list.map((p) =>
+          p.slug === slug ? { ...p, availableQuantity: prev.availableQuantity } : p
+        )
+      );
+      if (response.status === 401) {
+        notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
+        router.replace("/login?next=/dashboard");
+        return;
+      }
+      notifyError(result.error || "تعذر حفظ الكمية");
+    } catch (e) {
+      console.error(e);
+      setProducts((list) =>
+        list.map((p) =>
+          p.slug === slug ? { ...p, availableQuantity: prev.availableQuantity } : p
+        )
+      );
+      notifyError("تعذر حفظ الكمية");
     }
   };
 
@@ -674,19 +765,18 @@ export function DashboardView() {
   };
 
   const extra = (
-        <>
-          {isFormOpen && (
-            <ProductForm
-              product={editingProduct}
-              onClose={() => {
-                setIsFormOpen(false);
-                setEditingProduct(null);
-              }}
-              onSubmit={handleFormSubmit}
-            />
-          )}
-          <Footer />
-        </>
+    <>
+      {isFormOpen && (
+        <ProductForm
+          product={editingProduct}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingProduct(null);
+          }}
+          onSubmit={handleFormSubmit}
+        />
+      )}
+    </>
   );
   return React.createElement(DashboardViewReturn, {
     extra,
@@ -699,7 +789,7 @@ export function DashboardView() {
     setEditingProduct,
     visitCount,
     dashboardTab,
-    setDashboardTab,
+    setDashboardTab: setDashboardTabAndUrl,
     orders,
     reportMonth,
     setReportMonth,
@@ -727,12 +817,15 @@ export function DashboardView() {
     handleEditProduct,
     handleDeleteProduct,
     handleToggleHidden,
+    handleQuickQuantity,
     handleFormSubmit,
     handleExportGiftsExcel,
     handleImportGiftsExcel,
     giftsExcelImporting,
     handleBackup,
     handleRestore,
+    parseRestoreFile,
+    applyRestoreProducts,
     handleDownloadReport,
     refreshOrders,
     refetchProducts,

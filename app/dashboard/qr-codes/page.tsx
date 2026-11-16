@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import JSZip from "jszip";
-import { Navbar } from "@/components/navbar";
+import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Download, DownloadCloud } from "lucide-react";
+import { Download, DownloadCloud } from "lucide-react";
 import { products as initialProducts } from "@/data/products";
 
 const QR_IMAGE_API = "https://api.qrserver.com/v1/create-qr-code";
@@ -73,23 +72,13 @@ export default function QRCodesPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto max-w-2xl px-4 py-8">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <h1 className="mb-2 text-3xl font-bold">تحميل رموز QR للهدايا</h1>
-              <p className="text-muted-foreground">
-                حمّل صورة QR تحتوي على كود كل هدية (اسم الملف: رقم الكود) ثم اطبعها والصقها على العبوات.
-              </p>
-            </div>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="min-h-[44px]">
-                <ArrowRight className="ml-2 h-4 w-4" />
-                العودة للوحة التحكم
-              </Button>
-            </Link>
+    <DashboardLayout>
+        <div className="mx-auto max-w-2xl px-3 py-6 sm:px-6 sm:py-8">
+          <div className="mb-6">
+            <h1 className="mb-2 text-2xl font-bold text-brand-green-dark dark:text-brand-gold-light sm:text-3xl">تحميل رموز QR للهدايا</h1>
+            <p className="text-muted-foreground">
+              حمّل صورة QR تحتوي على كود كل هدية (اسم الملف: رقم الكود) ثم اطبعها والصقها على العبوات.
+            </p>
           </div>
 
           <Card className="mb-6">
@@ -136,7 +125,6 @@ export default function QRCodesPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   );
 }

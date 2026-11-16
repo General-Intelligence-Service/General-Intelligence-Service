@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import React, { Suspense } from "react";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 
 export function DashboardLayout({
   children,
@@ -12,10 +11,14 @@ export function DashboardLayout({
   extra?: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 bg-muted/30 min-h-screen">{children}</main>
-      {extra}
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#F5F6F4] dark:bg-background">
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      }
+    >
+      <DashboardShell extra={extra}>{children}</DashboardShell>
+    </Suspense>
   );
 }

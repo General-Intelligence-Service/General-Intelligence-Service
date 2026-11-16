@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import {
   Plane,
@@ -20,7 +19,7 @@ import {
   Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Navbar } from "@/components/navbar";
+import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -448,19 +447,8 @@ export default function TripsPage() {
     );
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
-          {/* Breadcrumb */}
-          <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="مسار التنقل">
-            <Link href="/dashboard" className="hover:text-foreground transition-colors">
-              لوحة التحكم
-            </Link>
-            <span aria-hidden>←</span>
-            <span className="text-foreground font-medium">الرحلات</span>
-          </nav>
-
+    <DashboardLayout>
+        <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8">
           {/* Header row */}
           <div className="mb-6 flex flex-row items-start justify-between gap-3">
             <div className="min-w-0 text-right">
@@ -692,7 +680,6 @@ export default function TripsPage() {
             )}
           </div>
         </div>
-      </main>
 
       {/* Create / Edit Drawer */}
       {drawerOpen && (
@@ -1034,6 +1021,6 @@ export default function TripsPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

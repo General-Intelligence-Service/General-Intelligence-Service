@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowRight, GripVertical, Plus, Save, Search, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Save, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Navbar } from "@/components/navbar";
+import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -199,23 +198,13 @@ export default function TodayGiftsDashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto max-w-4xl px-4 py-8">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="mb-2 text-3xl font-bold">إعداد هدايا اليوم</h1>
-              <p className="text-muted-foreground">
-                اختر الهدايا لليوم ورتّبها بالسحب ثم اضغط حفظ. (لا يتم تعديل بيانات الهدية نفسها)
-              </p>
-            </div>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="min-h-[44px] shrink-0">
-                <ArrowRight className="ml-2 h-4 w-4" />
-                العودة للوحة التحكم
-              </Button>
-            </Link>
+    <DashboardLayout>
+        <div className="mx-auto max-w-4xl px-3 py-6 sm:px-6 sm:py-8">
+          <div className="mb-6">
+            <h1 className="mb-2 text-2xl font-bold text-brand-green-dark dark:text-brand-gold-light sm:text-3xl">إعداد هدايا اليوم</h1>
+            <p className="text-muted-foreground">
+              اختر الهدايا لليوم ورتّبها بالسحب ثم اضغط حفظ. (لا يتم تعديل بيانات الهدية نفسها)
+            </p>
           </div>
 
           <Card className="mb-6">
@@ -416,8 +405,7 @@ export default function TodayGiftsDashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   );
 }
 

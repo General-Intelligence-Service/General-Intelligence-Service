@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Navbar } from "@/components/navbar";
+import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { QRScanner } from "@/components/qr-scanner";
-import { ArrowRight, CheckCircle2, XCircle, QrCode, Info, Minus, Plus } from "lucide-react";
+import { CheckCircle2, XCircle, QrCode, Info, Minus, Plus } from "lucide-react";
 
 export interface ScanResponse {
   status: string;
@@ -140,23 +140,13 @@ export default function GiftScannerPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 bg-muted/30">
-        <div className="container mx-auto max-w-2xl px-4 py-8">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <div>
-              <h1 className="mb-2 text-3xl font-bold">مسح الهدايا</h1>
-              <p className="text-muted-foreground">
-                امسح رمز QR على الهدية لتسجيل التوزيع وإنقاص الكمية من المخزون
-              </p>
-            </div>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="min-h-[44px]">
-                <ArrowRight className="ml-2 h-4 w-4" />
-                العودة للوحة التحكم
-              </Button>
-            </Link>
+    <DashboardLayout>
+        <div className="mx-auto max-w-2xl px-3 py-6 sm:px-6 sm:py-8">
+          <div className="mb-6">
+            <h1 className="mb-2 text-2xl font-bold text-brand-green-dark dark:text-brand-gold-light sm:text-3xl">مسح الهدايا</h1>
+            <p className="text-muted-foreground">
+              امسح رمز QR على الهدية لتسجيل التوزيع وإنقاص الكمية من المخزون
+            </p>
           </div>
 
           <Card className="mb-6 border-primary/20 bg-primary/5">
@@ -345,7 +335,6 @@ export default function GiftScannerPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </DashboardLayout>
   );
 }

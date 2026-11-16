@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardView } from "./dashboard-view";
 
@@ -23,7 +23,7 @@ export default function DashboardPage() {
 
   if (authOk === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#F5F6F4] dark:bg-background">
         <p className="text-muted-foreground">جاري التحقق...</p>
       </div>
     );
@@ -33,5 +33,15 @@ export default function DashboardPage() {
     return null;
   }
 
-  return <DashboardView />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#F5F6F4] dark:bg-background">
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      }
+    >
+      <DashboardView />
+    </Suspense>
+  );
 }
