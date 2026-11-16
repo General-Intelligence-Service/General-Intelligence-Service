@@ -24,7 +24,8 @@
 const defaultLogoPath = "/new-logo.png";
 const defaultLogoDarkPath = "/LOGO-PDF.png";
 const defaultPdfLogoPath = "/logo_pdf.png";
-const defaultIconPath = "/LOGO-Miniature.png";
+/** درع شفاف مُستخرج من new-logo.png — لا تستخدم LOGO-Miniature (خلفية سوداء) */
+const defaultIconPath = "/gis-shield.png";
 
 function resolveLogoPath(): string {
   const fromEnv =
@@ -79,7 +80,7 @@ export const siteConfig = {
    * نسخة بسيطة لكسر كاش المتصفح/Service Worker عند استبدال ملف الشعار بنفس الاسم.
    * غيّر الرقم فقط عند تحديث ملفات الشعار تحت public/.
    */
-  logoAssetVersion: 14,
+  logoAssetVersion: 15,
   /** شعار خاص بملفات الـPDF */
   pdfLogoPath: resolvePdfLogoPath(),
   /** أيقونة مربعة/درع — تبويب المتصفح وmanifest التطبيق (ليس الشعار الأفقي) */
