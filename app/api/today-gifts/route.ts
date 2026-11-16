@@ -7,6 +7,8 @@ import {
   type TodayGiftItem,
 } from "@/lib/today-gifts-db";
 
+export const dynamic = "force-dynamic";
+
 function isoDayOrToday(v: string | null): string {
   const day = (v ?? "").trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return day;
@@ -21,8 +23,7 @@ export async function GET(request: NextRequest) {
         { status: 503 }
       );
     }
-    const { searchParams } = new URL(request.url);
-    const day = isoDayOrToday(searchParams.get("day"));
+    const day = isoDayOrToday(request.nextUrl.searchParams.get("day"));
     const items = await getTodayGiftItems(day);
     const slugs = items.map((i) => i.slug);
     return NextResponse.json({ success: true, day, slugs, items });
