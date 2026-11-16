@@ -1,57 +1,33 @@
 import { cookies } from "next/headers";
-import crypto from "crypto";
+import { verifyPassword } from "@/lib/password";
+import {
+  COOKIE_NAME,
+  SESSION_MAX_AGE,
+  createSessionToken as createToken,
+  verifySessionToken as verifyToken,
+  type SessionPayload,
+} from "@/lib/auth-token";
 
-const COOKIE_NAME = "admin_session";
-const MAX_AGE = 60 * 60 * 24 * 7; // 7 أيام
+export {
+  COOKIE_NAME,
+  SESSION_MAX_AGE,
+  type SessionPayload,
+};
 
-// Dev-only fallback. In production you MUST provide AUTH_SECRET.
-const DEFAULT_SECRET = "dev-only-auth-secret-change-me";
-
-function getSecret(): string {
-  const secret = process.env.AUTH_SECRET ?? DEFAULT_SECRET;
-  return secret.length >= 16 ? secret : DEFAULT_SECRET;
+export async function createSessionToken(email: string): Promise<string> {
+  return createToken(email);
 }
 
-function sign(payload: string): string {
-  return crypto.createHmac("sha256", getSecret()).update(payload).digest("base64url");
-}
-
-export interface SessionPayload {
-  email: string;
-  exp: number;
-}
-
-export function createSessionToken(email: string): string {
-  const payload: SessionPayload = {
-    email: email.trim().toLowerCase(),
-    exp: Math.floor(Date.now() / 1000) + MAX_AGE,
-  };
-  const payloadStr = JSON.stringify(payload);
-  const sig = sign(payloadStr);
-  return Buffer.from(payloadStr, "utf-8").toString("base64url") + "." + sig;
-}
-
-export function verifySessionToken(token: string): SessionPayload | null {
-  try {
-    const [payloadB64, sig] = token.split(".");
-    if (!payloadB64 || !sig) return null;
-    const payloadStr = Buffer.from(payloadB64, "base64url").toString("utf-8");
-    if (sign(payloadStr) !== sig) return null;
-    const payload = JSON.parse(payloadStr) as SessionPayload;
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
+  return verifyToken(token);
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
+  return verifyToken(token);
 }
-
 
 export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
@@ -59,23 +35,29 @@ export async function setSessionCookie(token: string): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: MAX_AGE,
+    maxAge: SESSION_MAX_AGE,
     path: "/",
   });
 }
 
 export async function deleteSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(COOKIE_NAME);
+  cookieStore.set(COOKIE_NAME, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+    expires: new Date(0),
+  });
 }
 
 export function getAllowedEmails(): string[] {
   const env = process.env.ALLOWED_ADMIN_EMAILS ?? "";
-  const fromEnv = env
+  return env
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  return fromEnv;
 }
 
 export function isAllowedEmail(email: string): boolean {
@@ -87,7 +69,6 @@ function parseAdminCredentials(): Record<string, string> {
   const raw = (process.env.ADMIN_CREDENTIALS ?? "").trim();
   const out: Record<string, string> = {};
   if (!raw) return out;
-  // Support comma/newline/semicolon separated pairs (Vercel UI sometimes uses new lines)
   const pairs = raw
     .split(/[,;\n\r]+/g)
     .map((s) => s.trim())
@@ -102,14 +83,22 @@ function parseAdminCredentials(): Record<string, string> {
   return out;
 }
 
-export function checkAdminPassword(email: string, password: string): boolean {
+export async function checkAdminPassword(email: string, password: string): Promise<boolean> {
   const e = email.trim().toLowerCase();
   const pass = (password ?? "").trim();
+  if (!pass) return false;
+
   const map = parseAdminCredentials();
   if (map[e] !== undefined) {
-    return pass === map[e];
+    return verifyPassword(pass, map[e]);
   }
+
+  const hash = (process.env.ADMIN_PASSWORD_HASH ?? "").trim();
+  if (hash) {
+    return verifyPassword(pass, hash);
+  }
+
   const expected = (process.env.ADMIN_PASSWORD ?? "").trim();
   if (!expected) return false;
-  return pass === expected;
+  return verifyPassword(pass, expected);
 }

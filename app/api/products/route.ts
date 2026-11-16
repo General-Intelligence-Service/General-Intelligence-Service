@@ -13,82 +13,134 @@ import {
 } from "@/lib/products-db";
 import { getSession } from "@/lib/auth-session";
 import { generateProductSlug } from "@/lib/slug";
+import { productCreateSchema, productUpdateSchema } from "@/lib/product-schemas";
+import { withNoStore } from "@/lib/security-headers";
 
-// GET - جلب المنتجات. include_archived=1 يتضمن المؤرشفة (archived) — الداشبورد الافتراضي بدونها
+export const dynamic = "force-dynamic";
+
+function sanitizePublicProduct(p: Product): Omit<Product, "hidden" | "archived"> & {
+  hidden?: undefined;
+  archived?: undefined;
+} {
+  const { hidden: _h, archived: _a, ...rest } = p;
+  return rest;
+}
+
+function filterPublic(list: Product[]): Product[] {
+  return list
+    .filter((p) => !p.hidden && !p.archived)
+    .map((p) => sanitizePublicProduct(p) as Product);
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const session = await getSession();
+    const { searchParams } = request.nextUrl;
+    const includeArchived =
+      !!session &&
+      (searchParams.get("include_archived") === "1" ||
+        searchParams.get("include_archived") === "true");
+    const includeHidden =
+      !!session &&
+      (searchParams.get("include_hidden") === "1" ||
+        searchParams.get("include_hidden") === "true");
+    const quick =
+      searchParams.get("quick") === "1" || searchParams.get("quick") === "true";
+
     if (!isProductsDbConfigured()) {
-      return NextResponse.json({ success: true, data: staticProducts });
+      const data = session
+        ? staticProducts.filter((p) => (includeArchived || !p.archived) && (includeHidden || !p.hidden))
+        : filterPublic(staticProducts);
+      return NextResponse.json(
+        { success: true, data },
+        session ? withNoStore({ status: 200 }) : { status: 200 }
+      );
     }
-    const { searchParams } = new URL(request.url);
-    const includeArchived = searchParams.get("include_archived") === "1" || searchParams.get("include_archived") === "true";
-    const includeHidden = searchParams.get("include_hidden") === "1" || searchParams.get("include_hidden") === "true";
-    /** quick=1: جلب سريع للداشبورد — يتخطى syncInitialProducts (حلقة إدراج لكل منتج أولي) */
-    const quick = searchParams.get("quick") === "1" || searchParams.get("quick") === "true";
+
     await ensureProductsTable();
     await seedProductsIfEmpty();
     if (!quick) {
       await syncInitialProducts();
     }
-    const data = await getAllProducts(includeArchived, includeHidden);
-    return NextResponse.json({ success: true, data });
+
+    let data = await getAllProducts(
+      session ? includeArchived : false,
+      session ? includeHidden : false
+    );
+
+    if (!session) {
+      data = filterPublic(data);
+    }
+
+    return NextResponse.json(
+      { success: true, data },
+      session ? withNoStore({ status: 200 }) : { status: 200 }
+    );
   } catch (error) {
     console.error("GET /api/products:", error);
     return NextResponse.json(
       { success: false, error: "فشل في جلب الهدايا" },
-      { status: 500 }
+      withNoStore({ status: 500 })
     );
   }
 }
 
-// POST - إضافة منتج جديد (في قاعدة البيانات) — يتطلب تسجيل دخول
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json(
         { success: false, error: "يجب تسجيل الدخول" },
-        { status: 401 }
+        withNoStore({ status: 401 })
       );
     }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },
-        { status: 503 }
+        withNoStore({ status: 503 })
       );
     }
-    const body = await request.json();
-    const requestedSku = typeof body.sku === "string" ? body.sku.trim() : "";
+
+    const body = await request.json().catch(() => null);
+    const parsed = productCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "بيانات غير صالحة", details: parsed.error.flatten() },
+        withNoStore({ status: 400 })
+      );
+    }
+
+    const v = parsed.data;
+    const requestedSku = (v.sku ?? "").trim();
     let newProduct: Product = {
-      slug: (body.slug && String(body.slug).trim()) || generateProductSlug(body.name ?? ""),
+      slug: (v.slug && v.slug.trim()) || generateProductSlug(v.name),
       sku: requestedSku || (await getNextAvailableSku()),
-      name: body.name,
-      shortDescription: body.shortDescription ?? "",
-      contents: Array.isArray(body.contents) ? body.contents : [],
-      giftTier: (body.giftTier as GiftTier) || "standard",
-      images: Array.isArray(body.images) ? body.images : [],
-      availableQuantity: body.availableQuantity ?? 0,
-      category: body.category,
-      price: body.price,
+      name: v.name,
+      shortDescription: v.shortDescription ?? "",
+      contents: v.contents ?? [],
+      giftTier: (v.giftTier as GiftTier) || "standard",
+      images: v.images ?? [],
+      availableQuantity: v.availableQuantity ?? 0,
+      category: v.category ?? undefined,
+      price: v.price ?? undefined,
+      archived: v.archived,
+      hidden: v.hidden,
     };
+
     await ensureProductsTable();
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         await createProduct(newProduct);
-        return NextResponse.json({
-          success: true,
-          message: "تم إضافة الهدية بنجاح",
-          data: newProduct,
-        });
+        return NextResponse.json(
+          { success: true, message: "تم إضافة الهدية بنجاح", data: newProduct },
+          withNoStore({ status: 200 })
+        );
       } catch (error) {
         const dbError = error as { code?: string; constraint?: string };
         const isSkuConflict =
           dbError?.code === "23505" && dbError?.constraint === "products_sku_key";
         if (isSkuConflict && attempt < 2) {
-          newProduct = {
-            ...newProduct,
-            sku: await getNextAvailableSku(),
-          };
+          newProduct = { ...newProduct, sku: await getNextAvailableSku() };
           continue;
         }
         throw error;
@@ -98,92 +150,92 @@ export async function POST(request: NextRequest) {
     console.error("POST /api/products:", error);
     return NextResponse.json(
       { success: false, error: "فشل في إضافة الهدية" },
-      { status: 500 }
+      withNoStore({ status: 500 })
     );
   }
 }
 
-// PUT - تحديث منتج (في قاعدة البيانات) — يتطلب تسجيل دخول
 export async function PUT(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json(
         { success: false, error: "يجب تسجيل الدخول" },
-        { status: 401 }
+        withNoStore({ status: 401 })
       );
     }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },
-        { status: 503 }
+        withNoStore({ status: 503 })
       );
     }
-    const body = await request.json();
-    const slug = typeof body.slug === "string" ? body.slug.trim() : "";
-    if (!slug) {
+
+    const body = await request.json().catch(() => null);
+    const parsed = productUpdateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "معرّف الهدية (slug) مطلوب" },
-        { status: 400 }
+        { success: false, error: "بيانات غير صالحة", details: parsed.error.flatten() },
+        withNoStore({ status: 400 })
       );
     }
+
+    const v = parsed.data;
     const updatedData: Partial<Product> = {
-      sku: body.sku,
-      name: body.name,
-      shortDescription: body.shortDescription,
-      contents: body.contents,
-      giftTier: body.giftTier,
-      images: body.images,
-      availableQuantity: body.availableQuantity,
-      category: body.category,
-      price: body.price,
-      archived: body.archived,
-      hidden: body.hidden,
+      sku: v.sku,
+      name: v.name,
+      shortDescription: v.shortDescription,
+      contents: v.contents,
+      giftTier: v.giftTier,
+      images: v.images,
+      availableQuantity: v.availableQuantity,
+      category: v.category === null ? undefined : v.category,
+      price: v.price === null ? undefined : v.price,
+      archived: v.archived,
+      hidden: v.hidden,
     };
+
     await ensureProductsTable();
-    const updated = await updateProduct(slug, updatedData);
+    const updated = await updateProduct(v.slug, updatedData);
     if (!updated) {
       return NextResponse.json(
         { success: false, error: "الهدية غير موجودة" },
-        { status: 404 }
+        withNoStore({ status: 404 })
       );
     }
-    return NextResponse.json({
-      success: true,
-      message: "تم تحديث الهدية بنجاح",
-      data: updated,
-    });
+    return NextResponse.json(
+      { success: true, message: "تم تحديث الهدية بنجاح", data: updated },
+      withNoStore({ status: 200 })
+    );
   } catch (error) {
     console.error("PUT /api/products:", error);
     return NextResponse.json(
       { success: false, error: "فشل في تحديث الهدية" },
-      { status: 500 }
+      withNoStore({ status: 500 })
     );
   }
 }
 
-// DELETE - حذف منتج (من قاعدة البيانات) — يتطلب تسجيل دخول
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json(
         { success: false, error: "يجب تسجيل الدخول" },
-        { status: 401 }
+        withNoStore({ status: 401 })
       );
     }
     if (!isProductsDbConfigured()) {
       return NextResponse.json(
         { success: false, error: "قاعدة البيانات غير مُعدّة. أضف Postgres من لوحة Vercel." },
-        { status: 503 }
+        withNoStore({ status: 503 })
       );
     }
-    const { searchParams } = new URL(request.url);
-    const slug = searchParams.get("slug");
+    const slug = request.nextUrl.searchParams.get("slug");
     if (!slug) {
       return NextResponse.json(
         { success: false, error: "معرّف الهدية مطلوب" },
-        { status: 400 }
+        withNoStore({ status: 400 })
       );
     }
     await ensureProductsTable();
@@ -191,18 +243,18 @@ export async function DELETE(request: NextRequest) {
     if (!deleted) {
       return NextResponse.json(
         { success: false, error: "الهدية غير موجودة" },
-        { status: 404 }
+        withNoStore({ status: 404 })
       );
     }
-    return NextResponse.json({
-      success: true,
-      message: "تم حذف الهدية بنجاح",
-    });
+    return NextResponse.json(
+      { success: true, message: "تم حذف الهدية بنجاح" },
+      withNoStore({ status: 200 })
+    );
   } catch (error) {
     console.error("DELETE /api/products:", error);
     return NextResponse.json(
       { success: false, error: "فشل في حذف الهدية" },
-      { status: 500 }
+      withNoStore({ status: 500 })
     );
   }
 }

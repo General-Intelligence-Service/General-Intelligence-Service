@@ -5,45 +5,92 @@ import {
   createSessionToken,
   setSessionCookie,
 } from "@/lib/auth-session";
+import {
+  getClientIp,
+  limitLoginByEmail,
+  limitLoginByIp,
+  retryAfterSeconds,
+} from "@/lib/rate-limit";
+import { loginSchema } from "@/lib/product-schemas";
+import { withNoStore } from "@/lib/security-headers";
+
+export const dynamic = "force-dynamic";
+
+const GENERIC_AUTH_ERROR = "البريد أو كلمة المرور غير صحيحة";
+
+function unauthorized() {
+  return NextResponse.json(
+    { success: false, error: GENERIC_AUTH_ERROR },
+    withNoStore({ status: 401 })
+  );
+}
+
+function tooMany(reset: number) {
+  const retry = retryAfterSeconds(reset);
+  return new NextResponse(
+    JSON.stringify({ success: false, error: "محاولات كثيرة. حاول لاحقاً." }),
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Retry-After": String(retry),
+        "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+        Pragma: "no-cache",
+      },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const email = (body.email as string)?.trim?.();
-    const password = body.password;
-
-    if (!email) {
-      return NextResponse.json(
-        { success: false, error: "البريد الإلكتروني مطلوب" },
-        { status: 400 }
-      );
-    }
-    const pass = typeof password === "string" ? password.trim() : "";
-
-    if (!isAllowedEmail(email)) {
-      return NextResponse.json(
-        { success: false, error: "هذا البريد غير معتمد للدخول" },
-        { status: 403 }
-      );
+    const ip = getClientIp(request);
+    const ipLimit = await limitLoginByIp(ip);
+    if (!ipLimit.success) {
+      return tooMany(ipLimit.reset);
     }
 
-    if (!checkAdminPassword(email, pass)) {
-      return NextResponse.json(
-        { success: false, error: "كلمة المرور غير صحيحة" },
-        { status: 401 }
-      );
+    const body = await request.json().catch(() => null);
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      // رسالة موحّدة لتفادي تسريب صحة البريد
+      return unauthorized();
     }
 
-    const token = createSessionToken(email);
+    const email = parsed.data.email.trim().toLowerCase();
+    const pass = parsed.data.password;
+
+    const emailLimit = await limitLoginByEmail(email);
+    if (!emailLimit.success) {
+      return tooMany(emailLimit.reset);
+    }
+
+    // تحقق موحّد الزمن تقريباً: نفحص الصلاحية وكلمة المرور دائماً بنفس المسار
+    const allowed = isAllowedEmail(email);
+    const passwordOk = allowed ? await checkAdminPassword(email, pass) : false;
+
+    // مقارنة وهمية لتقريب التوقيت عند بريد غير مسموح
+    if (!allowed) {
+      await checkAdminPassword(email, pass).catch(() => false);
+    }
+
+    if (!allowed || !passwordOk) {
+      return unauthorized();
+    }
+
+    const token = await createSessionToken(email);
     await setSessionCookie(token);
 
-    const nextUrl = typeof body.next === "string" && body.next.startsWith("/") ? body.next : "/dashboard";
-    return NextResponse.json({ success: true, redirect: nextUrl });
+    const nextUrl =
+      typeof parsed.data.next === "string" && parsed.data.next.startsWith("/")
+        ? parsed.data.next
+        : "/dashboard";
+
+    return NextResponse.json({ success: true, redirect: nextUrl }, withNoStore({ status: 200 }));
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
       { success: false, error: "حدث خطأ أثناء تسجيل الدخول" },
-      { status: 500 }
+      withNoStore({ status: 500 })
     );
   }
 }
