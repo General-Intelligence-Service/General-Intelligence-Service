@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
       recipient: String(body.recipient ?? ""),
       destination: String(body.destination ?? ""),
       tripDate: String(body.tripDate ?? ""),
-      status: body.status === "returned" ? "returned" : "open",
+      returnDate: typeof body.returnDate === "string" ? body.returnDate : null,
+      status: "open",
       notes: typeof body.notes === "string" ? body.notes : null,
       gifts: parseGifts(body.gifts),
     };

@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, X, ShoppingCart, Plus, Minus } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Product, getGiftTierLabel, getProductDisplayImage } from "@/data/products";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { InquireLink } from "@/components/inquire-link";
 import { saveCatalogViewSnapshot } from "@/lib/catalog-view-session";
 
 interface QuickViewModalProps {
@@ -209,9 +209,9 @@ export function QuickViewModal({
               >
                 <Button variant="outline" size="sm" className="w-full min-h-[44px]">عرض كامل</Button>
               </Link>
-              <a href={generateWhatsAppLink(product.name, product.sku)} target="_blank" rel="noopener noreferrer">
+              <InquireLink name={product.name} sku={product.sku} title="استفسر عن الهدية" className="w-full sm:w-auto">
                 <Button size="sm" className="w-full min-h-[44px] bg-brand-green-dark hover:bg-brand-green-darker">استفسر</Button>
-              </a>
+              </InquireLink>
             </div>
           </div>
         </div>

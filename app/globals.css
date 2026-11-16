@@ -100,23 +100,13 @@
     display: flex;
     align-items: center;
     background:
-      radial-gradient(ellipse 90% 70% at 80% 20%, hsl(40 35% 55% / 0.18), transparent 55%),
-      radial-gradient(ellipse 70% 60% at 10% 80%, hsl(168 50% 20% / 0.35), transparent 50%),
-      linear-gradient(145deg, #05221e 0%, #0b443a 42%, #08332c 78%, #0a2f28 100%);
-    color: #f4efe4;
+      radial-gradient(ellipse 80% 70% at 50% 40%, #1a5a48 0%, transparent 65%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, #0c3328 0%, #082820 100%);
+    color: #ffffff;
   }
 
-  .site-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0.05;
-    background-image: url("/LOGO-Miniature.png");
-    background-repeat: no-repeat;
-    background-position: 12% 55%;
-    background-size: min(52vw, 420px);
-    pointer-events: none;
+  .site-hero-logo {
+    filter: brightness(0) invert(1);
   }
 
   .gold-fade-rule {
@@ -158,10 +148,9 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    opacity: 0.35;
-    background-image:
-      linear-gradient(180deg, transparent 55%, hsl(168 50% 6% / 0.55)),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.22;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.12) 1px, transparent 0);
+    background-size: 22px 22px;
     pointer-events: none;
   }
 
@@ -182,7 +171,7 @@
   }
 
   .filter-chip {
-    @apply inline-flex min-h-[44px] cursor-pointer items-center rounded-md border px-4 py-2 text-sm font-semibold transition-all duration-200;
+    @apply inline-flex min-h-[44px] cursor-pointer items-center rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200;
   }
 
   .filter-chip-active {

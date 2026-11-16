@@ -14,11 +14,11 @@ import {
   isExternalOrArchiveImageSrc,
   type GiftTier,
 } from "@/data/products";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 import { saveCatalogViewSnapshot } from "@/lib/catalog-view-session";
 import { cn } from "@/lib/utils";
 import { useOrder } from "@/contexts/order-context";
+import { InquireLink } from "@/components/inquire-link";
 
 interface ProductCardProps {
   product: Product;
@@ -252,16 +252,14 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
                 )}
               </>
             )}
-            <a
-              href={generateWhatsAppLink(product.name, product.sku)}
-              target="_blank"
-              rel="noopener noreferrer"
+            <InquireLink
+              name={product.name}
+              sku={product.sku}
               title="استفسر عن الهدية"
-              aria-label="استفسر عن الهدية عبر واتساب"
               className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-brand-green-dark/20 text-brand-green-dark transition hover:bg-brand-green-dark hover:text-white dark:border-brand-gold/30 dark:text-brand-gold-light dark:hover:bg-brand-gold dark:hover:text-brand-green-darker"
             >
               <MessageCircle className="h-5 w-5" />
-            </a>
+            </InquireLink>
           </div>
         </div>
       </article>

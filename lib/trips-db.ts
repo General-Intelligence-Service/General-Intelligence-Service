@@ -6,6 +6,7 @@ import type {
   TripGiftInput,
   TripGiftType,
   TripInput,
+  TripReturnGiftInput,
   TripStatus,
 } from "@/types/trip";
 
@@ -15,6 +16,7 @@ export type {
   TripGiftInput,
   TripInput,
   TripGiftType,
+  TripReturnGiftInput,
   TripStatus,
 } from "@/types/trip";
 
@@ -36,6 +38,11 @@ function isoDay(v: string): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function optionalDay(v: string | null | undefined): string | null {
+  if (v == null || !String(v).trim()) return null;
+  return isoDay(String(v));
+}
+
 export async function ensureTripsTables(): Promise<void> {
   if (initDone) return;
   await sql`
@@ -45,6 +52,7 @@ export async function ensureTripsTables(): Promise<void> {
       recipient TEXT NOT NULL,
       destination TEXT NOT NULL,
       trip_date DATE NOT NULL,
+      return_date DATE,
       status VARCHAR(32) NOT NULL DEFAULT 'open',
       notes TEXT,
       created_by VARCHAR(255),
@@ -62,11 +70,28 @@ export async function ensureTripsTables(): Promise<void> {
       custom_name TEXT,
       quantity INTEGER NOT NULL DEFAULT 1,
       delivered_to TEXT,
+      delivered_qty INTEGER NOT NULL DEFAULT 0,
+      returned_qty INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  try {
+    await sql`ALTER TABLE trips ADD COLUMN return_date DATE`;
+  } catch {
+    /* موجود */
+  }
+  try {
+    await sql`ALTER TABLE trip_gifts ADD COLUMN delivered_qty INTEGER NOT NULL DEFAULT 0`;
+  } catch {
+    /* موجود */
+  }
+  try {
+    await sql`ALTER TABLE trip_gifts ADD COLUMN returned_qty INTEGER NOT NULL DEFAULT 0`;
+  } catch {
+    /* موجود */
+  }
   await sql`CREATE INDEX IF NOT EXISTS trips_trip_date_idx ON trips (trip_date DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS trip_gifts_trip_id_idx ON trip_gifts (trip_id)`;
   await sql`
@@ -88,6 +113,8 @@ function mapGift(row: Record<string, unknown>): TripGift {
     customName: row.custom_name != null ? String(row.custom_name) : null,
     quantity: clampQty(row.quantity),
     deliveredTo: row.delivered_to != null ? String(row.delivered_to) : null,
+    deliveredQty: clampQty(row.delivered_qty),
+    returnedQty: clampQty(row.returned_qty),
     notes: row.notes != null ? String(row.notes) : null,
   };
 }
@@ -100,12 +127,23 @@ function mapTrip(row: Record<string, unknown>, gifts: TripGift[]): Trip {
       : tripDateRaw instanceof Date
         ? tripDateRaw.toISOString().slice(0, 10)
         : isoDay(String(tripDateRaw ?? ""));
+  const returnRaw = row.return_date;
+  let returnDate: string | null = null;
+  if (returnRaw != null && returnRaw !== "") {
+    returnDate =
+      typeof returnRaw === "string"
+        ? returnRaw.slice(0, 10)
+        : returnRaw instanceof Date
+          ? returnRaw.toISOString().slice(0, 10)
+          : isoDay(String(returnRaw));
+  }
   return {
     id: String(row.id),
     organization: String(row.organization ?? ""),
     recipient: String(row.recipient ?? ""),
     destination: String(row.destination ?? ""),
     tripDate,
+    returnDate,
     status: row.status === "returned" ? "returned" : "open",
     notes: row.notes != null ? String(row.notes) : null,
     gifts,
@@ -129,6 +167,8 @@ function normalizeGifts(gifts: TripGiftInput[]): TripGiftInput[] {
         customName: null,
         quantity,
         deliveredTo: (g.deliveredTo ?? "").trim() || null,
+        deliveredQty: clampQty(g.deliveredQty),
+        returnedQty: clampQty(g.returnedQty),
         notes: (g.notes ?? "").trim() || null,
       });
     } else {
@@ -140,6 +180,8 @@ function normalizeGifts(gifts: TripGiftInput[]): TripGiftInput[] {
         customName,
         quantity,
         deliveredTo: (g.deliveredTo ?? "").trim() || null,
+        deliveredQty: clampQty(g.deliveredQty),
+        returnedQty: clampQty(g.returnedQty),
         notes: (g.notes ?? "").trim() || null,
       });
     }
@@ -205,7 +247,6 @@ async function adjustCatalogStock(slug: string, delta: number, dayIso: string, u
     }
   }
 
-  // سجل حركة صادر عند الخصم / وارد عند الإرجاع من الرحلة
   const outQty = delta < 0 ? Math.abs(delta) : 0;
   const inQty = delta > 0 ? delta : 0;
   try {
@@ -220,7 +261,7 @@ async function adjustCatalogStock(slug: string, delta: number, dayIso: string, u
             updated_at = NOW()
     `;
   } catch {
-    // gift_movements قد لا يكون جاهزاً في بعض البيئات — لا نوقف حفظ الرحلة
+    // gift_movements قد لا يكون جاهزاً
   }
 }
 
@@ -232,7 +273,7 @@ async function resolveProductName(slug: string): Promise<string | null> {
 }
 
 /**
- * يطبّق فرق كميات الهدايا الكتالوجية على المخزون (idempotent عبر مقارنة القديم السابقة).
+ * يطبّق فرق كميات الهدايا الكتالوجية على المخزون (idempotent عبر مقارنة القيم السابقة).
  */
 async function applyStockDeltas(
   previous: TripGift[],
@@ -255,7 +296,6 @@ async function applyStockDeltas(
   for (const slug of slugs) {
     const before = prevMap.get(slug) ?? 0;
     const after = nextMap.get(slug) ?? 0;
-    // + يعيد للمخزون، − يخصم
     await adjustCatalogStock(slug, before - after, dayIso, updatedBy);
   }
 }
@@ -294,12 +334,13 @@ export async function createTrip(input: TripInput, createdBy?: string): Promise<
   const recipient = String(input.recipient ?? "").trim();
   const destination = String(input.destination ?? "").trim();
   const tripDate = isoDay(input.tripDate);
+  const returnDate = optionalDay(input.returnDate);
   const status: TripStatus = input.status === "returned" ? "returned" : "open";
   const notes = (input.notes ?? "").trim() || null;
 
-  if (!organization) throw new Error("الجهة مطلوبة");
-  if (!recipient) throw new Error("الشخص المستلم مطلوب");
-  if (!destination) throw new Error("جهة الرحلة مطلوبة");
+  if (!organization) throw new Error("اسم الوفد مطلوب");
+  if (!recipient) throw new Error("المسؤول مطلوب");
+  if (!destination) throw new Error("الوجهة مطلوبة");
   if (gifts.length === 0) throw new Error("أضف هدية واحدة على الأقل");
 
   await sql`BEGIN`;
@@ -307,8 +348,11 @@ export async function createTrip(input: TripInput, createdBy?: string): Promise<
     await applyStockDeltas([], gifts, tripDate, createdBy);
 
     const { rows } = await sql`
-      INSERT INTO trips (organization, recipient, destination, trip_date, status, notes, created_by)
-      VALUES (${organization}, ${recipient}, ${destination}, ${tripDate}::date, ${status}, ${notes}, ${createdBy ?? null})
+      INSERT INTO trips (organization, recipient, destination, trip_date, return_date, status, notes, created_by)
+      VALUES (
+        ${organization}, ${recipient}, ${destination}, ${tripDate}::date,
+        ${returnDate}::date, ${status}, ${notes}, ${createdBy ?? null}
+      )
       RETURNING *
     `;
     const tripId = String(rows[0].id);
@@ -318,7 +362,8 @@ export async function createTrip(input: TripInput, createdBy?: string): Promise<
         g.giftType === "catalog" && g.productSlug ? await resolveProductName(g.productSlug) : null;
       await sql`
         INSERT INTO trip_gifts (
-          trip_id, gift_type, product_slug, product_name, custom_name, quantity, delivered_to, notes
+          trip_id, gift_type, product_slug, product_name, custom_name,
+          quantity, delivered_to, delivered_qty, returned_qty, notes
         )
         VALUES (
           ${tripId}::uuid,
@@ -328,6 +373,8 @@ export async function createTrip(input: TripInput, createdBy?: string): Promise<
           ${g.customName ?? null},
           ${g.quantity},
           ${g.deliveredTo ?? null},
+          ${0},
+          ${0},
           ${g.notes ?? null}
         )
       `;
@@ -347,18 +394,21 @@ export async function updateTrip(id: string, input: TripInput, updatedBy?: strin
   await ensureTripsTables();
   const existing = await getTrip(id);
   if (!existing) throw new Error("الرحلة غير موجودة");
+  if (existing.status === "returned") {
+    throw new Error("لا يمكن تعديل رحلة مكتملة. استخدم تسجيل العودة إن لزم.");
+  }
 
   const gifts = normalizeGifts(input.gifts);
   const organization = String(input.organization ?? "").trim();
   const recipient = String(input.recipient ?? "").trim();
   const destination = String(input.destination ?? "").trim();
   const tripDate = isoDay(input.tripDate);
-  const status: TripStatus = input.status === "returned" ? "returned" : "open";
+  const returnDate = optionalDay(input.returnDate);
   const notes = (input.notes ?? "").trim() || null;
 
-  if (!organization) throw new Error("الجهة مطلوبة");
-  if (!recipient) throw new Error("الشخص المستلم مطلوب");
-  if (!destination) throw new Error("جهة الرحلة مطلوبة");
+  if (!organization) throw new Error("اسم الوفد مطلوب");
+  if (!recipient) throw new Error("المسؤول مطلوب");
+  if (!destination) throw new Error("الوجهة مطلوبة");
   if (gifts.length === 0) throw new Error("أضف هدية واحدة على الأقل");
 
   await sql`BEGIN`;
@@ -371,7 +421,7 @@ export async function updateTrip(id: string, input: TripInput, updatedBy?: strin
           recipient = ${recipient},
           destination = ${destination},
           trip_date = ${tripDate}::date,
-          status = ${status},
+          return_date = ${returnDate}::date,
           notes = ${notes},
           updated_at = NOW()
       WHERE id = ${id}::uuid
@@ -384,7 +434,8 @@ export async function updateTrip(id: string, input: TripInput, updatedBy?: strin
         g.giftType === "catalog" && g.productSlug ? await resolveProductName(g.productSlug) : null;
       await sql`
         INSERT INTO trip_gifts (
-          trip_id, gift_type, product_slug, product_name, custom_name, quantity, delivered_to, notes
+          trip_id, gift_type, product_slug, product_name, custom_name,
+          quantity, delivered_to, delivered_qty, returned_qty, notes
         )
         VALUES (
           ${id}::uuid,
@@ -394,6 +445,8 @@ export async function updateTrip(id: string, input: TripInput, updatedBy?: strin
           ${g.customName ?? null},
           ${g.quantity},
           ${g.deliveredTo ?? null},
+          ${0},
+          ${0},
           ${g.notes ?? null}
         )
       `;
@@ -409,6 +462,76 @@ export async function updateTrip(id: string, input: TripInput, updatedBy?: strin
   }
 }
 
+/**
+ * تسجيل عودة الوفد: المُرجعة تعود للمخزون، والحالة تصبح مكتملة.
+ */
+export async function completeTripReturn(
+  id: string,
+  items: TripReturnGiftInput[],
+  updatedBy?: string,
+  actualReturnDate?: string | null
+): Promise<Trip> {
+  await ensureTripsTables();
+  const existing = await getTrip(id);
+  if (!existing) throw new Error("الرحلة غير موجودة");
+  if (existing.status === "returned") throw new Error("تم تسجيل عودة هذه الرحلة مسبقاً");
+
+  const byId = new Map(items.map((i) => [i.giftId, i]));
+  for (const g of existing.gifts) {
+    const row = byId.get(g.id);
+    if (!row) throw new Error("يجب تحديد المُسلَّمة والمُرجعة لكل هدية");
+    const delivered = clampQty(row.deliveredQty);
+    const returned = clampQty(row.returnedQty);
+    if (delivered + returned !== g.quantity) {
+      const label = g.giftType === "other" ? g.customName : g.productName || g.productSlug;
+      throw new Error(
+        `مجموع المُسلَّمة والمُرجعة يجب أن يساوي المسحوبة (${g.quantity}) للهدية: ${label}`
+      );
+    }
+  }
+
+  const dayIso = optionalDay(actualReturnDate) || isoDay(new Date().toISOString().slice(0, 10));
+
+  await sql`BEGIN`;
+  try {
+    for (const g of existing.gifts) {
+      const row = byId.get(g.id)!;
+      const delivered = clampQty(row.deliveredQty);
+      const returned = clampQty(row.returnedQty);
+      const deliveredTo = (row.deliveredTo ?? g.deliveredTo ?? "").trim() || null;
+
+      await sql`
+        UPDATE trip_gifts
+        SET delivered_qty = ${delivered},
+            returned_qty = ${returned},
+            delivered_to = ${deliveredTo},
+            updated_at = NOW()
+        WHERE id = ${g.id}::uuid
+      `;
+
+      if (g.giftType === "catalog" && g.productSlug && returned > 0) {
+        await adjustCatalogStock(g.productSlug, returned, dayIso, updatedBy);
+      }
+    }
+
+    await sql`
+      UPDATE trips
+      SET status = 'returned',
+          return_date = ${dayIso}::date,
+          updated_at = NOW()
+      WHERE id = ${id}::uuid
+    `;
+
+    await sql`COMMIT`;
+    const trip = await getTrip(id);
+    if (!trip) throw new Error("تعذر قراءة الرحلة بعد تسجيل العودة");
+    return trip;
+  } catch (e) {
+    await sql`ROLLBACK`;
+    throw e;
+  }
+}
+
 export async function deleteTrip(id: string, updatedBy?: string): Promise<boolean> {
   await ensureTripsTables();
   const existing = await getTrip(id);
@@ -416,8 +539,12 @@ export async function deleteTrip(id: string, updatedBy?: string): Promise<boolea
 
   await sql`BEGIN`;
   try {
-    // إعادة الكميات الكتالوجية للمخزون
-    await applyStockDeltas(existing.gifts, [], existing.tripDate, updatedBy);
+    if (existing.status === "open") {
+      // الرحلة الجارية: إعادة كل الكميات المسحوبة للمخزون
+      await applyStockDeltas(existing.gifts, [], existing.tripDate, updatedBy);
+    } else {
+      // مكتملة: المُرجعة عادت مسبقاً، والمُسلَّمة خرجت نهائياً — لا نلمس المخزون
+    }
     await sql`DELETE FROM trips WHERE id = ${id}::uuid`;
     await sql`COMMIT`;
     return true;

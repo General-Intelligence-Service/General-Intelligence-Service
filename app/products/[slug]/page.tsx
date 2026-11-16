@@ -23,7 +23,7 @@ import {
   loadPublicProductsFromLocalStorage,
   PRODUCTS_STORAGE_KEY,
 } from "@/lib/products-local-storage";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { InquireLink } from "@/components/inquire-link";
 import { useOrder } from "@/contexts/order-context";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { ProductQRModal } from "@/components/product-qr-modal";
@@ -384,14 +384,14 @@ export default function ProductPage({ params }: ProductPageProps) {
 
                 <Separator />
 
-                <a
-                  href={generateWhatsAppLink(product.name, product.sku)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] active:shadow-inner min-h-[44px] h-12 rounded-md px-8 touch-manipulation"
+                <InquireLink
+                  name={product.name}
+                  sku={product.sku}
+                  title="استفسر عن الهدية"
+                  className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium bg-brand-green-dark text-white hover:bg-brand-green-darker hover:shadow-md active:scale-[0.98] min-h-[44px] h-12 px-8 touch-manipulation"
                 >
                   استفسر عن الهدية
-                </a>
+                </InquireLink>
               </motion.div>
             </div>
           </div>

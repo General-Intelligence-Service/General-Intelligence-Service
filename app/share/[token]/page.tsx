@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { consumeOneTimeShareToken } from "@/lib/product-share-db";
 import { getProductBySlug } from "@/lib/products-db";
 import { getGiftTierLabel, getProductDisplayImage, isExternalOrArchiveImageSrc } from "@/data/products";
-import { generateWhatsAppLink } from "@/lib/whatsapp";
+import { InquireLink } from "@/components/inquire-link";
 import { BLUR_DATA_URL } from "@/lib/blur-placeholder";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +90,6 @@ export default async function ShareOneTimePage({
   }
 
   const img = getProductDisplayImage(product);
-  const wa = generateWhatsAppLink(product.name, product.sku);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -147,14 +146,14 @@ export default async function ShareOneTimePage({
                   </ul>
                 </div>
               ) : null}
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
+              <InquireLink
+                name={product.name}
+                sku={product.sku}
+                title="استفسر عن الهدية"
                 className="flex w-full items-center justify-center rounded-md bg-brand-green-dark px-4 py-3 text-base font-medium text-white hover:bg-brand-green-darker"
               >
-                استفسر عن الهدية (تيليجرام)
-              </a>
+                استفسر عن الهدية
+              </InquireLink>
             </div>
           </div>
         </div>

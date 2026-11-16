@@ -9,6 +9,10 @@ export type TripGift = {
   customName: string | null;
   quantity: number;
   deliveredTo: string | null;
+  /** الكمية المُسلَّمة عند العودة */
+  deliveredQty: number;
+  /** الكمية المُرجعة للمخزون عند العودة */
+  returnedQty: number;
   notes: string | null;
 };
 
@@ -18,6 +22,7 @@ export type Trip = {
   recipient: string;
   destination: string;
   tripDate: string;
+  returnDate: string | null;
   status: TripStatus;
   notes: string | null;
   gifts: TripGift[];
@@ -32,6 +37,8 @@ export type TripGiftInput = {
   customName?: string | null;
   quantity: number;
   deliveredTo?: string | null;
+  deliveredQty?: number;
+  returnedQty?: number;
   notes?: string | null;
 };
 
@@ -40,7 +47,15 @@ export type TripInput = {
   recipient: string;
   destination: string;
   tripDate: string;
+  returnDate?: string | null;
   status?: TripStatus;
   notes?: string | null;
   gifts: TripGiftInput[];
+};
+
+export type TripReturnGiftInput = {
+  giftId: string;
+  deliveredQty: number;
+  returnedQty: number;
+  deliveredTo?: string | null;
 };

@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { Check, ChevronDown } from "lucide-react";
 import {
   catalogFilterTransition,
   catalogTransition,
@@ -33,8 +34,15 @@ import {
   consumeCatalogViewSnapshot,
 } from "@/lib/catalog-view-session";
 import { applyProductCopyFixesList } from "@/lib/product-copy-fixes";
+import { cn } from "@/lib/utils";
 
 type CatalogSort = "default" | "available" | "luxury";
+
+const SORT_OPTIONS: { value: CatalogSort; label: string }[] = [
+  { value: "default", label: "الافتراضي" },
+  { value: "available", label: "المتوفر أولاً" },
+  { value: "luxury", label: "الفاخرة أولاً" },
+];
 
 function applyArabicSearchCorrections(input: string): string {
   const s = (input ?? "").trim();
@@ -115,12 +123,32 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortBy, setSortBy] = useState<CatalogSort>("default");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  /** شعار الهيرو دائماً على خلفية خضراء داكنة */
-  const heroLogoSrc = `${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
+  /** شعار الهيرو: نسخة داكنة/فاتحة إن وُجدت، مع فلتر أبيض لأن خلفية الـ Hero خضراء دائماً */
+  const heroLogoSrc = `${siteConfig.logoDarkPath || siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
   const logoWidth = 2400;
   const logoHeight = 650;
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onPointer = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSortOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [sortOpen]);
 
   // عند الرجوع من صفحة منتج: استعد URL الكتالوج + موضع التمرير (بدل “قفزة” للواجهة الافتراضية)
   useEffect(() => {
@@ -316,7 +344,7 @@ function HomeContent() {
                   alt={siteConfig.logoAlt}
                   width={logoWidth}
                   height={logoHeight}
-                  className="mx-auto h-auto w-full max-w-[480px] object-contain drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+                  className="site-hero-logo mx-auto h-auto w-full max-w-[480px] object-contain drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
                   priority
                   sizes="(max-width: 640px) 92vw, 480px"
                 />
@@ -326,7 +354,7 @@ function HomeContent() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...catalogTransition, delay: 0.06 }}
-                className="mt-6 text-2xl font-bold tracking-tight text-[#f4efe4] sm:text-3xl md:text-4xl"
+                className="mt-6 text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl"
               >
                 المجموعة الرسمية للهدايا
               </motion.h1>
@@ -335,7 +363,7 @@ function HomeContent() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...catalogTransition, delay: 0.1 }}
-                className="mx-auto mt-3 max-w-xl text-pretty text-base leading-relaxed text-[#e8dfc8]/90 sm:text-lg"
+                className="mx-auto mt-3 max-w-xl text-pretty text-base leading-relaxed text-white/85 sm:text-lg"
               >
                 {siteConfig.description} — تصفّح المجموعة وأضف ما تحتاجه إلى طلبك بسهولة.
               </motion.p>
@@ -358,7 +386,7 @@ function HomeContent() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="min-h-[48px] border-[#e8dfc8]/35 bg-transparent px-7 text-base text-[#f4efe4] hover:bg-[#f4efe4]/10 hover:text-white"
+                  className="min-h-[48px] border-white/35 bg-transparent px-7 text-base text-white hover:bg-white/10 hover:text-white"
                   onClick={() => router.push("/present")}
                 >
                   عرض تقديمي
@@ -369,7 +397,7 @@ function HomeContent() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ ...catalogTransition, delay: 0.2 }}
-                className="mt-6 text-sm text-[#e8dfc8]/75"
+                className="mt-6 text-sm text-white/85"
               >
                 {visibleProducts.length} هدية · {giftTiers.length} تصنيفات · طلب PDF فوري
               </motion.p>
@@ -470,18 +498,54 @@ function HomeContent() {
               </motion.div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <label className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm" ref={sortRef}>
                   <span className="text-muted-foreground">ترتيب:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as CatalogSort)}
-                    className="min-h-[44px] rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    <option value="default">الافتراضي</option>
-                    <option value="available">المتوفر أولاً</option>
-                    <option value="luxury">الفاخرة أولاً</option>
-                  </select>
-                </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className={cn(
+                        "filter-chip inline-flex min-h-[44px] items-center gap-2 px-4",
+                        sortOpen ? "filter-chip-active" : "filter-chip-idle"
+                      )}
+                      aria-haspopup="listbox"
+                      aria-expanded={sortOpen}
+                      onClick={() => setSortOpen((o) => !o)}
+                    >
+                      {SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "الافتراضي"}
+                      <ChevronDown className={cn("h-4 w-4 transition", sortOpen && "rotate-180")} />
+                    </button>
+                    {sortOpen && (
+                      <ul
+                        role="listbox"
+                        className="absolute right-0 z-40 mt-2 min-w-[11rem] overflow-hidden rounded-2xl border border-border bg-background p-1 shadow-lg"
+                      >
+                        {SORT_OPTIONS.map((opt) => {
+                          const active = sortBy === opt.value;
+                          return (
+                            <li key={opt.value} role="option" aria-selected={active}>
+                              <button
+                                type="button"
+                                className={cn(
+                                  "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                                  active
+                                    ? "bg-brand-green-dark text-white dark:bg-brand-gold dark:text-brand-green-darker"
+                                    : "hover:bg-muted"
+                                )}
+                                onClick={() => {
+                                  setSortBy(opt.value);
+                                  setSortOpen(false);
+                                }}
+                              >
+                                <span>{opt.label}</span>
+                                {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </div>
                 <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
