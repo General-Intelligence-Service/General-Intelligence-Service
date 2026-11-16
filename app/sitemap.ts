@@ -1,12 +1,11 @@
 import { MetadataRoute } from "next";
 import { products } from "@/data/products";
-import { siteConfig } from "@/lib/config";
+
+const SITE_URL = "https://general-intelligence-service.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://yourdomain.com"; // غيّر هذا إلى رابط موقعك
-
   const productRoutes = products.map((product) => ({
-    url: `${baseUrl}/products/${product.slug}`,
+    url: `${SITE_URL}/products/${product.slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.8,
@@ -14,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     {
-      url: baseUrl,
+      url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
@@ -22,4 +21,3 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...productRoutes,
   ];
 }
-

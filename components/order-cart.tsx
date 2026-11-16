@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Plus, Minus, Trash2, ShoppingCart, FileText, Save, RotateCcw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { products as initialProducts, type Product } from "@/data/products";
 import { loadPublicProductsFromLocalStorage } from "@/lib/products-local-storage";
 
 export function OrderCart() {
+  const pathname = usePathname();
   const {
     orderItems,
     updateQuantity,
@@ -27,6 +29,11 @@ export function OrderCart() {
     orderNotes,
     openCartRef,
   } = useOrder();
+  const showFloatingCart =
+    pathname === "/" ||
+    (pathname?.startsWith("/products") ?? false) ||
+    (pathname?.startsWith("/order") ?? false) ||
+    totalItems > 0;
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -223,20 +230,20 @@ export function OrderCart() {
         </div>
       )}
       {/* Floating Cart Button */}
-      {totalItems > 0 && (
+      {showFloatingCart && (
         <motion.div
-          className="fixed bottom-6 left-6 z-50"
-          animate={{ scale: lastAddedName ? 1.2 : 1 }}
+          className="no-print fixed bottom-6 left-6 z-50"
+          animate={{ scale: lastAddedName ? 1.12 : 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-green to-brand-green-light shadow-xl shadow-brand-green/30 ring-2 ring-white/20 transition-all duration-300 hover:scale-110 hover:shadow-2xl hover:shadow-brand-green/40 hover:ring-4 hover:ring-brand-gold/40 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold"
+            className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-brand-green-dark shadow-lg ring-2 ring-white/15 transition-all duration-300 hover:scale-105 hover:bg-brand-green hover:ring-brand-gold/50 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-gold sm:h-16 sm:w-16"
             aria-label={`فتح طلبية الهدايا (${totalItems} قطعة)`}
           >
-            <ShoppingCart className="h-7 w-7 text-white drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
-            <span className="absolute -top-1 -right-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-gold px-1.5 text-sm font-bold text-brand-green shadow-md ring-2 ring-white">
+            <ShoppingCart className="h-6 w-6 text-white sm:h-7 sm:w-7" />
+            <span className="absolute -top-1 -right-1 flex h-6 min-w-6 items-center justify-center rounded-md bg-brand-gold px-1.5 text-xs font-bold text-brand-green-darker shadow ring-2 ring-white sm:h-7 sm:min-w-7 sm:text-sm">
               {totalItems}
             </span>
           </button>

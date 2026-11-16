@@ -96,7 +96,7 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    min-height: min(92vh, 820px);
+    min-height: min(70vh, 640px);
     display: flex;
     align-items: center;
     background:
@@ -111,12 +111,46 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    opacity: 0.14;
+    opacity: 0.05;
     background-image: url("/LOGO-Miniature.png");
     background-repeat: no-repeat;
     background-position: 12% 55%;
     background-size: min(52vw, 420px);
     pointer-events: none;
+  }
+
+  .gold-fade-rule {
+    height: 1px;
+    width: 100%;
+    max-width: 42rem;
+    margin-inline: auto;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(40 28% 61% / 0.15) 15%,
+      hsl(40 28% 61% / 0.75) 50%,
+      hsl(40 28% 61% / 0.15) 85%,
+      transparent 100%
+    );
+  }
+
+  .catalog-sticky-bar {
+    position: sticky;
+    top: 4.25rem;
+    z-index: 30;
+    margin-inline: -1rem;
+    padding: 0.75rem 1rem 1rem;
+    background: hsl(var(--background) / 0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid hsl(40 28% 61% / 0.22);
+  }
+
+  @media (min-width: 640px) {
+    .catalog-sticky-bar {
+      margin-inline: 0;
+      padding-inline: 0.25rem;
+      border-radius: 0.75rem;
+    }
   }
 
   .site-hero::after {

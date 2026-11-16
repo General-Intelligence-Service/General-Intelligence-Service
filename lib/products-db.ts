@@ -1,5 +1,6 @@
 import { sql } from "@vercel/postgres";
 import { products as initialProducts, type Product, type GiftTier } from "@/data/products";
+import { applyProductCopyFixes } from "@/lib/product-copy-fixes";
 
 const PRODUCTS_TABLE = "products";
 
@@ -50,7 +51,7 @@ export async function ensureProductsTable(): Promise<void> {
 }
 
 function rowToProduct(r: Record<string, unknown>): Product {
-  return {
+  return applyProductCopyFixes({
     slug: String(r.slug),
     sku: String(r.sku),
     name: String(r.name),
@@ -65,7 +66,7 @@ function rowToProduct(r: Record<string, unknown>): Product {
     hidden: Boolean((r as any).hidden),
     createdAt: r.created_at != null ? String((r as any).created_at) : undefined,
     updatedAt: r.updated_at != null ? String((r as any).updated_at) : undefined,
-  };
+  });
 }
 
 async function getSuppressedSlugSet(): Promise<Set<string>> {

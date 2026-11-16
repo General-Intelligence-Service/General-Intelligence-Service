@@ -1,8 +1,11 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/config";
 
+const SITE_URL = "https://general-intelligence-service.vercel.app";
+const ogImage = `${SITE_URL}${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
+
 export const defaultMetadata: Metadata = {
-  metadataBase: new URL("https://yourdomain.com"), // غيّر هذا إلى رابط موقعك
+  metadataBase: new URL(SITE_URL),
   title: {
     default: siteConfig.name,
     template: `%s - ${siteConfig.name}`,
@@ -13,15 +16,24 @@ export const defaultMetadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ar_SA",
-    url: "https://yourdomain.com",
+    url: SITE_URL,
     siteName: siteConfig.name,
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [
+      {
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        alt: siteConfig.logoAlt,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [ogImage],
   },
   robots: {
     index: true,
@@ -42,4 +54,3 @@ export const defaultMetadata: Metadata = {
     ],
   },
 };
-
