@@ -29,8 +29,8 @@ export function Navbar() {
   const logoHeight = 650;
 
   return (
-    <nav className="no-print lux-chrome-header sticky top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-background/50">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <nav className="no-print lux-chrome-header sticky top-0 z-50 w-full">
+      <div className="container mx-auto flex h-[4.25rem] items-center justify-between px-4">
         <Link
           href="/"
           className="flex min-w-0 max-w-none items-center gap-2 sm:gap-3"
@@ -46,24 +46,23 @@ export function Navbar() {
           />
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-6 md:flex">
           <Link
             href="/#products"
-            className="flex flex-col w-fit h-[29px] text-base font-medium transition-colors hover:text-brand-green-dark"
+            className="text-sm font-semibold text-brand-green-dark transition-colors hover:text-brand-gold-dark dark:text-brand-gold-light"
           >
             الهدايا
           </Link>
           <Link
             href="/present"
-            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green-dark"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-brand-green-dark dark:hover:text-brand-gold-light"
           >
             <MonitorPlay className="h-4 w-4 shrink-0" aria-hidden />
             عرض تقديمي
           </Link>
           <Link
             href="/login"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="rounded-md border border-brand-gold/40 px-3 py-2 text-sm font-medium text-brand-green-dark transition-colors hover:bg-brand-gold/15 dark:text-brand-gold-light"
           >
             تسجيل الدخول
           </Link>

@@ -51,15 +51,14 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
       }}
       className="h-full"
     >
-      <Card className="group h-full overflow-hidden rounded-lg shadow-sm transition-all duration-200 sm:rounded-xl sm:shadow-md sm:hover:shadow-lg sm:hover:shadow-primary/10 sm:hover:-translate-y-2">
+      <Card className="gift-tile group h-full overflow-hidden rounded-xl border-0 shadow-none sm:rounded-xl">
         <Link
           href={`/products/${product.slug}`}
           scroll={false}
           onClick={() => saveCatalogViewSnapshot()}
         >
           <CardHeader className="p-0">
-            {/* جوال: صورة أقل ارتفاعاً؛ سطح المكتب: مربع */}
-            <div className="relative aspect-[5/4] w-full overflow-hidden bg-white dark:bg-muted sm:aspect-square">
+            <div className="relative aspect-[5/4] w-full overflow-hidden bg-gradient-to-b from-white to-[#f3f6f4] dark:from-muted dark:to-card sm:aspect-square">
               <Image
                 src={displayImage}
                 alt={product.name}

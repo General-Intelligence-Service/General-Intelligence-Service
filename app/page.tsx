@@ -4,7 +4,6 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { useTheme } from "next-themes";
 import {
   catalogFilterTransition,
   catalogTransition,
@@ -13,7 +12,6 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { QuickViewModal } from "@/components/quick-view-modal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   products as initialProducts,
@@ -85,17 +83,13 @@ function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToOrder } = useOrder();
-  const { resolvedTheme } = useTheme();
   const [allProducts, setAllProducts] = useState<Product[]>(initialProducts);
   const [selectedGiftTier, setSelectedGiftTier] = useState<GiftTier | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const logoSrc = useMemo(() => {
-    const path = mounted && resolvedTheme === "dark" ? siteConfig.logoDarkPath : siteConfig.logoPath;
-    return `${path}?v=${siteConfig.logoAssetVersion}`;
-  }, [mounted, resolvedTheme]);
+  /** شعار الهيرو دائماً على خلفية خضراء داكنة */
+  const heroLogoSrc = `${siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
   const logoWidth = 2400;
   const logoHeight = 650;
 
@@ -135,7 +129,6 @@ function HomeContent() {
 
   // تحميل المنتجات: من API ثم localStorage العام (بدون دمج مع القائمة الثابتة — يمنع عودة المحذوف)
   useEffect(() => {
-    setMounted(true);
     const fetchProducts = async () => {
       try {
         const res = await fetch("/api/products");
@@ -261,154 +254,85 @@ function HomeContent() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden py-10 sm:py-14">
-          <div className="absolute inset-0 bg-creative-aurora" aria-hidden />
-          <div
-            className="absolute inset-0 opacity-60 [mask-image:radial-gradient(60%_55%_at_50%_35%,black,transparent)]"
-            aria-hidden
-          >
-            <div className="h-full w-full bg-[radial-gradient(circle_at_1px_1px,hsl(var(--foreground)/0.08)_1px,transparent_0)] [background-size:18px_18px]" />
-          </div>
-
-          <div className="container relative mx-auto px-4 sm:px-6">
-            <div className="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-2 lg:gap-10">
+        {/* Hero — تكوين واحد: الشعار + جملة + أزرار على خلفية مؤسسية كاملة */}
+        <section className="site-hero">
+          <div className="container relative z-[1] mx-auto px-4 py-16 sm:px-6 sm:py-20">
+            <div className="mx-auto max-w-3xl text-center">
               <motion.div
-                initial={{ opacity: 0, y: 26 }}
+                initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ ...catalogTransition, duration: 0.72 }}
-                className="text-center lg:text-right"
+                transition={{ ...catalogTransition, duration: 0.8 }}
               >
-                <div className="mx-auto w-fit lg:mx-0">
-                  <Image
-                    src={logoSrc}
-                    alt={siteConfig.logoAlt}
-                    width={logoWidth}
-                    height={logoHeight}
-                    className="h-auto w-full max-w-[520px] object-contain sm:max-w-[580px]"
-                    priority
-                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 70vw, 580px"
-                  />
-                </div>
-
-                {/* (Removed per request) */}
-                <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">
-                  ابحث، صفّي، واطّلع على التفاصيل بسرعة. ثم أضف الهدية لطلبك
-                  بضغطة واحدة.
-                </p>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
-                  <Button
-                    className="min-h-[48px] rounded-xl px-6 text-base shadow-sm"
-                    onClick={() => {
-                      document
-                        .getElementById("products")
-                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
-                  >
-                    ابدأ التصفح
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="min-h-[48px] rounded-xl px-6 text-base bg-background/60 backdrop-blur"
-                    onClick={() => router.push("/present")}
-                  >
-                    عرض تقديمي
-                  </Button>
-                </div>
-
-                <div className="mt-6 flex flex-wrap justify-center gap-2 lg:justify-start">
-                  <Badge variant="secondary" className="px-3 py-1 text-sm">
-                    بحث ذكي بالعربية
-                  </Badge>
-                  <Badge variant="secondary" className="px-3 py-1 text-sm">
-                    واجهة RTL محسّنة
-                  </Badge>
-                  <Badge variant="secondary" className="px-3 py-1 text-sm">
-                    معاينة سريعة للمنتجات
-                  </Badge>
-                </div>
+                <Image
+                  src={heroLogoSrc}
+                  alt={siteConfig.logoAlt}
+                  width={logoWidth}
+                  height={logoHeight}
+                  className="mx-auto h-auto w-full max-w-[560px] object-contain drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+                  priority
+                  sizes="(max-width: 640px) 92vw, 560px"
+                />
               </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...catalogTransition, duration: 0.7, delay: 0.12 }}
+                className="mx-auto mt-8 max-w-xl text-pretty text-base leading-relaxed text-[#e8dfc8]/90 sm:text-lg"
+              >
+                {siteConfig.description} — تصفّح المجموعة الرسمية وأضف ما تحتاجه إلى طلبك بسهولة.
+              </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ ...catalogTransition, duration: 0.7, delay: 0.05 }}
-                className="relative"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...catalogTransition, duration: 0.65, delay: 0.22 }}
+                className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
               >
-                <div className="relative overflow-hidden rounded-3xl border bg-card/60 p-6 shadow-[0_20px_60px_-40px_hsl(var(--foreground)/0.35)] backdrop-blur">
-                  <div className="pointer-events-none absolute inset-0 opacity-90 [mask-image:radial-gradient(55%_70%_at_50%_10%,black,transparent)]">
-                    <div className="h-full w-full bg-gradient-to-br from-primary/20 via-accent/10 to-transparent" />
-                  </div>
-
-                  <div className="relative space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">مختصر سريع</p>
-                      <Badge className="rounded-full">جديد</Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl border bg-background/50 p-4">
-                        <p className="text-sm text-muted-foreground">الفئات</p>
-                        <p className="mt-1 text-xl font-bold">{giftTiers.length}</p>
-                      </div>
-                      <div className="rounded-2xl border bg-background/50 p-4">
-                        <p className="text-sm text-muted-foreground">الهدايا</p>
-                        <p className="mt-1 text-xl font-bold">{allProducts.length}</p>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border bg-background/50 p-4">
-                      <p className="text-sm text-muted-foreground">نصيحة</p>
-                      <p className="mt-1 text-sm">
-                        اكتب اسم الهدية أو كود SKU للحصول على نتائج فورية.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <Button
+                  className="min-h-[48px] border border-brand-gold/40 bg-brand-gold px-7 text-base text-brand-green-darker hover:bg-brand-gold-light hover:text-brand-green-darker"
+                  onClick={() => {
+                    document
+                      .getElementById("products")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  تصفح الهدايا
+                </Button>
+                <Button
+                  variant="outline"
+                  className="min-h-[48px] border-[#e8dfc8]/35 bg-transparent px-7 text-base text-[#f4efe4] hover:bg-[#f4efe4]/10 hover:text-white"
+                  onClick={() => router.push("/present")}
+                >
+                  عرض تقديمي
+                </Button>
               </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Highlights */}
-        <section className="py-8 sm:py-10">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
-                <p className="text-sm text-muted-foreground">تجربة سريعة</p>
-                <p className="mt-1 text-base font-semibold">فلترة وبحث فوري</p>
-              </div>
-              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
-                <p className="text-sm text-muted-foreground">عرض جذاب</p>
-                <p className="mt-1 text-base font-semibold">تصميم إبداعي متجاوب</p>
-              </div>
-              <div className="rounded-2xl border bg-card/60 p-5 backdrop-blur">
-                <p className="text-sm text-muted-foreground">جاهز للمشاركة</p>
-                <p className="mt-1 text-base font-semibold">عرض تقديمي للكتالوج</p>
-              </div>
             </div>
           </div>
         </section>
 
         {/* Products Section */}
-        <section id="products" className="py-6 sm:py-14 md:py-24">
+        <section id="products" className="site-section-wash py-10 sm:py-16 md:py-20">
           <div className="container mx-auto px-4 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={catalogTransition}
-              className="mb-8 text-center"
+              className="mb-10 text-center"
             >
-              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              <p className="mb-2 text-sm font-semibold tracking-wide text-brand-gold-dark">
+                المجموعة الرسمية
+              </p>
+              <h2 className="mb-3 text-3xl font-bold text-brand-green-dark md:text-4xl dark:text-brand-gold-light">
                 معرض الهدايا
               </h2>
-              <p className="text-muted-foreground">
-                تصفح مجموعتنا المتنوعة من الهدايا الفاخرة والتراثية المعروضة
+              <p className="mx-auto max-w-lg text-muted-foreground">
+                ابحث بالاسم أو الكود، وصفِّ حسب التصنيف.
               </p>
             </motion.div>
 
-            {/* بحث مع اقتراحات */}
-            <div className="relative mb-6 max-w-md mx-auto">
+            <div className="relative mb-8 mx-auto max-w-lg">
               <input
                 type="text"
                 placeholder="ابحث عن هدية بالاسم أو الكود..."
@@ -416,10 +340,10 @@ function HomeContent() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                className="w-full rounded-xl border border-input bg-background/70 px-4 py-3 pr-10 text-right backdrop-blur focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-lg border border-brand-gold/25 bg-card px-4 py-3.5 text-right shadow-[0_10px_30px_-24px_hsl(168_40%_20%/0.35)] transition focus:border-brand-gold/50 focus:outline-none focus:ring-2 focus:ring-brand-green/25"
               />
               {correctedSearchQuery && (
-                <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-right">
+                <div className="mt-2 rounded-lg border border-brand-gold/30 bg-brand-gold/10 px-3 py-2 text-right">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm text-muted-foreground">
                       هل تقصد:{" "}
@@ -441,12 +365,12 @@ function HomeContent() {
                 </div>
               )}
               {(searchFocused || searchQuery) && searchSuggestions.length > 0 && (
-                <ul className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-lg border bg-background shadow-lg">
+                <ul className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-lg border border-brand-gold/20 bg-card shadow-lg">
                   {searchSuggestions.map((p) => (
                     <li key={p.slug}>
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-right text-sm hover:bg-muted/70"
+                        className="w-full px-4 py-2.5 text-right text-sm transition hover:bg-brand-green/5"
                         onClick={() => {
                           setSearchQuery(p.name);
                           setSearchFocused(false);
@@ -461,36 +385,33 @@ function HomeContent() {
               )}
             </div>
 
-            {/* Filters + ترتيب */}
-            <div className="mb-8 space-y-4">
-              <div>
-                <p className="mb-3 text-base font-semibold text-foreground">تصنيف الهدايا:</p>
-                <motion.div
-                  layout
-                  transition={catalogFilterTransition}
-                  className="flex flex-wrap gap-3"
+            <div className="mb-10">
+              <p className="mb-3 text-center text-sm font-semibold text-muted-foreground sm:text-right">
+                التصنيف
+              </p>
+              <motion.div
+                layout
+                transition={catalogFilterTransition}
+                className="flex flex-wrap justify-center gap-2 sm:justify-start"
+              >
+                <button
+                  type="button"
+                  className={`filter-chip ${selectedGiftTier === null ? "filter-chip-active" : "filter-chip-idle"}`}
+                  onClick={() => setSelectedGiftTier(null)}
                 >
-                  <Badge
-                    variant={selectedGiftTier === null ? "default" : "outline"}
-                    className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
-                    onClick={() => setSelectedGiftTier(null)}
+                  الكل
+                </button>
+                {giftTiers.map((tier) => (
+                  <button
+                    type="button"
+                    key={tier}
+                    className={`filter-chip ${selectedGiftTier === tier ? "filter-chip-active" : "filter-chip-idle"}`}
+                    onClick={() => setSelectedGiftTier(tier)}
                   >
-                    الكل
-                  </Badge>
-                  {giftTiers.map((tier) => (
-                    <Badge
-                      key={tier}
-                      variant={
-                        selectedGiftTier === tier ? "default" : "outline"
-                      }
-                      className="cursor-pointer text-base px-4 py-2 min-h-[44px] inline-flex items-center transition-all duration-200 hover:shadow-md active:scale-[0.98]"
-                      onClick={() => setSelectedGiftTier(tier)}
-                    >
-                      {getGiftTierLabel(tier)}
-                    </Badge>
-                  ))}
-                </motion.div>
-              </div>
+                    {getGiftTierLabel(tier)}
+                  </button>
+                ))}
+              </motion.div>
             </div>
 
             {/* شبكة المنتجات: عناصر الأرشيف أولاً ثم باقي الكتالوج */}
