@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { adminLoginUrl } from "@/lib/admin-login-path";
 import Image from "next/image";
 import {
   Plane,
@@ -93,7 +94,7 @@ export default function TripsPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login?next=/dashboard/trips");
+    if (authOk === false) router.replace(adminLoginUrl("/dashboard/trips"));
   }, [authOk, router]);
 
   const fetchTrips = useCallback(async () => {
@@ -104,7 +105,7 @@ export default function TripsPage() {
       if (res.ok && json.success && Array.isArray(json.trips)) {
         setTrips(json.trips);
       } else if (res.status === 401) {
-        router.replace("/login?next=/dashboard/trips");
+        router.replace(adminLoginUrl("/dashboard/trips"));
       } else {
         toast.error(json.error || "تعذر جلب الرحلات.");
       }
@@ -347,7 +348,7 @@ export default function TripsPage() {
         await fetchProducts();
       } else if (res.status === 401) {
         toast.error("انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard/trips");
+        router.replace(adminLoginUrl("/dashboard/trips"));
       } else {
         toast.error(json.error || "تعذر الحفظ.");
       }

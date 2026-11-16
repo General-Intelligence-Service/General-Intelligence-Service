@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin-login-path";
 import Link from "next/link";
 import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default function GiftScannerPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login");
+    if (authOk === false) router.replace(ADMIN_LOGIN_PATH);
   }, [authOk, router]);
 
   const handleScan = async (decodedText: string) => {

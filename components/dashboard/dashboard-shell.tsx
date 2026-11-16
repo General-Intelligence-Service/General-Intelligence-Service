@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin-login-path";
 import {
   Package,
   ClipboardList,
@@ -188,7 +189,7 @@ export function DashboardShell({
     } catch {
       //
     }
-    router.replace("/login");
+    router.replace(ADMIN_LOGIN_PATH);
   };
 
   return (

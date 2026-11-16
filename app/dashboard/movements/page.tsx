@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ADMIN_LOGIN_PATH, adminLoginUrl } from "@/lib/admin-login-path";
 import { Download, FileText, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
@@ -28,7 +29,7 @@ export default function MovementsPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login");
+    if (authOk === false) router.replace(ADMIN_LOGIN_PATH);
   }, [authOk, router]);
 
   const fetchData = async () => {
@@ -40,7 +41,7 @@ export default function MovementsPage() {
         setRows(json.summary);
       } else if (res.status === 401) {
         toast.error("انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard/movements");
+        router.replace(adminLoginUrl("/dashboard/movements"));
       } else {
         toast.error(json.error || "تعذر جلب سجل الحركة.");
       }

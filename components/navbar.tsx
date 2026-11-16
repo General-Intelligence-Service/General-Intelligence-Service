@@ -19,7 +19,22 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/session", { credentials: "include" })
+      .then((res) => {
+        if (!cancelled) setIsAdmin(res.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setIsAdmin(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const logoSrc = useMemo(() => {
     const path = mounted && resolvedTheme === "dark" ? siteConfig.logoDarkPath : siteConfig.logoPath;
@@ -60,16 +75,17 @@ export function Navbar() {
             <MonitorPlay className="h-4 w-4 shrink-0" aria-hidden />
             عرض تقديمي
           </Link>
-          <Link
-            href="/login"
-            className="rounded-md border border-brand-gold/40 px-3 py-2 text-sm font-medium text-brand-green-dark transition-colors hover:bg-brand-gold/15 dark:text-brand-gold-light"
-          >
-            تسجيل الدخول
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/dashboard"
+              className="rounded-md border border-brand-gold/40 px-3 py-1.5 text-xs font-medium text-brand-green-dark transition-colors hover:bg-brand-gold/15 dark:text-brand-gold-light"
+            >
+              لوحة التحكم
+            </Link>
+          )}
           <ThemeToggle />
         </div>
 
-        {/* Mobile Navigation */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <button
@@ -104,13 +120,15 @@ export function Navbar() {
                 <MonitorPlay className="h-5 w-5 shrink-0" aria-hidden />
                 عرض تقديمي
               </Link>
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                تسجيل الدخول
-              </Link>
+              {isAdmin && (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="text-lg font-medium text-brand-green-dark transition-colors hover:text-brand-gold-dark dark:text-brand-gold-light"
+                >
+                  لوحة التحكم
+                </Link>
+              )}
             </div>
           </SheetContent>
         </Sheet>
@@ -118,4 +136,3 @@ export function Navbar() {
     </nav>
   );
 }
-

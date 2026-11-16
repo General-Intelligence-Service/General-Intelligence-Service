@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { adminLoginUrl } from "@/lib/admin-login-path";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +51,7 @@ export default function ScanPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login?next=/scan");
+    if (authOk === false) router.replace(adminLoginUrl("/scan"));
   }, [authOk, router]);
 
   const handleScan = async (decodedText: string) => {

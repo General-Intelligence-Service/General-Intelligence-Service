@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ADMIN_LOGIN_PATH } from "@/lib/admin-login-path";
 import { DashboardView } from "./dashboard-view";
 
 export default function DashboardPage() {
@@ -18,7 +19,7 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login");
+    if (authOk === false) router.replace(ADMIN_LOGIN_PATH);
   }, [authOk, router]);
 
   if (authOk === null) {

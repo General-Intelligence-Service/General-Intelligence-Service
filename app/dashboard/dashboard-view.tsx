@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ADMIN_LOGIN_PATH, adminLoginUrl } from "@/lib/admin-login-path";
 import { ProductForm } from "@/components/dashboard/product-form";
 import { Product, products as initialProducts } from "@/data/products";
 import { notifyProductsStorageChanged } from "@/lib/products-local-storage";
@@ -189,9 +190,9 @@ export function DashboardView() {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-      router.replace("/login");
+      router.replace(ADMIN_LOGIN_PATH);
     } catch {
-      router.replace("/login");
+      router.replace(ADMIN_LOGIN_PATH);
     }
   };
 
@@ -270,7 +271,7 @@ export function DashboardView() {
       }
       if (response.status === 401) {
         notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard");
+        router.replace(adminLoginUrl("/dashboard"));
         return;
       }
       notifyError(result.error || `تعذر الحفظ (${response.status})`);
@@ -487,7 +488,7 @@ export function DashboardView() {
         }
         if (res.status === 401) {
           notifyError(json.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
-          router.replace("/login?next=/dashboard");
+          router.replace(adminLoginUrl("/dashboard"));
           return;
         }
         if (res.status === 503) {
@@ -724,7 +725,7 @@ export function DashboardView() {
       );
       if (response.status === 401) {
         notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard");
+        router.replace(adminLoginUrl("/dashboard"));
         return;
       }
       notifyError(result.error || "تعذر حفظ الكمية");
@@ -754,7 +755,7 @@ export function DashboardView() {
       }
       if (response.status === 401) {
         notifyError(result.error || "انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard");
+        router.replace(adminLoginUrl("/dashboard"));
         return;
       }
       notifyError(result.error || "تعذر تحديث الإخفاء");

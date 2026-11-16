@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ADMIN_LOGIN_PATH, adminLoginUrl } from "@/lib/admin-login-path";
 import { GripVertical, Plus, Save, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
@@ -47,7 +48,7 @@ export default function TodayGiftsDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (authOk === false) router.replace("/login");
+    if (authOk === false) router.replace(ADMIN_LOGIN_PATH);
   }, [authOk, router]);
 
   const fetchProducts = useCallback(async () => {
@@ -174,7 +175,7 @@ export default function TodayGiftsDashboardPage() {
         toast.success("تم حفظ هدايا اليوم بنجاح.");
       } else if (res.status === 401) {
         toast.error("انتهت الجلسة. سجّل الدخول مرة أخرى.");
-        router.replace("/login?next=/dashboard/today-gifts");
+        router.replace(adminLoginUrl("/dashboard/today-gifts"));
       } else {
         toast.error(json.success ? "تعذر الحفظ" : json.error || "تعذر الحفظ");
       }
