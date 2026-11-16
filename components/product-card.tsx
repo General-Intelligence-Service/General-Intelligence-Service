@@ -99,51 +99,96 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
           outOfStock && "opacity-90"
         )}
       >
-        {/* صورة — الضغط يفتح العرض السريع إن وُجد، وإلا صفحة المنتج */}
+        {/* صورة المنتج */}
         <div className="relative">
-          <button
-            type="button"
-            className="relative block w-full text-right"
-            onClick={(e) => {
-              if (onQuickView) handleQuickView(e);
-              else {
-                saveCatalogViewSnapshot();
-                window.location.href = `/products/${product.slug}`;
-              }
-            }}
-            aria-label={`عرض سريع: ${product.name}`}
+          <div
+            className={cn(
+              "group/media relative aspect-square w-full overflow-hidden bg-white dark:bg-[#14201c]",
+              outOfStock && "opacity-60 grayscale-[35%]"
+            )}
           >
-            <div
-              className={cn(
-                "relative aspect-square w-full overflow-hidden bg-[#F7F3EA] dark:bg-[#1a2420]",
-                outOfStock && "opacity-60 grayscale-[35%]"
-              )}
-            >
-              <Image
-                src={displayImage}
-                alt={product.name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-contain transition-transform duration-300 md:group-hover:scale-105"
-                loading="lazy"
-                unoptimized={isExternalOrArchiveImageSrc(displayImage)}
-                placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
+            <Image
+              src={displayImage}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-[400ms] ease-out md:group-hover/media:scale-105"
+              loading="lazy"
+              unoptimized={isExternalOrArchiveImageSrc(displayImage)}
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+            />
+
+            {/* ضغط الصورة على الجوال يفتح العرض السريع */}
+            {onQuickView ? (
+              <button
+                type="button"
+                className="absolute inset-0 z-[1] md:hidden"
+                onClick={handleQuickView}
+                aria-label={`عرض سريع لـ ${product.name}`}
               />
-              {onQuickView && (
-                <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-black/0 transition md:flex md:group-hover:bg-black/15">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-brand-green-dark opacity-0 shadow transition md:group-hover:opacity-100">
-                    <Eye className="h-5 w-5" />
-                  </span>
-                </span>
-              )}
-            </div>
-          </button>
+            ) : (
+              <button
+                type="button"
+                className="absolute inset-0 z-[1] md:hidden"
+                onClick={() => {
+                  saveCatalogViewSnapshot();
+                  window.location.href = `/products/${product.slug}`;
+                }}
+                aria-label={product.name}
+              />
+            )}
+
+            {/* تدرج أسفل الصورة — كمبيوتر عند hover / focus */}
+            {onQuickView && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 z-[1] hidden opacity-0 transition-opacity duration-200 md:block md:group-hover/media:opacity-100 md:group-focus-within/media:opacity-100"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(12,51,40,0.75), transparent 45%)",
+                }}
+              />
+            )}
+
+            {/* كبسولة «عرض سريع» — كمبيوتر فقط */}
+            {onQuickView && (
+              <button
+                type="button"
+                onClick={handleQuickView}
+                aria-label={`عرض سريع لـ ${product.name}`}
+                className={cn(
+                  "absolute bottom-3 left-1/2 z-[2] hidden -translate-x-1/2 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold text-[#0c3328]",
+                  "bg-white/92 shadow-md backdrop-blur-md",
+                  "opacity-0 translate-y-2 transition-all duration-200 ease-out",
+                  "hover:bg-[#C9A96E] hover:text-white",
+                  "focus-visible:opacity-100 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A96E] focus-visible:ring-offset-2",
+                  "md:inline-flex md:group-hover/media:opacity-100 md:group-hover/media:translate-y-0",
+                  "md:group-focus-within/media:opacity-100 md:group-focus-within/media:translate-y-0"
+                )}
+              >
+                <Eye className="h-4 w-4 shrink-0" aria-hidden />
+                عرض سريع
+              </button>
+            )}
+
+            {/* زر دائري للجوال — أسفل اليسار دائماً */}
+            {onQuickView && (
+              <button
+                type="button"
+                onClick={handleQuickView}
+                aria-label={`عرض سريع لـ ${product.name}`}
+                className="absolute bottom-2 left-2 z-[2] inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#0c3328] shadow-md backdrop-blur-md md:hidden"
+              >
+                <Eye className="h-4 w-4" aria-hidden />
+              </button>
+            )}
+          </div>
 
           {product.giftTier && (
             <span
               className={cn(
-                "absolute left-2 top-2 z-[1] rounded-md border px-2 py-0.5 text-[10px] font-bold sm:text-xs",
+                "absolute right-2 top-2 z-[3] rounded-md border px-2 py-0.5 text-[10px] font-bold sm:text-xs",
                 tierBadgeClass(product.giftTier)
               )}
             >
@@ -152,7 +197,7 @@ export function ProductCard({ product, index = 0, onAddToOrder, onQuickView }: P
           )}
 
           {outOfStock && (
-            <span className="absolute right-2 top-2 z-[1] rounded-md bg-destructive px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">
+            <span className="absolute left-2 top-2 z-[3] rounded-md bg-destructive px-2 py-0.5 text-[10px] font-bold text-white sm:text-xs">
               نفدت الكمية
             </span>
           )}

@@ -25,6 +25,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 160 14% 86%;
     --input: 160 14% 86%;
+    --input-bg: #F7F8F6;
     --ring: 168 72% 15%;
     --radius: 0.65rem;
     --chart-1: 168 55% 28%;
@@ -53,6 +54,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 168 20% 18%;
     --input: 168 20% 18%;
+    --input-bg: hsl(168 22% 13%);
     --ring: 40 28% 68%;
   }
 }
@@ -67,6 +69,22 @@
   ::selection {
     background: hsl(168 45% 28% / 0.22);
     color: hsl(var(--foreground));
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--input-bg, #F7F8F6) inset;
+    box-shadow: 0 0 0 1000px var(--input-bg, #F7F8F6) inset;
+    -webkit-text-fill-color: hsl(var(--foreground));
+    caret-color: hsl(var(--foreground));
+    transition: background-color 9999s ease-out;
   }
 }
 
@@ -103,10 +121,6 @@
       radial-gradient(ellipse 80% 70% at 50% 40%, #1a5a48 0%, transparent 65%),
       radial-gradient(ellipse 100% 100% at 50% 50%, #0c3328 0%, #082820 100%);
     color: #ffffff;
-  }
-
-  .site-hero-logo {
-    filter: brightness(0) invert(1);
   }
 
   .gold-fade-rule {

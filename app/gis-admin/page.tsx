@@ -1,12 +1,11 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { siteConfig } from "@/lib/config";
+import { SiteLogo } from "@/components/site-logo";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,8 +16,6 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const logoSrc = `${siteConfig.logoDarkPath || siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +45,10 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm space-y-6">
       <div className="text-center space-y-4">
-        <Image
-          src={logoSrc}
-          alt={siteConfig.logoAlt}
-          width={480}
-          height={130}
-          className="mx-auto h-auto w-full max-w-[220px] object-contain"
+        <SiteLogo
+          variant="default"
+          layout="stacked"
+          className="mx-auto"
           priority
         />
         <h1 className="text-2xl font-bold text-brand-green-dark dark:text-brand-gold-light">

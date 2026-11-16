@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ADMIN_LOGIN_PATH } from "@/lib/admin-login-path";
 import {
@@ -16,9 +15,9 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { SiteLogo } from "@/components/site-logo";
 
 type NavItem = {
   href: string;
@@ -91,18 +90,15 @@ function SidebarContent({
   onNavigate?: () => void;
   onLogout: () => void;
 }) {
-  const logoSrc = `${siteConfig.logoDarkPath || siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
-
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-white/10 px-4 py-5">
         <Link href="/dashboard" onClick={onNavigate} className="block">
-          <Image
-            src={logoSrc}
-            alt={siteConfig.logoAlt}
-            width={480}
-            height={130}
-            className="mx-auto h-auto w-full max-w-[180px] object-contain brightness-0 invert"
+          <SiteLogo
+            variant="onDark"
+            layout="stacked"
+            className="mx-auto"
+            iconClassName="h-14 w-14"
             priority
           />
         </Link>

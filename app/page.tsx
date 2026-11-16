@@ -2,9 +2,9 @@
 
 import { Suspense, useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
+import { SiteLogo } from "@/components/site-logo";
 import {
   catalogFilterTransition,
   catalogTransition,
@@ -127,11 +127,6 @@ function HomeContent() {
   const sortRef = useRef<HTMLDivElement>(null);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  /** شعار الهيرو: نسخة داكنة/فاتحة إن وُجدت، مع فلتر أبيض لأن خلفية الـ Hero خضراء دائماً */
-  const heroLogoSrc = `${siteConfig.logoDarkPath || siteConfig.logoPath}?v=${siteConfig.logoAssetVersion}`;
-  const logoWidth = 2400;
-  const logoHeight = 650;
-
   useEffect(() => {
     if (!sortOpen) return;
     const onPointer = (e: MouseEvent) => {
@@ -339,14 +334,12 @@ function HomeContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={catalogTransition}
               >
-                <Image
-                  src={heroLogoSrc}
-                  alt={siteConfig.logoAlt}
-                  width={logoWidth}
-                  height={logoHeight}
-                  className="site-hero-logo mx-auto h-auto w-full max-w-[480px] object-contain drop-shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+                <SiteLogo
+                  variant="light"
+                  layout="stacked"
+                  className="mx-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                  iconClassName="drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]"
                   priority
-                  sizes="(max-width: 640px) 92vw, 480px"
                 />
               </motion.div>
 

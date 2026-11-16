@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, MonitorPlay } from "lucide-react";
-import { useTheme } from "next-themes";
 import {
   Sheet,
   SheetContent,
@@ -14,13 +12,11 @@ import {
 } from "@/components/ui/sheet";
 import { siteConfig } from "@/lib/config";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteLogo } from "@/components/site-logo";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,13 +32,6 @@ export function Navbar() {
     };
   }, []);
 
-  const logoSrc = useMemo(() => {
-    const path = mounted && resolvedTheme === "dark" ? siteConfig.logoDarkPath : siteConfig.logoPath;
-    return `${path}?v=${siteConfig.logoAssetVersion}`;
-  }, [mounted, resolvedTheme]);
-  const logoWidth = 2400;
-  const logoHeight = 650;
-
   return (
     <nav className="no-print lux-chrome-header sticky top-0 z-50 w-full">
       <div className="container mx-auto flex h-[4.25rem] items-center justify-between px-4">
@@ -50,14 +39,11 @@ export function Navbar() {
           href="/"
           className="flex min-w-0 max-w-none items-center gap-2 sm:gap-3"
         >
-          <Image
-            src={logoSrc}
-            alt={siteConfig.logoAlt}
-            width={logoWidth}
-            height={logoHeight}
-            className="h-[44px] w-auto max-w-[280px] object-contain sm:h-[48px] sm:max-w-[360px] md:h-[52px] md:max-w-[440px] lg:max-w-[520px]"
+          <SiteLogo
+            variant="default"
+            layout="inline"
+            className="max-w-[min(100%,20rem)]"
             priority
-            sizes="(max-width: 640px) 280px, (max-width: 1024px) 400px, 520px"
           />
         </Link>
 

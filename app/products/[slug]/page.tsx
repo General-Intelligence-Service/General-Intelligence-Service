@@ -240,18 +240,14 @@ export default function ProductPage({ params }: ProductPageProps) {
                     onClose={() => setQrOpen(false)}
                   />
                 )}
-                {lightboxOpen ? (
-                  <ImageLightbox
-                    images={galleryImages}
-                    currentIndex={lightboxIndex}
-                    onClose={() => setLightboxOpen(false)}
-                    onPrev={() => setLightboxIndex((i) => Math.max(0, i - 1))}
-                    onNext={() =>
-                      setLightboxIndex((i) => Math.min(galleryImages.length - 1, i + 1))
-                    }
-                    productName={product.name}
-                  />
-                ) : null}
+                <ImageLightbox
+                  open={lightboxOpen}
+                  onClose={() => setLightboxOpen(false)}
+                  images={galleryImages}
+                  initialIndex={lightboxIndex}
+                  title={product.name}
+                  subtitle={`كود: ${product.sku}`}
+                />
               </motion.div>
 
               {/* Product Info */}

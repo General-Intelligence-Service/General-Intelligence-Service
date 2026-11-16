@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   Plus,
@@ -37,8 +36,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Product,
   getGiftTierLabel,
-  getProductDisplayImage,
-  isExternalOrArchiveImageSrc,
   type GiftTier,
 } from "@/data/products";
 import { getStoredOrders, saveStoredOrders, type OrderRecord } from "@/types/order";
@@ -48,6 +45,7 @@ import { siteConfig } from "@/lib/config";
 import { useConfirm } from "@/components/confirm-dialog-provider";
 import { notifyError, notifyInfo, notifySuccess } from "@/lib/notify";
 import { cn } from "@/lib/utils";
+import { ProductImageThumb } from "@/components/image-lightbox";
 
 type StockFilter = "all" | "in_stock" | "low" | "out";
 type TierFilter = "all" | GiftTier;
@@ -619,20 +617,16 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
                     {displayedProducts.map((product) => {
                       const qty = product.availableQuantity ?? 0;
                       const status = stockStatus(qty);
-                      const thumb = getProductDisplayImage(product);
                       return (
                         <tr key={product.slug} className="border-b last:border-0 transition hover:bg-muted/30">
                           <td className="px-3 py-3">
-                            <div className="relative h-12 w-12 overflow-hidden rounded-md border bg-muted">
-                              <Image
-                                src={thumb}
-                                alt=""
-                                fill
-                                className="object-cover"
-                                sizes="48px"
-                                unoptimized={isExternalOrArchiveImageSrc(thumb)}
-                              />
-                            </div>
+                            <ProductImageThumb
+                              images={product.images ?? []}
+                              name={product.name}
+                              sku={product.sku}
+                              sizeClassName="h-12 w-12"
+                              sizes="48px"
+                            />
                           </td>
                           <td className="px-3 py-3">
                             <p className="font-medium leading-snug">{product.name}</p>
@@ -721,20 +715,16 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
             {displayedProducts.map((product) => {
               const qty = product.availableQuantity ?? 0;
               const status = stockStatus(qty);
-              const thumb = getProductDisplayImage(product);
               return (
                 <div key={product.slug} className="rounded-xl border bg-white p-3 shadow-sm dark:bg-card">
                   <div className="flex gap-3">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-muted">
-                      <Image
-                        src={thumb}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="56px"
-                        unoptimized={isExternalOrArchiveImageSrc(thumb)}
-                      />
-                    </div>
+                    <ProductImageThumb
+                      images={product.images ?? []}
+                      name={product.name}
+                      sku={product.sku}
+                      sizeClassName="h-14 w-14 shrink-0 rounded-lg"
+                      sizes="56px"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold leading-snug truncate">{product.name}</p>
                       <p className="text-xs text-muted-foreground">{product.sku}</p>
