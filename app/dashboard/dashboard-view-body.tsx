@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { SecurityAlerts } from "@/components/dashboard/security-alerts";
 import { useSearchParams } from "next/navigation";
 import {
   Plus,
@@ -292,6 +293,8 @@ export function DashboardViewBody(props: DashboardViewReturnProps) {
           </div>
         )}
       </div>
+
+      {dashboardTab === "products" && <SecurityAlerts />}
 
       {/* Stats — products tab */}
       {dashboardTab === "products" && (

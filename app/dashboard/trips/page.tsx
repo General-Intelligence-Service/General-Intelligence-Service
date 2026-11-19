@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminLoginUrl } from "@/lib/admin-login-path";
 import Image from "next/image";
@@ -18,6 +18,8 @@ import {
   Luggage,
   CheckCircle2,
   Clock3,
+  Check,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/app/dashboard/dashboard-layout";
@@ -34,6 +36,11 @@ type GiftDraft = TripGiftInput & { key: string };
 type StatusFilter = "all" | "open" | "returned";
 type SortOrder = "newest" | "oldest";
 type ReturnDraft = Record<string, { deliveredQty: number; returnedQty: number; deliveredTo: string }>;
+
+const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
+  { value: "newest", label: "الأحدث" },
+  { value: "oldest", label: "الأقدم" },
+];
 
 function isoToday(): string {
   return new Date().toISOString().slice(0, 10);
@@ -86,6 +93,26 @@ export default function TripsPage() {
   const [listQuery, setListQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onPointer = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSortOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [sortOpen]);
 
   useEffect(() => {
     fetch("/api/auth/session", { credentials: "include" })
@@ -524,15 +551,54 @@ export default function TripsPage() {
                   {label}
                 </button>
               ))}
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                className="min-h-[36px] rounded-full border border-input bg-background px-3 text-sm"
-                aria-label="ترتيب"
-              >
-                <option value="newest">الأحدث</option>
-                <option value="oldest">الأقدم</option>
-              </select>
+              <div className="relative" ref={sortRef}>
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={sortOpen}
+                  aria-label="ترتيب"
+                  onClick={() => setSortOpen((o) => !o)}
+                  className={cn(
+                    "inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-sm font-medium transition",
+                    sortOpen
+                      ? "bg-brand-green-dark text-white dark:bg-brand-gold dark:text-brand-green-darker"
+                      : "border border-border bg-white text-foreground hover:border-brand-gold/50 dark:bg-card"
+                  )}
+                >
+                  {SORT_OPTIONS.find((o) => o.value === sortOrder)?.label ?? "الأحدث"}
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition", sortOpen && "rotate-180")} />
+                </button>
+                {sortOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute left-0 z-40 mt-2 min-w-[9.5rem] overflow-hidden rounded-2xl border border-border bg-white p-1 shadow-lg dark:bg-card"
+                  >
+                    {SORT_OPTIONS.map((opt) => {
+                      const active = sortOrder === opt.value;
+                      return (
+                        <li key={opt.value} role="option" aria-selected={active}>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                              active
+                                ? "bg-brand-green-dark text-white dark:bg-brand-gold dark:text-brand-green-darker"
+                                : "hover:bg-muted"
+                            )}
+                            onClick={() => {
+                              setSortOrder(opt.value);
+                              setSortOpen(false);
+                            }}
+                          >
+                            <span>{opt.label}</span>
+                            {active ? <Check className="h-4 w-4 shrink-0" /> : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
 

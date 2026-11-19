@@ -15,8 +15,12 @@ export const productCreateSchema = z.object({
   slug: z.string().trim().max(255).optional(),
   sku: z.string().trim().max(64).optional(),
   name: z.string().trim().min(1, "الاسم مطلوب").max(512),
-  shortDescription: z.string().max(4000).optional().default(""),
-  contents: z.array(z.string().max(500)).max(100).optional().default([]),
+  shortDescription: z.string().trim().max(4000).optional().default(""),
+  contents: z
+    .array(z.string().trim().max(500))
+    .max(100)
+    .optional()
+    .default([]),
   giftTier: giftTierSchema.optional().default("standard"),
   images: z.array(imageUrlSchema).max(30).optional().default([]),
   availableQuantity: z.coerce.number().int().min(0).max(999999).optional().default(0),
@@ -30,8 +34,8 @@ export const productUpdateSchema = z.object({
   slug: z.string().trim().min(1).max(255),
   sku: z.string().trim().max(64).optional(),
   name: z.string().trim().min(1).max(512).optional(),
-  shortDescription: z.string().max(4000).optional(),
-  contents: z.array(z.string().max(500)).max(100).optional(),
+  shortDescription: z.string().trim().max(4000).optional(),
+  contents: z.array(z.string().trim().max(500)).max(100).optional(),
   giftTier: giftTierSchema.optional(),
   images: z.array(imageUrlSchema).max(30).optional(),
   availableQuantity: z.coerce.number().int().min(0).max(999999).optional(),

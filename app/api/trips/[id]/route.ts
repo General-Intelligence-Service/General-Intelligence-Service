@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auditRequestMeta, diffFields, writeAuditLog } from "@/lib/audit-log";
 import { getSession } from "@/lib/auth-session";
 import {
   deleteTrip,
@@ -78,7 +79,39 @@ export async function PUT(
       notes: typeof body.notes === "string" ? body.notes : null,
       gifts: parseGifts(body.gifts),
     };
+    const before = await getTrip(params.id);
     const trip = await updateTrip(params.id, input, session.email);
+    const changes = before
+      ? diffFields(
+          {
+            organization: before.organization,
+            recipient: before.recipient,
+            destination: before.destination,
+            tripDate: before.tripDate,
+            returnDate: before.returnDate ?? null,
+            notes: before.notes ?? null,
+          },
+          {
+            organization: trip.organization,
+            recipient: trip.recipient,
+            destination: trip.destination,
+            tripDate: trip.tripDate,
+            returnDate: trip.returnDate ?? null,
+            notes: trip.notes ?? null,
+          },
+          ["organization", "recipient", "destination", "tripDate", "returnDate", "notes"]
+        )
+      : {};
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "trip.update",
+      targetType: "رحلة",
+      targetId: trip.id,
+      targetLabel: trip.destination || trip.id,
+      changes: Object.keys(changes).length ? changes : null,
+      ...auditRequestMeta(request),
+      result: "success",
+    });
     return NextResponse.json({ success: true, trip });
   } catch (e) {
     console.error("PUT /api/trips/[id]:", e);
@@ -88,7 +121,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -102,10 +135,20 @@ export async function DELETE(
         { status: 503 }
       );
     }
+    const before = await getTrip(params.id);
     const ok = await deleteTrip(params.id, session.email);
     if (!ok) {
       return NextResponse.json({ success: false, error: "الرحلة غير موجودة" }, { status: 404 });
     }
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "trip.delete",
+      targetType: "رحلة",
+      targetId: params.id,
+      targetLabel: before?.destination || params.id,
+      ...auditRequestMeta(request),
+      result: "success",
+    });
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("DELETE /api/trips/[id]:", e);

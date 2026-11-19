@@ -13,6 +13,7 @@ import { DashboardViewReturn } from "./dashboard-view-return";
 import type { InputChangeEvent } from "./dashboard-types";
 import { useConfirm } from "@/components/confirm-dialog-provider";
 import { notifyError, notifySuccess, notifyInfo } from "@/lib/notify";
+import { logClientAudit } from "@/lib/client-audit";
 
 export function DashboardView() {
   const router = useRouter();
@@ -221,10 +222,12 @@ export function DashboardView() {
       }
       const payload = {
         slug,
-        sku: product.sku ?? "",
-        name: product.name ?? "",
-        shortDescription: product.shortDescription ?? "",
-        contents: Array.isArray(product.contents) ? product.contents : [],
+        sku: (product.sku ?? "").trim(),
+        name: (product.name ?? "").trim(),
+        shortDescription: (product.shortDescription ?? "").trim(),
+        contents: Array.isArray(product.contents)
+          ? product.contents.map((c) => String(c).trim()).filter(Boolean)
+          : [],
         giftTier: product.giftTier ?? "standard",
         images: Array.isArray(product.images) ? product.images : [],
         availableQuantity: product.availableQuantity ?? 0,
@@ -326,6 +329,7 @@ export function DashboardView() {
       utils.book_append_sheet(wb, ws, "الهدايا");
       const filename = `تصدير-بيانات-الهدايا-${new Date().toISOString().slice(0, 10)}.xlsx`;
       writeFile(wb, filename);
+      logClientAudit({ action: "data.export_excel", targetType: "ملف", targetLabel: filename });
     } catch (e) {
       console.error(e);
       notifyError("تعذر إنشاء ملف Excel.");
@@ -524,6 +528,12 @@ export function DashboardView() {
       } else {
         notifySuccess(`تم تحديث كميات ${successCount} منتج بنجاح.${tail}`);
       }
+      logClientAudit({
+        action: "data.import_excel",
+        targetType: "ملف",
+        targetLabel: `${file.name.slice(0, 200)} · ${successCount} منتج`,
+        result: failedNames.length > 0 && successCount === 0 ? "failure" : "success",
+      });
     } catch (err) {
       console.error(err);
       notifyError("تعذر قراءة ملف Excel أو تطبيق التحديث.");
@@ -541,6 +551,7 @@ export function DashboardView() {
     a.download = `هدايا-نسخة-احتياطية-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    logClientAudit({ action: "data.backup_download", targetType: "ملف", targetLabel: a.download });
   };
 
   /** يُستدعى بعد تأكيد الواجهة (كتابة كلمة «استعادة») */
@@ -551,6 +562,11 @@ export function DashboardView() {
       notifyProductsStorageChanged();
     }
     notifySuccess("تمت الاستعادة بنجاح.");
+    logClientAudit({
+      action: "data.backup_restore",
+      targetType: "ملف",
+      targetLabel: `استعادة ${data.length} هدية`,
+    });
   };
 
   const parseRestoreFile = (file: File): Promise<Product[] | null> => {

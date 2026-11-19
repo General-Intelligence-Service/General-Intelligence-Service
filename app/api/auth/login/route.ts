@@ -13,8 +13,12 @@ import {
 } from "@/lib/rate-limit";
 import { loginSchema } from "@/lib/product-schemas";
 import { withNoStore } from "@/lib/security-headers";
+import { getTotpStatusStrict } from "@/lib/admin-security-db";
+import { createPending2faToken, setPending2faCookie } from "@/lib/pending-2fa";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const GENERIC_AUTH_ERROR = "البريد أو كلمة المرور غير صحيحة";
 
@@ -42,10 +46,21 @@ function tooMany(reset: number) {
 }
 
 export async function POST(request: NextRequest) {
+  const meta = auditRequestMeta(request);
   try {
     const ip = getClientIp(request);
     const ipLimit = await limitLoginByIp(ip);
     if (!ipLimit.success) {
+      await writeAuditLog({
+        actorEmail: null,
+        action: "auth.login_locked",
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        result: "failure",
+        changes: null,
+        targetType: "ip",
+        targetId: ip,
+      });
       return tooMany(ipLimit.reset);
     }
 
@@ -61,6 +76,13 @@ export async function POST(request: NextRequest) {
 
     const emailLimit = await limitLoginByEmail(email);
     if (!emailLimit.success) {
+      await writeAuditLog({
+        actorEmail: email,
+        action: "auth.login_locked",
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        result: "failure",
+      });
       return tooMany(emailLimit.reset);
     }
 
@@ -74,18 +96,48 @@ export async function POST(request: NextRequest) {
     }
 
     if (!allowed || !passwordOk) {
+      await writeAuditLog({
+        actorEmail: email,
+        action: "auth.login_failed",
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+        result: "failure",
+      });
       return unauthorized();
     }
-
-    const token = await createSessionToken(email);
-    await setSessionCookie(token);
 
     const nextUrl =
       typeof parsed.data.next === "string" && parsed.data.next.startsWith("/")
         ? parsed.data.next
         : "/dashboard";
 
-    return NextResponse.json({ success: true, redirect: nextUrl }, withNoStore({ status: 200 }));
+    // كلمة المرور صحيحة — إن كان 2FA مفعّلاً لا نُنشئ الجلسة بعد
+    // fail-closed: إن تعذّر التحقق من حالة 2FA لا نُنشئ الجلسة
+    const twoFactorEnabled = await getTotpStatusStrict(email);
+    if (twoFactorEnabled) {
+      const pending = await createPending2faToken(email, 0);
+      await setPending2faCookie(pending);
+      return NextResponse.json(
+        { success: true, twoFactor: true, next: nextUrl },
+        withNoStore({ status: 200 })
+      );
+    }
+
+    const token = await createSessionToken(email, { totpEnabled: false });
+    await setSessionCookie(token);
+
+    await writeAuditLog({
+      actorEmail: email,
+      action: "auth.login_success",
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+      result: "success",
+    });
+
+    return NextResponse.json(
+      { success: true, redirect: nextUrl },
+      withNoStore({ status: 200 })
+    );
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

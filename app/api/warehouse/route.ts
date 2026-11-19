@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
 import { isTodayGiftsDbConfigured } from "@/lib/today-gifts-db";
 import { applyWarehouseEntriesAndUpdateStock } from "@/lib/gift-movements-db";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,21 @@ export async function PUT(request: NextRequest) {
     })).filter((i) => i.slug);
 
     const applied = await applyWarehouseEntriesAndUpdateStock(day, normalized, session.email);
+    if (applied.appliedCount > 0) {
+      const changes = Object.fromEntries(
+        normalized.map((i) => [i.slug, { from: null, to: { خروج: i.outQty, دخول: i.inQty } }])
+      );
+      await writeAuditLog({
+        actorEmail: session.email,
+        action: "warehouse.movement",
+        targetType: "حركة مستودع",
+        targetId: day,
+        targetLabel: `${day} · ${applied.appliedCount} هدية`,
+        changes,
+        ...auditRequestMeta(request),
+        result: "success",
+      });
+    }
     return NextResponse.json({ success: true, day, appliedCount: applied.appliedCount });
   } catch (e) {
     console.error("PUT /api/warehouse:", e);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
 import {
   completeTripReturn,
   isTripsDbConfigured,
@@ -40,6 +41,15 @@ export async function POST(
 
     const returnDate = typeof body.returnDate === "string" ? body.returnDate : null;
     const trip = await completeTripReturn(params.id, items, session.email, returnDate);
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "trip.return",
+      targetType: "رحلة",
+      targetId: params.id,
+      targetLabel: trip?.destination || params.id,
+      ...auditRequestMeta(request),
+      result: "success",
+    });
     return NextResponse.json({ success: true, trip });
   } catch (e) {
     console.error("POST /api/trips/[id]/return:", e);

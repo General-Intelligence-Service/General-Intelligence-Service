@@ -10,8 +10,11 @@ import {
   updateProduct,
   deleteProduct,
   getNextAvailableSku,
+  getProductBySlug,
 } from "@/lib/products-db";
 import { getSession } from "@/lib/auth-session";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
+import { classifyProductUpdateAction, productDiff } from "@/lib/audit-product";
 import { generateProductSlug } from "@/lib/slug";
 import { productCreateSchema, productUpdateSchema } from "@/lib/product-schemas";
 import { withNoStore } from "@/lib/security-headers";
@@ -113,11 +116,11 @@ export async function POST(request: NextRequest) {
     const v = parsed.data;
     const requestedSku = (v.sku ?? "").trim();
     let newProduct: Product = {
-      slug: (v.slug && v.slug.trim()) || generateProductSlug(v.name),
+      slug: (v.slug && v.slug.trim()) || generateProductSlug(v.name.trim()),
       sku: requestedSku || (await getNextAvailableSku()),
-      name: v.name,
-      shortDescription: v.shortDescription ?? "",
-      contents: v.contents ?? [],
+      name: v.name.trim(),
+      shortDescription: (v.shortDescription ?? "").trim(),
+      contents: (v.contents ?? []).map((c) => String(c).trim()).filter(Boolean),
       giftTier: (v.giftTier as GiftTier) || "standard",
       images: v.images ?? [],
       availableQuantity: v.availableQuantity ?? 0,
@@ -131,6 +134,15 @@ export async function POST(request: NextRequest) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         await createProduct(newProduct);
+        await writeAuditLog({
+          actorEmail: session.email,
+          action: "product.create",
+          targetType: "هدية",
+          targetId: newProduct.sku,
+          targetLabel: newProduct.name,
+          ...auditRequestMeta(request),
+          result: "success",
+        });
         return NextResponse.json(
           { success: true, message: "تم إضافة الهدية بنجاح", data: newProduct },
           withNoStore({ status: 200 })
@@ -182,10 +194,11 @@ export async function PUT(request: NextRequest) {
 
     const v = parsed.data;
     const updatedData: Partial<Product> = {
-      sku: v.sku,
-      name: v.name,
-      shortDescription: v.shortDescription,
-      contents: v.contents,
+      sku: v.sku !== undefined ? v.sku.trim() : undefined,
+      name: v.name !== undefined ? v.name.trim() : undefined,
+      shortDescription:
+        v.shortDescription !== undefined ? v.shortDescription.trim() : undefined,
+      contents: v.contents?.map((c) => String(c).trim()).filter(Boolean),
       giftTier: v.giftTier,
       images: v.images,
       availableQuantity: v.availableQuantity,
@@ -196,12 +209,28 @@ export async function PUT(request: NextRequest) {
     };
 
     await ensureProductsTable();
+    const before = await getProductBySlug(v.slug);
     const updated = await updateProduct(v.slug, updatedData);
     if (!updated) {
       return NextResponse.json(
         { success: false, error: "الهدية غير موجودة" },
         withNoStore({ status: 404 })
       );
+    }
+    if (before) {
+      const changes = productDiff(before, updated);
+      if (Object.keys(changes).length > 0) {
+        await writeAuditLog({
+          actorEmail: session.email,
+          action: classifyProductUpdateAction(before, updated, changes),
+          targetType: "هدية",
+          targetId: updated.sku,
+          targetLabel: updated.name,
+          changes,
+          ...auditRequestMeta(request),
+          result: "success",
+        });
+      }
     }
     return NextResponse.json(
       { success: true, message: "تم تحديث الهدية بنجاح", data: updated },
@@ -239,6 +268,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     await ensureProductsTable();
+    const before = await getProductBySlug(slug);
     const deleted = await deleteProduct(slug);
     if (!deleted) {
       return NextResponse.json(
@@ -246,6 +276,15 @@ export async function DELETE(request: NextRequest) {
         withNoStore({ status: 404 })
       );
     }
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "product.delete",
+      targetType: "هدية",
+      targetId: before?.sku ?? slug,
+      targetLabel: before?.name ?? slug,
+      ...auditRequestMeta(request),
+      result: "success",
+    });
     return NextResponse.json(
       { success: true, message: "تم حذف الهدية بنجاح" },
       withNoStore({ status: 200 })

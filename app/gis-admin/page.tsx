@@ -4,9 +4,10 @@ import { Suspense, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import { AlertTriangle, ArrowRight, Eye, EyeOff, KeyRound, Loader2, Lock, Mail } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import { OtpInput } from "@/components/otp-input";
 
 const shieldSrc = `${siteConfig.iconPath}?v=${siteConfig.logoAssetVersion}`;
 
@@ -116,6 +117,20 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // خطوة التحقق الثنائي (بعد نجاح كلمة المرور)
+  const [twoFactorStep, setTwoFactorStep] = useState(false);
+  const [twoFactorNext, setTwoFactorNext] = useState("");
+  const [otp, setOtp] = useState("");
+  const [useBackup, setUseBackup] = useState(false);
+  const [backupCode, setBackupCode] = useState("");
+
+  const resetToPassword = () => {
+    setTwoFactorStep(false);
+    setOtp("");
+    setBackupCode("");
+    setUseBackup(false);
+    setPassword("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +149,12 @@ function LoginForm() {
       });
       const data = await res.json();
 
+      if (data.success && data.twoFactor) {
+        setTwoFactorNext(typeof data.next === "string" ? data.next : "/dashboard");
+        setTwoFactorStep(true);
+        setOtp("");
+        return;
+      }
       if (data.success) {
         router.push(data.redirect ?? "/dashboard");
         return;
@@ -146,8 +167,148 @@ function LoginForm() {
     }
   };
 
+  const submitTwoFactor = async (code: string) => {
+    if (submitting) return;
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          useBackup,
+          next: twoFactorNext || undefined,
+        }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push(data.redirect ?? "/dashboard");
+        return;
+      }
+      if (data.reset) {
+        setError(data.error ?? "انتهت صلاحية التحقق. سجّل الدخول مجدداً.");
+        resetToPassword();
+        return;
+      }
+      setError(data.error ?? "رمز التحقق غير صحيح");
+      setOtp("");
+    } catch {
+      setError("حدث خطأ أثناء الاتصال");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleTwoFactorSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = useBackup ? backupCode.trim() : otp;
+    if (!code) return;
+    void submitTwoFactor(code);
+  };
+
+  // تسليم تلقائي عند اكتمال 6 أرقام
+  const handleOtpChange = (digits: string) => {
+    setOtp(digits);
+    if (!useBackup && digits.length === 6) {
+      void submitTwoFactor(digits);
+    }
+  };
+
   const fieldClass =
     "h-12 w-full rounded-[10px] border border-border bg-[var(--input-bg,#F7F8F6)] pl-3 pr-11 text-left text-sm text-foreground outline-none transition focus:border-brand-green-dark focus:ring-2 focus:ring-brand-green-dark/20 dark:border-white/10 dark:bg-[#161d1b] dark:focus:border-brand-gold dark:focus:ring-brand-gold/20";
+
+  if (twoFactorStep) {
+    return (
+      <motion.div
+        className="w-full max-w-[400px]"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut", delay: 0.05 }}
+      >
+        <div className="mb-7 text-center lg:text-right">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-green-dark/10 text-brand-green-dark dark:bg-brand-gold/10 dark:text-brand-gold-light lg:mx-0">
+            <KeyRound className="h-6 w-6" aria-hidden />
+          </div>
+          <h2 className="text-2xl font-bold text-brand-green-dark dark:text-brand-gold-light">
+            أدخل رمز التحقق
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {useBackup
+              ? "أدخل أحد الرموز الاحتياطية الثمانية (يُستخدم مرة واحدة)"
+              : "أدخل الرمز المكوّن من 6 أرقام في تطبيق Google Authenticator أو Microsoft Authenticator"}
+          </p>
+        </div>
+
+        <form onSubmit={handleTwoFactorSubmit} className="space-y-5">
+          {error ? (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <span>{error}</span>
+            </div>
+          ) : null}
+
+          {useBackup ? (
+            <input
+              type="text"
+              value={backupCode}
+              onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+              dir="ltr"
+              autoComplete="off"
+              placeholder="XXXX-XXXX"
+              aria-label="رمز احتياطي"
+              className={cn(fieldClass, "pr-3 text-center tracking-widest")}
+              autoFocus
+            />
+          ) : (
+            <OtpInput value={otp} onChange={handleOtpChange} disabled={submitting} />
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting || (useBackup ? !backupCode.trim() : otp.length !== 6)}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-brand-green-dark text-sm font-semibold text-white transition hover:bg-[#145a48] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-brand-gold dark:text-brand-green-darker dark:hover:bg-brand-gold-light"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                جاري التحقق...
+              </>
+            ) : (
+              "تأكيد"
+            )}
+          </button>
+
+          <div className="flex items-center justify-between text-sm">
+            <button
+              type="button"
+              onClick={resetToPassword}
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowRight className="h-4 w-4" aria-hidden />
+              رجوع
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUseBackup((v) => !v);
+                setError("");
+                setOtp("");
+                setBackupCode("");
+              }}
+              className="font-medium text-brand-green-dark underline-offset-4 hover:underline dark:text-brand-gold-light"
+            >
+              {useBackup ? "استخدام رمز التطبيق بدلاً من ذلك" : "استخدام رمز احتياطي بدلاً من ذلك"}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

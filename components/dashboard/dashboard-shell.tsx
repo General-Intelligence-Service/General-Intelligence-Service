@@ -11,6 +11,8 @@ import {
   QrCode,
   ScanLine,
   HardDriveDownload,
+  History,
+  ShieldCheck,
   LogOut,
   Menu,
   X,
@@ -58,6 +60,18 @@ const NAV_ITEMS: NavItem[] = [
     icon: ScanLine,
     match: (pathname) =>
       pathname.startsWith("/dashboard/gift-scanner") || pathname === "/scan",
+  },
+  {
+    href: "/dashboard/activity",
+    label: "سجل النشاط",
+    icon: History,
+    match: (pathname) => pathname.startsWith("/dashboard/activity"),
+  },
+  {
+    href: "/dashboard/security",
+    label: "الأمان (2FA)",
+    icon: ShieldCheck,
+    match: (pathname) => pathname.startsWith("/dashboard/security"),
   },
   {
     href: "/dashboard?focus=backup",

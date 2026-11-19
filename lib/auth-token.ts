@@ -18,6 +18,8 @@ export function getAuthSecret(): string {
 export interface SessionPayload {
   email: string;
   exp: number;
+  /** معلومة تجميلية/تشخيصية فقط — القرار الأمني يعتمد على قاعدة البيانات */
+  totpEnabled?: boolean;
 }
 
 function toBase64Url(bytes: ArrayBuffer | Uint8Array): string {
@@ -50,10 +52,14 @@ async function hmacSign(payload: string, secret: string): Promise<string> {
   return toBase64Url(sig);
 }
 
-export async function createSessionToken(email: string): Promise<string> {
+export async function createSessionToken(
+  email: string,
+  opts?: { totpEnabled?: boolean }
+): Promise<string> {
   const payload: SessionPayload = {
     email: email.trim().toLowerCase(),
     exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
+    ...(opts?.totpEnabled !== undefined ? { totpEnabled: opts.totpEnabled } : {}),
   };
   const payloadStr = JSON.stringify(payload);
   const sig = await hmacSign(payloadStr, getAuthSecret());

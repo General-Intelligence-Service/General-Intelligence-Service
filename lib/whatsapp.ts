@@ -21,7 +21,19 @@ export function getContactEmail(): string {
 }
 
 function inquireMessage(productName: string, sku: string): string {
-  return `السلام عليكم، أرغب بالاستفسار عن هدية: ${productName} (كود: ${sku})`;
+  const name = productName.trim();
+  const code = sku.trim();
+  return `السلام عليكم، أرغب بالاستفسار عن هدية: ${name} (كود: ${code})`;
+}
+
+export function getInquireMailto(productName: string, sku: string): string {
+  const email = getContactEmail();
+  if (!email) return "";
+  const name = productName.trim();
+  const message = inquireMessage(name, sku);
+  const subject = encodeURIComponent(`استفسار عن هدية: ${name}`);
+  const body = encodeURIComponent(message);
+  return `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
 /**
@@ -34,12 +46,7 @@ export function generateWhatsAppLink(productName: string, sku: string): string {
   if (phone) {
     return `https://wa.me/${phone}?text=${encoded}`;
   }
-  const email = getContactEmail();
-  if (email) {
-    const subject = encodeURIComponent(`استفسار عن هدية: ${productName}`);
-    return `mailto:${email}?subject=${subject}&body=${encoded}`;
-  }
-  return "";
+  return getInquireMailto(productName, sku);
 }
 
 export function generateWhatsAppLinkGeneral(): string {

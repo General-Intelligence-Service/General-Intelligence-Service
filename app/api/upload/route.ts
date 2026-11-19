@@ -5,6 +5,7 @@ import path from "path";
 import { randomBytes } from "crypto";
 import { put } from "@vercel/blob";
 import { getSession } from "@/lib/auth-session";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
 import { detectImageKind, extensionForKind, mimeForKind } from "@/lib/image-magic";
 import { withNoStore } from "@/lib/security-headers";
 
@@ -67,6 +68,15 @@ export async function POST(request: NextRequest) {
         contentType: mime,
         token: process.env.BLOB_READ_WRITE_TOKEN,
       });
+      await writeAuditLog({
+        actorEmail: session.email,
+        action: "upload.image",
+        targetType: "صورة",
+        targetId: fileName,
+        targetLabel: file.name.slice(0, 200),
+        ...auditRequestMeta(request),
+        result: "success",
+      });
       return NextResponse.json(
         { success: true, message: "تم رفع الصورة بنجاح", url: blob.url },
         withNoStore({ status: 200 })
@@ -89,6 +99,15 @@ export async function POST(request: NextRequest) {
       await mkdir(imagesDir, { recursive: true });
     }
     await writeFile(path.join(imagesDir, fileName), bytes);
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "upload.image",
+      targetType: "صورة",
+      targetId: fileName,
+      targetLabel: file.name.slice(0, 200),
+      ...auditRequestMeta(request),
+      result: "success",
+    });
 
     return NextResponse.json(
       { success: true, message: "تم رفع الصورة بنجاح", url: `/images/${fileName}` },

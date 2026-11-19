@@ -14,8 +14,11 @@ export {
   type SessionPayload,
 };
 
-export async function createSessionToken(email: string): Promise<string> {
-  return createToken(email);
+export async function createSessionToken(
+  email: string,
+  opts?: { totpEnabled?: boolean }
+): Promise<string> {
+  return createToken(email, opts);
 }
 
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {

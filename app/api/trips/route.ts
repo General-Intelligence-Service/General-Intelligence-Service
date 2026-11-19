@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-session";
+import { auditRequestMeta, writeAuditLog } from "@/lib/audit-log";
 import {
   createTrip,
   isTripsDbConfigured,
@@ -69,6 +70,15 @@ export async function POST(request: NextRequest) {
       gifts: parseGifts(body.gifts),
     };
     const trip = await createTrip(input, session.email);
+    await writeAuditLog({
+      actorEmail: session.email,
+      action: "trip.create",
+      targetType: "رحلة",
+      targetId: trip.id,
+      targetLabel: trip.destination || trip.id,
+      ...auditRequestMeta(request),
+      result: "success",
+    });
     return NextResponse.json({ success: true, trip });
   } catch (e) {
     console.error("POST /api/trips:", e);
